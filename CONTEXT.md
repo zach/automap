@@ -138,6 +138,10 @@ _Avoid_: verified, certified, compatible, tested
 An OS, a CPU architecture and a toolchain, such as Windows x64 with MSVC 2026. Evidence is always for exactly one platform.
 _Avoid_: target, triplet (a vcpkg term), OS
 
+**Cooldown**:
+The minimum age, 7 days, an upstream release must reach before it can enter the map. Security fixes may skip it; nothing skips the evidence.
+_Avoid_: quarantine, embargo, delay
+
 **Composition**:
 One engine as Automap describes it: which library fills each slot, and where the glue for each binding and pairing lives. It consists of a manifest and a lock in the developer's repo.
 _Avoid_: stack, project, build, configuration
