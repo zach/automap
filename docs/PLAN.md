@@ -55,7 +55,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Done | 0028–0033 |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Done | 0034–0039 |
 | 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Done | 0040 |
-| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | In progress | 0041–0044 |
+| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | In progress | 0041–0045 |
 | 9 | Extensibility and privacy: private libraries, overlays, NDA platforms, offline | 3, 5, 6 | Not started | |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Not started | |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Not started | |
