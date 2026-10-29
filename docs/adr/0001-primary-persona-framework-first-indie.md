@@ -26,11 +26,11 @@ Automap could be aimed at several kinds of developer, and the primary persona de
 
 The primary persona is the **framework-first indie** (option 1): a solo developer or small team who builds and ships games on their own engine assembled from libraries. Their coding agent is the primary steward of the engine's code and the human sets direction; reading the C++ is optional ([ADR-0005](0005-agent-is-primary-steward.md)). Agent-only builders (option 5) are therefore inside the primary persona ([ADR-0004](0004-v1-non-goals.md)).
 
-Jam developers and learners are served by testbeds as an on-ramp, not designed around. Console-bound studios are designed for (the private-overlay model must work for them) but are not the primary persona for v1. Engine extenders are a v1 non-goal ([ADR-0004](0004-v1-non-goals.md)).
+Jam developers and learners are served by testbeds as an on-ramp, not designed around. Console-bound studios are designed for (private maps must work for them) but are not the primary persona for v1. Engine extenders are a v1 non-goal ([ADR-0004](0004-v1-non-goals.md)).
 
 ## Consequences
 
 - "Immediately useful" is judged against this persona's jobs, not a jam developer's: known-good pairings, seam glue that lives in their repo under their control, reproducible and vendoring-friendly output, and safe upgrades.
 - Web builds are not a v1 requirement by default; a web-capable testbed remains an open question (OQ-008).
-- The private-overlay design (branch 9) must accommodate console studios even though they ship later.
+- Private maps (branch 9) must accommodate console studios even though they ship later.
 - The coding agent is the persona's primary way of working, so the agent interface (branch 8) is a primary surface.

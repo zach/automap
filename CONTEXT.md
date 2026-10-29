@@ -41,8 +41,12 @@ _Avoid_: uninstall, export, detach
 ### Product
 
 **Map**:
-Automap's versioned data describing slots, libraries, contracts, pairings and recipes, plus the evidence records behind them.
+Versioned data describing slots, libraries, contracts, pairings and recipes, plus the evidence behind them. The public map is Automap's; private maps layer over it.
 _Avoid_: catalog, database, registry, index
+
+**Private map**:
+A map with the public map's schema, kept in the developer's repo or another repo they control and layered over the public map by the CLI. It holds in-house and proprietary libraries, private variants (including patched libraries), recipes and evidence, and is never uploaded.
+_Avoid_: overlay (a vcpkg term), private registry, fork
 
 **CLI**:
 Automap's command-line tool: the one deterministic way to query the map and act on a composition, designed for agents first.
