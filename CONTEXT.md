@@ -55,7 +55,7 @@ _Avoid_: main skill, entry skill, meta-skill
 ### The map
 
 **Slot** _(provisional)_:
-A named role in an engine that one library, or the developer's own code, fills: for example windowing, physics or audio.
+A named role in an engine, such as windowing, physics or audio, that a library or the developer's own code fills. A slot has no Automap-defined API: the engine calls the filling library's own API.
 _Avoid_: category, module, component, layer
 
 **Library** _(provisional)_:
@@ -105,5 +105,5 @@ The middle tier: a composition organized into layers (platform and GPU, core run
 _Avoid_: framework, template engine
 
 **Custom integration** _(provisional)_:
-The top tier: a composition with swappable implementations behind contracts, which may include private and proprietary libraries.
+The top tier: a composition whose libraries, which may include private and proprietary ones, are swappable at the seam contracts.
 _Avoid_: advanced mode, enterprise tier
