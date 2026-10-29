@@ -60,6 +60,14 @@ _Avoid_: error message, exit code
 An existing package manager that Automap delegates fetching and building to, such as vcpkg.
 _Avoid_: backend (ambiguous with rendering and platform backends), package manager (when naming this role)
 
+**Watcher**:
+Automap's process that notices upstream releases, tags and commits for every library in the public map.
+_Avoid_: bot, crawler, monitor
+
+**Curation agent**:
+An agent that updates the public map's facts, recipes and probes. Nothing it writes enters the map without evidence.
+_Avoid_: curator (humans decide coverage), maintainer bot
+
 **Automap registry**:
 Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express, libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale.
 _Avoid_: the map (the map describes; the registry builds), overlay, fork
