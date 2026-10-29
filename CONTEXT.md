@@ -48,6 +48,10 @@ _Avoid_: tool, client, engine
 An existing package manager that Automap delegates fetching and building to, such as vcpkg.
 _Avoid_: backend (ambiguous with rendering and platform backends), package manager (when naming this role)
 
+**Automap registry**:
+Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express, libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale.
+_Avoid_: the map (the map describes; the registry builds), overlay, fork
+
 **Router skill**:
 The single agent skill that teaches a coding agent to drive the CLI.
 _Avoid_: main skill, entry skill, meta-skill
