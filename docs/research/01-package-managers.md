@@ -151,7 +151,7 @@ The closest any of them come is Conan's `validate()`, which can assert facts abo
 | Tool | Setting | Since | Default |
 |---|---|---|---|
 | npm | `min-release-age` (days), plus `min-release-age-exclude` | 11.10.0, 2026-02-11 [45] | off |
-| pnpm | `minimumReleaseAge` (minutes) | 10.x; **on by default** in 11.0, 2026-04-28 [46] | 1440 (one day) |
+| pnpm | `minimumReleaseAge` (minutes) | 10.x (exact minor **[Unverified]**); **on by default** in 11.0, 2026-04-28 [46] | 1440 (one day) |
 | uv | `exclude-newer` accepts relative durations ("7 days") | 0.9.17, 2025-12-09 [47] (secondary source) | off |
 | Yarn | `npmMinimalAgeGate` | 4.10 [50] (secondary source) | reported on |
 | Renovate | `minimumReleaseAge`, which needs release timestamps from the datasource | — [48] | off |
@@ -237,7 +237,7 @@ Scores run from 1 (weak) to 5 (strong) and are judgment calls grounded in the se
 | Agent-friendliness: declarative manifest, schema, machine-readable CLI | 5 | 3 (`.txt` is limited; `.py` is code) | 3 | 2 |
 | **Unweighted total (of 55)** | **45** | **46** | **33** | **26 (+n/a)** |
 
-**Reading the table.** vcpkg and Conan are effectively tied, and they win on different axes.
+**Reading the table.** Unweighted, vcpkg and Conan are effectively tied, and they win on different axes. Doubling the weight of the three criteria that matter most for Automap's first tiers (catalog currency, CMake fit, agent-friendliness) gives vcpkg 60, Conan 55, xmake 41 and CPM 33.
 - **vcpkg** wins on what Automap's *testbed and starter-engine tiers* and its *agent* need: a current catalog of the exact libraries, a pure-JSON manifest an agent can write and validate against a schema, and zero-friction CMake.
 - **Conan** wins on what the *custom-integration tier* needs: private remotes, binaries as first-class artifacts, non-additive options, ABI propagation, signing and audit.
 - **xmake** has the best variant coverage for these libraries, Jolt double precision and ImGui SDL_GPU included, but it sits outside CMake, which most game developers use.
