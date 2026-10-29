@@ -7,7 +7,7 @@ date: 2026-10-29
 
 ## Context
 
-ADR-0001 as first written assumed the human reads and owns every line of glue, and defined the persona as C/C++ literate. That assumption was never agreed. The product owner rejected it: coding agents are capable of being the primary steward of an engine's code, and capability moves fast enough that benchmark figures go stale within months. The figure the assumption leaned on (GameEngineBench, best agent 55.5% pass@1 on UE5 C++ tasks, July 2026, [05](../research/05-developer-needs-2026.md)) did not include current frontier agents.
+Who writes and maintains an engine's code shapes the persona, the agent interface, and what makes a change trustworthy. Coding agents are capable of being the primary steward of an engine's code, and their capability moves fast enough that benchmark figures go stale within months. The most recent engine-specific figure in the research (GameEngineBench, best agent 55.5% pass@1 on UE5 C++ tasks, July 2026, [05](../research/05-developer-needs-2026.md)) did not include current frontier agents.
 
 The research's trust findings ([SUMMARY](../research/SUMMARY.md) finding 1) are about developers' willingness to adopt agent output, not about agent ability. Developers trust output they can verify.
 
@@ -19,7 +19,7 @@ The research's trust findings ([SUMMARY](../research/SUMMARY.md) finding 1) are 
 
 ## Decision
 
-Option 3. The persona is defined by what they want, not by whether they read C++ ([ADR-0001](0001-primary-persona-framework-first-indie.md), amended).
+Option 3. The persona is defined by what they want, not by whether they read C++ ([ADR-0001](0001-primary-persona-framework-first-indie.md)).
 
 ## Consequences
 

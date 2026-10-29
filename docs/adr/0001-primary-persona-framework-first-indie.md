@@ -1,11 +1,9 @@
 ---
-status: accepted (amended by ADR-0005)
+status: accepted
 date: 2026-10-29
 ---
 
 # Primary persona: the framework-first indie
-
-> **Amended 2026-10-29 by [ADR-0005](0005-agent-is-primary-steward.md).** As first written, this ADR defined the persona as "C/C++ literate" and required that "the human must be able to read and own every line of glue". Neither had been agreed; both are removed. The persona is now defined by what they want, not by whether they read C++.
 
 ## Context
 

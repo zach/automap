@@ -21,6 +21,7 @@ Automap is in **product exploration**: no product code yet. The exploration ends
 
 These override the upstream skills where they conflict.
 
+- **Documents state the current version only.** The current version of any document is never in dialogue with its prior revisions: no "amended", "previously", "as first written", "no longer", changelog notes or superseded markers. When a decision changes, rewrite the affected ADR and docs in place; git history is the record of what changed.
 - **One question at a time.** Grill the product owner (Zach) one question per message, walking the decision tree in `docs/PLAN.md` in dependency order. Upstream `grilling` asks a whole round at once; don't.
 - **Recommend an answer with every question**, with a one- or two-sentence rationale grounded in research. Word it so "yes" accepts the recommendation.
 - **Say so when a question needs Zach's taste or judgment** (positioning, what feels right to game developers) instead of hiding it behind a recommendation.
@@ -41,7 +42,7 @@ These override the upstream skills where they conflict.
 
 `.claude/skills/` holds skills vendored from [mattpocock/skills](https://github.com/mattpocock/skills) at commit `a496f55` (v1.3.2, MIT, see `.claude/skills/LICENSE-mattpocock-skills`). They were copied by hand because `npx skills` could not run in this environment. Installed: `setup-matt-pocock-skills`, `grill-with-docs` (with `grilling` and `domain-modeling`), `prototype`, `handoff`, `to-spec`, `to-tickets`, `research`.
 
-The brief's older names map to current ones: `/to-prd` is `to-spec`; `/to-issues` is `to-tickets`. Upstream now calls the glossary `GLOSSARY.md`; this repo keeps `CONTEXT.md` at the product owner's request, so read `GLOSSARY.md` in any skill as `CONTEXT.md`.
+The brief names two skills differently: `/to-prd` is `to-spec`; `/to-issues` is `to-tickets`. Upstream skills call the glossary `GLOSSARY.md`; this repo uses `CONTEXT.md` at the product owner's request, so read `GLOSSARY.md` in any skill as `CONTEXT.md`.
 
 ### Issue tracker
 
