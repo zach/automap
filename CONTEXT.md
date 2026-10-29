@@ -78,6 +78,10 @@ _Avoid_: metadata, property, attribute
 A decision a composition makes at one seam, such as which engine math library to use or whether determinism is on. Choices live in the manifest.
 _Avoid_: setting, option, config
 
+**Phase**:
+One of the six fixed stages of an engine's startup, in order: memory, diagnostics, platform, jobs, systems, game. Each library's init steps belong to a phase; shutdown runs in exact reverse.
+_Avoid_: stage, level, loading phase, init order
+
 **Shared interface**:
 An interface a contract defines and delivers as glue source, such as a neutral job-system interface. Never an Automap library the engine links.
 _Avoid_: adapter, abstraction layer, API
