@@ -110,20 +110,6 @@ _Avoid_: lockfile (for a build backend's own), snapshot, baseline
 The exact resolved identity of one library in a lock.
 _Avoid_: version (a pin is more than a version), reference
 
-### Growth
-
-**Tier** _(provisional)_:
-The level of ambition a composition works at: testbed, starter engine or custom integration.
-_Avoid_: level, stage, plan
-
-**Testbed** _(provisional)_:
-The smallest tier: a composition that opens a window and runs a render and input loop, made for experiments.
-_Avoid_: sandbox, demo, prototype, hello world
-
-**Starter engine** _(provisional)_:
-The middle tier: a composition organized into layers (platform and GPU, core runtime, engine systems, world and tools, game).
-_Avoid_: framework, template engine
-
-**Custom integration** _(provisional)_:
-The top tier: a composition whose libraries, which may include private and proprietary ones, are swappable at the seam contracts.
-_Avoid_: advanced mode, enterprise tier
+**Testbed**:
+A small composition that opens a window and runs a render and input loop, made for experiments. Starting a new engine typically produces one.
+_Avoid_: sandbox, demo, prototype, hello world, tier

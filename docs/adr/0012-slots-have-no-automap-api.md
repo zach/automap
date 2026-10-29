@@ -21,4 +21,4 @@ Option 2. A slot is a role with no Automap-defined engine-facing API. The engine
 ## Consequences
 
 - Automap does not become an engine framework and defines no lowest-common-denominator APIs for physics, rendering, audio or any other role.
-- In the custom-integration tier, libraries are swappable at the seam contracts, not behind an Automap API.
+- Libraries are swappable at the seam contracts, not behind an Automap API.

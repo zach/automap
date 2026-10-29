@@ -36,7 +36,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
      │   ├─► 4 Contracts ─────────────► 10 Data & asset slots (needs 3, 4)
      │   │   └─► 5 Compatibility & trust
      │   │       └─► 11 Freshness & governance
-     │   ├─► 7 Tiers & growth (needs 3, 6)
+     │   ├─► 7 Growth & eject (needs 3, 6)
      │   └─► 8 Agent interface (needs 2, 3, 6)
      ├─► 6 Build integration
      │   └─► 9 Extensibility & privacy (needs 3, 5, 6)
@@ -49,17 +49,17 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | --- | --- | --- | --- | --- |
 | 1 | Who and why: personas, jobs-to-be-done, primary persona | — | Done | 0001–0005 |
 | 2 | Product shape: map, scaffolder, package-manager layer, maintenance agent; day-one minimum | 1 | Done | 0006–0010 |
-| 3 | Domain model: schema-ready definitions | 2 | In progress | 0011–0017 |
+| 3 | Domain model: schema-ready definitions | 2 | In progress | 0011–0018 |
 | 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Not started | |
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Not started | |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Not started | |
-| 7 | Tiers and growth: testbed → starter → custom without rewrite; eject | 3, 6 | Not started | |
+| 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Not started | |
 | 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | Not started | |
 | 9 | Extensibility and privacy: private libraries, overlays, NDA platforms, offline | 3, 5, 6 | Not started | |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Not started | |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Not started | |
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Not started | |
-| 13 | Scope of v1: slots, libraries, platforms, tiers; first vertical slice | all | Not started | |
+| 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | Not started | |
 | 14 | Success measures | 1, 13 | Not started | |
 
 ## Planned spike
