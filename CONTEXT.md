@@ -107,8 +107,12 @@ The file the CLI writes beside the manifest, holding the exact pins the composit
 _Avoid_: lockfile (for a build backend's own), snapshot, baseline
 
 **Pin**:
-The exact resolved identity of one library in a lock.
+The exact resolved identity of one library in a lock, including its variant.
 _Avoid_: version (a pin is more than a version), reference
+
+**Variant**:
+A named set of build options for a library, such as "Jolt, double precision". Bindings, pairings and evidence are per variant, and every library has at least one.
+_Avoid_: feature (a vcpkg term), option, configuration, flavor
 
 **Testbed**:
 A small composition that opens a window and runs a render and input loop, made for experiments. Starting a new engine typically produces one.

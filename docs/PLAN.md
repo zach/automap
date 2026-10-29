@@ -8,7 +8,7 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | --- | --- | --- | --- |
 | 0. Orientation | Install skills, seed glossary, plan, start research | `CLAUDE.md`, `CONTEXT.md`, `docs/agents/`, this file | Done 2026-10-29 |
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
-| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | In progress: branch 3 |
+| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | In progress: branch 4 |
 | 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Not started |
 | 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Not started |
 
@@ -49,8 +49,8 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | --- | --- | --- | --- | --- |
 | 1 | Who and why: personas, jobs-to-be-done, primary persona | — | Done | 0001–0005 |
 | 2 | Product shape: map, scaffolder, package-manager layer, maintenance agent; day-one minimum | 1 | Done | 0006–0010 |
-| 3 | Domain model: schema-ready definitions | 2 | In progress | 0011–0019 |
-| 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Not started | |
+| 3 | Domain model: schema-ready definitions | 2 | Done | 0011–0020 |
+| 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | In progress | |
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Not started | |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Not started | |
 | 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Not started | |
