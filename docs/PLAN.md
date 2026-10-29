@@ -52,7 +52,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 3 | Domain model: schema-ready definitions | 2 | Done | 0011–0020 |
 | 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Done | 0021–0027 |
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Done | 0028–0033 |
-| 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | In progress | 0034–0037 |
+| 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | In progress | 0034–0038 |
 | 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Not started | |
 | 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | Not started | |
 | 9 | Extensibility and privacy: private libraries, overlays, NDA platforms, offline | 3, 5, 6 | Not started | |
