@@ -44,6 +44,10 @@ _Avoid_: uninstall, export, detach
 Versioned data describing slots, libraries, contracts, pairings and recipes, plus the evidence behind them. The public map is Automap's; private maps layer over it.
 _Avoid_: catalog, database, registry, index
 
+**Map release**:
+An immutable, dated release of the public map. Every lock records the map release it was resolved against.
+_Avoid_: snapshot, baseline (a vcpkg term), map version
+
 **Private map**:
 A map with the public map's schema, kept in the developer's repo or another repo they control and layered over the public map by the CLI. It holds in-house and proprietary libraries, private variants (including patched libraries), recipes and evidence, and is never uploaded.
 _Avoid_: overlay (a vcpkg term), private registry, fork
@@ -171,7 +175,7 @@ The file in the developer's repo, edited by the agent, that declares a compositi
 _Avoid_: config, project file; don't use "manifest" alone for a build backend's file (name it, e.g. `vcpkg.json`)
 
 **Lock**:
-The file the CLI writes beside the manifest, holding the exact pins the composition resolved to.
+The file the CLI writes beside the manifest, holding the exact pins the composition resolved to and the map release it was resolved against.
 _Avoid_: lockfile (for a build backend's own), snapshot, baseline
 
 **Pin**:
