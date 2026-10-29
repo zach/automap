@@ -94,9 +94,21 @@ _Avoid_: template, boilerplate, sample code
 An executable check that glue does its job for a binding or pairing, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
 _Avoid_: test (too broad), assertion, validator
 
-**Composition** _(provisional)_:
-One engine described as a set of slots, the libraries filling them, and the recipes wiring them together.
+**Composition**:
+One engine as Automap describes it: which library fills each slot, and where the glue for each binding and pairing lives. It consists of a manifest and a lock in the developer's repo.
 _Avoid_: stack, project, build, configuration
+
+**Manifest**:
+The file in the developer's repo, edited by the agent, that declares a composition: the library in each slot and where each binding's and pairing's glue lives.
+_Avoid_: config, project file; don't use "manifest" alone for a build backend's file (name it, e.g. `vcpkg.json`)
+
+**Lock**:
+The file the CLI writes beside the manifest, holding the exact pins the composition resolved to.
+_Avoid_: lockfile (for a build backend's own), snapshot, baseline
+
+**Pin**:
+The exact resolved identity of one library in a lock.
+_Avoid_: version (a pin is more than a version), reference
 
 ### Growth
 
