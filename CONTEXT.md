@@ -67,8 +67,20 @@ A kind of point where libraries, or a library and the engine around it, must agr
 _Avoid_: integration point, interface, boundary
 
 **Contract**:
-Automap's definition of what must hold at one seam: the vocabulary and rules every library in a composition is bound to there. Automap owns one contract per seam.
+Automap's definition of what must hold at one seam: the facts libraries declare, the choices compositions make, the rules over them, and optionally a shared interface. Automap owns one contract per seam.
 _Avoid_: interface, API, spec, requirement
+
+**Fact**:
+Something a library declares about one seam, such as its allocator hook style or its ABI-affecting defines. Facts live in the map and can differ between a library's versions and variants.
+_Avoid_: metadata, property, attribute
+
+**Choice**:
+A decision a composition makes at one seam, such as which engine math library to use or whether determinism is on. Choices live in the manifest.
+_Avoid_: setting, option, config
+
+**Shared interface**:
+An interface a contract defines and delivers as glue source, such as a neutral job-system interface. Never an Automap library the engine links.
+_Avoid_: adapter, abstraction layer, API
 
 **Rule**:
 One requirement that glue must meet, stated by a contract or by a pairing's recipe. A rule is either probed (it has a probe, and passing it counts as evidence) or guidance (labeled, and never counts as evidence).
@@ -103,7 +115,7 @@ One engine as Automap describes it: which library fills each slot, and where the
 _Avoid_: stack, project, build, configuration
 
 **Manifest**:
-The file in the developer's repo, edited by the agent, that declares a composition: the library in each slot and where each binding's and pairing's glue lives.
+The file in the developer's repo, edited by the agent, that declares a composition: the library in each slot, the composition's choices, and where each binding's and pairing's glue lives.
 _Avoid_: config, project file; don't use "manifest" alone for a build backend's file (name it, e.g. `vcpkg.json`)
 
 **Lock**:
