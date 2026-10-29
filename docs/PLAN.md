@@ -42,7 +42,8 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
      │   └─► 9 Extensibility & privacy (needs 3, 5, 6)
      └─► 12 Product & distribution (needs 1, 2, 11)
  13 Scope of v1 (needs all of the above)
- └─► 14 Success measures (needs 1, 13)
+ ├─► 14 Success measures (needs 1, 13)
+ └─► 15 Agent-driven build plan (needs 13)
 ```
 
 | # | Branch | Depends on | Status | ADRs |
@@ -54,13 +55,14 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Done | 0028–0033 |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Done | 0034–0039 |
 | 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Done | 0040 |
-| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | In progress | 0041, 0042 |
+| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | In progress | 0041–0043 |
 | 9 | Extensibility and privacy: private libraries, overlays, NDA platforms, offline | 3, 5, 6 | Not started | |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Not started | |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Not started | |
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Not started | |
 | 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | Not started | |
 | 14 | Success measures | 1, 13 | Not started | |
+| 15 | Agent-driven build plan: how Automap itself is built by agents (spec section 10): repo conventions, instruction files, build-team skills, test strategy, human checkpoints | 13 | Not started | |
 
 ## Planned spike
 
