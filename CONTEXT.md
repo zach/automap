@@ -151,7 +151,7 @@ The file the CLI writes beside the manifest, holding the exact pins the composit
 _Avoid_: lockfile (for a build backend's own), snapshot, baseline
 
 **Pin**:
-The exact resolved identity of one library in a lock, including its variant.
+The exact resolved identity of one library in a lock: the library, its version (or commit, for libraries without release tags), its variant, the registry it came from at a commit, and a content hash of its source.
 _Avoid_: version (a pin is more than a version), reference
 
 **Variant**:
