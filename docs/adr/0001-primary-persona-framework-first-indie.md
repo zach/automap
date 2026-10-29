@@ -31,6 +31,6 @@ Jam developers and learners are served by testbeds as an on-ramp, not designed a
 ## Consequences
 
 - "Immediately useful" is judged against this persona's jobs, not a jam developer's: known-good pairings, seam glue that lives in their repo under their control, reproducible and vendoring-friendly output, and safe upgrades.
-- Web builds are not a v1 requirement by default; a web-capable testbed remains an open question (OQ-008).
+- Web builds are not a v1 requirement ([ADR-0056](0056-v1-platforms-desktop-only.md)).
 - Private maps (branch 9) must accommodate console studios even though they ship later.
 - The coding agent is the persona's primary way of working, so the agent interface (branch 8) is a primary surface.
