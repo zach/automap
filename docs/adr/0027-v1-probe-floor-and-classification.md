@@ -31,6 +31,7 @@ Option 2. In v1 every contract has at least one probed rule. The starting classi
 | Math types | precision agrees across libraries; adapters convert there and back without loss | semantic rules |
 | Determinism (when chosen) | floating-point flags and library defines set; replay hashes match | semantic rules |
 | Handles | ID bit widths | ownership and caching rules |
+| Assets | output identical across runs with the same input, version and settings; every file read goes through the file-I/O interface | semantic rules |
 
 ## Consequences
 
