@@ -7,7 +7,6 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 | ID | Question | Branch | Raised |
 | --- | --- | --- | --- |
 | OQ-006 | Which agent instruction files (`CLAUDE.md`, `AGENTS.md`) the repo where Automap itself is built uses, and what they contain (spec section 10). This exploration repo uses `CLAUDE.md`. | 15 | 2026-10-29 |
-| OQ-008 | Is a web-capable testbed (sokol, raylib, or SDL + WebGPU) in v1, given SDL_GPU has no web backend? ([SUMMARY](research/SUMMARY.md) finding 5) | 13 | 2026-10-29 |
 
 ## Parked
 
@@ -18,3 +17,4 @@ _None yet._
 | ID | Question | Why deferred | Deferred |
 | --- | --- | --- | --- |
 | OQ-011 | What canonical identity does a composition lock have, so the same composition built through different build backends shares one evidence subject? | v1 has one build backend ([ADR-0034](adr/0034-vcpkg-is-the-v1-build-backend.md)). | 2026-10-29 |
+| OQ-008 | Is a web-capable testbed (sokol, raylib, or SDL + WebGPU) supported, given SDL_GPU has no web backend? | v1 is desktop only ([ADR-0056](adr/0056-v1-platforms-desktop-only.md)). | 2026-10-29 |
