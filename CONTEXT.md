@@ -59,7 +59,7 @@ A named role in an engine, such as windowing, physics or audio, that a library o
 _Avoid_: category, module, component, layer
 
 **Library** _(provisional)_:
-A third-party, in-house or proprietary body of code that can fill one or more slots.
+A body of code that can fill one or more slots, whether third-party, proprietary or the developer's own. The developer's own code is a library like any other; its source may be a directory in their repo.
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
 
 **Seam**:
