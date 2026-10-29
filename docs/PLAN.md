@@ -56,7 +56,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Done | 0034–0039 |
 | 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Done | 0040 |
 | 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | Done | 0041–0046 |
-| 9 | Extensibility and privacy: private libraries, private maps, NDA platforms, offline | 3, 5, 6 | In progress | 0047 |
+| 9 | Extensibility and privacy: private libraries, private maps, NDA platforms, offline | 3, 5, 6 | In progress | 0047, 0048 |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Not started | |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Not started | |
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Not started | |
