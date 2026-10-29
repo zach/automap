@@ -8,7 +8,7 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | --- | --- | --- | --- |
 | 0. Orientation | Install skills, seed glossary, plan, start research | `CLAUDE.md`, `CONTEXT.md`, `docs/agents/`, this file | Done 2026-10-29 |
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
-| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | In progress: branch 7 |
+| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | In progress: branch 8 |
 | 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Not started |
 | 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Not started |
 
@@ -53,8 +53,8 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Done | 0021–0027 |
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Done | 0028–0033 |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Done | 0034–0039 |
-| 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | In progress | |
-| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | Not started | |
+| 7 | Growth and eject: testbed to large composition without a rewrite; leaving Automap | 3, 6 | Done | 0040 |
+| 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | In progress | |
 | 9 | Extensibility and privacy: private libraries, overlays, NDA platforms, offline | 3, 5, 6 | Not started | |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Not started | |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Not started | |
