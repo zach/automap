@@ -122,8 +122,12 @@ _Avoid_: proof, certification, badge, test result
 How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed.
 _Avoid_: tier, grade, rung
 
+**Evidence state**:
+Whether evidence can be relied on: current (produced within the last 30 days), stale (older, with a re-run queued) or broken (the latest run failed; re-checked on schedule).
+_Avoid_: valid, expired, outdated
+
 **Known-good**:
-Backed by evidence at the probed level or higher.
+Backed by current evidence at the probed level or higher.
 _Avoid_: verified, certified, compatible, tested
 
 **Platform**:
