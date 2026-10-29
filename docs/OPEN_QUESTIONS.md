@@ -9,7 +9,7 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 | OQ-006 | Which agent instruction files (`CLAUDE.md`, `AGENTS.md`) the repo where Automap itself is built uses, and what they contain (spec section 10). This exploration repo uses `CLAUDE.md`. | 15 | 2026-10-29 |
 | OQ-008 | Is a web-capable testbed (sokol, raylib, or SDL + WebGPU) in v1, given SDL_GPU has no web backend? ([SUMMARY](research/SUMMARY.md) finding 5) | 13 | 2026-10-29 |
 | OQ-010 | How are console compositions verified without NDA access: self-hosted devkits, partner-run verifiers that sign evidence, or unverifiable claims? | 5, 9 | 2026-10-29 |
-| OQ-012 | Should the agent be barred from opening issues or PRs on upstream projects whose policies ban AI-generated contributions (SDL, SDL_shadercross, sokol, stb, PhysicsFS, Godot)? Policy, not capability ([SUMMARY](research/SUMMARY.md) finding 4). | 8 | 2026-10-29 |
+| OQ-014 | How is a local patch to a library's source represented (for example as a variant), and how does evidence treat a patched library? | 9 | 2026-10-29 |
 
 ## Parked
 
