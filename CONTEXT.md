@@ -12,6 +12,24 @@ Automap is a curated, machine-readable map for composing a custom C++ game engin
 The primary persona: a solo developer or small team, comfortable in C/C++, who builds and ships games on their own engine assembled from libraries, working with a coding agent.
 _Avoid_: user, customer, engine developer
 
+### Jobs
+
+**Extend**:
+The core job: add or swap a library in an engine, with seam glue the developer owns and evidence that the resulting pairings work.
+_Avoid_: install, integrate, add package
+
+**Start**:
+Extending an empty composition: the first libraries added to a new engine, typically producing a testbed.
+_Avoid_: scaffold, generate, bootstrap, new project
+
+**Upgrade**:
+Moving a composition's libraries to newer versions while keeping its glue and evidence valid.
+_Avoid_: update, bump
+
+**Adopt**:
+Describing an existing engine that Automap did not create as a composition, so it can be extended like any other.
+_Avoid_: import, onboard, migrate
+
 ### The map
 
 **Slot** _(provisional)_:
