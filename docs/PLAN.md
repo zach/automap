@@ -49,7 +49,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | --- | --- | --- | --- | --- |
 | 1 | Who and why: personas, jobs-to-be-done, primary persona | — | Done | 0001–0005 |
 | 2 | Product shape: map, scaffolder, package-manager layer, maintenance agent; day-one minimum | 1 | Done | 0006–0010 |
-| 3 | Domain model: schema-ready definitions | 2 | In progress | 0011–0014 |
+| 3 | Domain model: schema-ready definitions | 2 | In progress | 0011–0015 |
 | 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Not started | |
 | 5 | Compatibility and trust: declaring, verifying, versioning, retiring pairings | 3, 4 | Not started | |
 | 6 | Build integration: backend(s), composition → build, pinning, supply chain | 2 | Not started | |

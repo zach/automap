@@ -74,8 +74,8 @@ _Avoid_: interface, API, spec, requirement
 The connection of one library to one contract, made by a recipe and backed by evidence.
 _Avoid_: adapter, conformance, implementation
 
-**Pairing** _(provisional)_:
-A direct integration between specific libraries that doesn't go through a contract, such as Dear ImGui's SDL3 backend, backed by evidence that it works.
+**Pairing**:
+A direct integration between exactly two libraries that doesn't go through a contract, such as Dear ImGui's SDL3 backend, backed by evidence that it works.
 _Avoid_: compatibility, combo, integration
 
 **Glue**:
