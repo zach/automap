@@ -67,7 +67,7 @@ A kind of point where libraries, or a library and the engine around it, must agr
 _Avoid_: integration point, interface, boundary
 
 **Contract**:
-Automap's definition of what must hold at one seam: the facts libraries declare, the choices compositions make, the rules over them, and optionally a shared interface. Automap owns one contract per seam.
+Automap's definition of what must hold at one seam: the facts libraries declare, the choices compositions make, the rules over them, and optionally a shared interface. Automap owns one contract per seam, and each is versioned independently.
 _Avoid_: interface, API, spec, requirement
 
 **Fact**:
