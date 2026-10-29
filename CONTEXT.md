@@ -70,6 +70,10 @@ _Avoid_: integration point, interface, boundary
 Automap's definition of what must hold at one seam: the vocabulary and rules every library in a composition is bound to there. Automap owns one contract per seam.
 _Avoid_: interface, API, spec, requirement
 
+**Rule**:
+One requirement that glue must meet, stated by a contract or by a pairing's recipe. A rule is either probed (it has a probe, and passing it counts as evidence) or guidance (labeled, and never counts as evidence).
+_Avoid_: constraint, check, requirement
+
 **Binding**:
 The connection of one library to one contract, made by glue that follows a recipe and backed by evidence.
 _Avoid_: adapter, conformance, implementation
@@ -91,7 +95,7 @@ Glue that Automap has verified for a binding or pairing. The CLI writes it into 
 _Avoid_: template, boilerplate, sample code
 
 **Probe**:
-An executable check that glue does its job for a binding or pairing, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
+An executable check that glue satisfies one rule, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
 _Avoid_: test (too broad), assertion, validator
 
 **Composition**:
