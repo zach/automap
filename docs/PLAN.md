@@ -58,7 +58,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 8 | Agent interface: skills, router, manifest, CLI, MCP, generated AGENTS.md | 2, 3, 6 | Done | 0041–0046 |
 | 9 | Extensibility and privacy: private libraries, private maps, NDA platforms, offline | 3, 5, 6 | Done | 0038, 0047–0049 |
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Done | 0050 |
-| 11 | Freshness and governance: curation, contributions, staying current | 5 | In progress | 0051 |
+| 11 | Freshness and governance: curation, contributions, staying current | 5 | In progress | 0051, 0052 |
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Not started | |
 | 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | Not started | |
 | 14 | Success measures | 1, 13 | Not started | |
