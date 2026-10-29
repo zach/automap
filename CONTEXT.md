@@ -61,7 +61,7 @@ Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express,
 _Avoid_: the map (the map describes; the registry builds), overlay, fork
 
 **Router skill**:
-The single agent skill that teaches a coding agent to drive the CLI.
+The single agent skill that teaches a coding agent to drive the CLI. It ships inside the CLI, which writes it into the developer's repo at its own version.
 _Avoid_: main skill, entry skill, meta-skill
 
 ### The map
