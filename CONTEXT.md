@@ -6,6 +6,12 @@ Automap is a curated, machine-readable map for composing a custom C++ game engin
 
 ## Language
 
+### People
+
+**Framework-first indie**:
+The primary persona: a solo developer or small team, comfortable in C/C++, who builds and ships games on their own engine assembled from libraries, working with a coding agent.
+_Avoid_: user, customer, engine developer
+
 ### The map
 
 **Slot** _(provisional)_:
