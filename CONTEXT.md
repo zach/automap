@@ -54,11 +54,11 @@ _Avoid_: main skill, entry skill, meta-skill
 
 ### The map
 
-**Slot** _(provisional)_:
-A named role in an engine, such as windowing, physics or audio, that a library or the developer's own code fills. A slot has no Automap-defined API: the engine calls the filling library's own API.
+**Slot**:
+A named role in an engine, such as windowing, physics-3d or audio, that a library fills. A slot has no Automap-defined API: the engine calls the filling library's own API. In a composition each slot holds at most one library.
 _Avoid_: category, module, component, layer
 
-**Library** _(provisional)_:
+**Library**:
 A body of code that can fill one or more slots, whether third-party, proprietary or the developer's own. The developer's own code is a library like any other; its source may be a directory in their repo.
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
 
