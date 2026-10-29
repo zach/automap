@@ -114,6 +114,18 @@ _Avoid_: template, boilerplate, sample code
 An executable check that glue satisfies one rule, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
 _Avoid_: test (too broad), assertion, validator
 
+**Evidence**:
+A record that a binding, pairing or composition passed verification at a stated evidence level.
+_Avoid_: proof, certification, badge, test result
+
+**Evidence level**:
+How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed.
+_Avoid_: tier, grade, rung
+
+**Known-good**:
+Backed by evidence at the probed level or higher.
+_Avoid_: verified, certified, compatible, tested
+
 **Composition**:
 One engine as Automap describes it: which library fills each slot, and where the glue for each binding and pairing lives. It consists of a manifest and a lock in the developer's repo.
 _Avoid_: stack, project, build, configuration
