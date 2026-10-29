@@ -62,16 +62,20 @@ _Avoid_: category, module, component, layer
 A third-party, in-house or proprietary body of code that can fill one or more slots.
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
 
-**Seam** _(provisional)_:
-A point where two libraries, or a library and the engine around it, must agree to work together: allocator ownership, threading, math types, handles, lifecycle, error handling, serialization, build flags or platform.
+**Seam**:
+A kind of point where libraries, or a library and the engine around it, must agree to work together: for example allocation, jobs, math types, handles, lifecycle, errors, serialization, build flags or platform.
 _Avoid_: integration point, interface, boundary
 
-**Contract** _(provisional)_:
-The stated requirements at one or more seams that whatever fills a slot must meet, and that the engine around it must honor.
-_Avoid_: interface, API, spec
+**Contract**:
+Automap's definition of what must hold at one seam: the vocabulary and rules every library in a composition is bound to there. Automap owns one contract per seam.
+_Avoid_: interface, API, spec, requirement
+
+**Binding** _(provisional)_:
+The connection of one library to one contract, made by a recipe and backed by evidence.
+_Avoid_: adapter, conformance, implementation
 
 **Pairing** _(provisional)_:
-A claim, backed by evidence, that specific libraries at stated versions work together on stated platforms.
+A direct integration between specific libraries that doesn't go through a contract, such as Dear ImGui's SDL3 backend, backed by evidence that it works.
 _Avoid_: compatibility, combo, integration
 
 **Glue**:
@@ -79,7 +83,7 @@ Code in the developer's repo that wires libraries together at their seams. The d
 _Avoid_: boilerplate, integration code, wrapper
 
 **Recipe** _(provisional)_:
-Instructions, and the glue code they produce, for wiring a library into a composition or wiring a pairing together.
+Instructions, and the glue code they produce, for binding a library to a contract or wiring a pairing together.
 _Avoid_: template, snippet, tutorial, guide
 
 **Composition** _(provisional)_:

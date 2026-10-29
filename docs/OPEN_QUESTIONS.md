@@ -6,7 +6,6 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 
 | ID | Question | Branch | Raised |
 | --- | --- | --- | --- |
-| OQ-001 | Who owns a contract: the slot, the library, or the pairing? The provisional definition hangs it on the slot, but per-library requirements (e.g. "init me before X") also exist. | 3, 4 | 2026-10-29 |
 | OQ-002 | Is a pairing strictly two libraries, or can it be N-ary (e.g. SDL3 + SDL_GPU + Dear ImGui's SDL_GPU backend)? | 3, 5 | 2026-10-29 |
 | OQ-003 | Does the developer's own code count as filling a slot, and if so is it modeled as a library (it would need contracts too)? | 3, 9 | 2026-10-29 |
 | OQ-004 | Is a tier a property of a whole composition, or can one composition mix tiers (a starter engine with one custom-integration slot)? | 3, 7 | 2026-10-29 |
