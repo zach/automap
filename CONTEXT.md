@@ -63,7 +63,7 @@ A body of code that can fill one or more slots, whether third-party, proprietary
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
 
 **Seam**:
-A kind of point where libraries, or a library and the engine around it, must agree to work together: for example allocation, jobs, math types, handles, lifecycle, errors, serialization, build flags or platform.
+A kind of point where libraries, or a library and the engine around it, must agree to work together. Automap's seams are allocation, jobs, math types, handles, lifecycle, diagnostics, serialization, build flags, platform and determinism.
 _Avoid_: integration point, interface, boundary
 
 **Contract**:
