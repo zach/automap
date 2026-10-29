@@ -44,6 +44,10 @@ _Avoid_: catalog, database, registry, index
 Automap's command-line tool: the one deterministic way to query the map and act on a composition, designed for agents first.
 _Avoid_: tool, client, engine
 
+**Build backend**:
+An existing package manager that Automap delegates fetching and building to, such as vcpkg.
+_Avoid_: backend (ambiguous with rendering and platform backends), package manager (when naming this role)
+
 **Router skill**:
 The single agent skill that teaches a coding agent to drive the CLI.
 _Avoid_: main skill, entry skill, meta-skill
