@@ -115,7 +115,7 @@ An executable check that glue satisfies one rule, such as "allocator hook instal
 _Avoid_: test (too broad), assertion, validator
 
 **Evidence**:
-A signed record, stored in the map, that one binding, pairing or composition passed verification at a stated evidence level on one platform.
+A record that one binding, pairing or composition passed verification at a stated evidence level on one platform. Automap's published evidence is signed and stored in the map; evidence for a developer's own composition lives in their repo beside the lock.
 _Avoid_: proof, certification, badge, test result
 
 **Evidence level**:
