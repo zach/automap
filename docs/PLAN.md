@@ -47,7 +47,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 
 | # | Branch | Depends on | Status | ADRs |
 | --- | --- | --- | --- | --- |
-| 1 | Who and why: personas, jobs-to-be-done, primary persona | — | In progress | 0001, 0002, 0003 |
+| 1 | Who and why: personas, jobs-to-be-done, primary persona | — | In progress | 0001, 0002, 0003, 0004 |
 | 2 | Product shape: map, scaffolder, package-manager layer, maintenance agent; day-one minimum | 1 | Not started | |
 | 3 | Domain model: schema-ready definitions | 2 | Not started | |
 | 4 | Contracts: per-seam expression; machine-checkable vs. guidance | 3 | Not started | |

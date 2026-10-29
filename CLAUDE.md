@@ -27,6 +27,8 @@ These override the upstream skills where they conflict.
 - **Don't ask what you can find out.** Research, the docs, or a quick experiment first.
 - **Write docs as decisions land.** New or sharpened terms go into `CONTEXT.md` immediately. Every decision with real alternatives gets an ADR in `docs/adr/` with **Context, Options, Decision, Consequences** sections (fuller than the upstream minimal format, by request).
 - **Challenge Zach** when an answer conflicts with an earlier decision, the research, or what developers need, before recording it.
+- **An ADR records only what Zach agreed to.** If writing it surfaces a new consequence or assumption, ask about it instead of writing it in.
+- **Don't build in assumptions that agents are weaker stewards of code than humans.** Coding-agent capability moves fast and benchmark figures go stale within months; Automap assumes agents can be the primary steward of an engine's code.
 - **Keep `docs/OPEN_QUESTIONS.md` current.** By the end it may contain only items explicitly deferred past v1.
 - **Research** goes in `docs/research/`, one file per topic, citing sources with access dates and separating verified facts from inference.
 - **No product code.** Throwaway spikes only, in `spikes/<name>/`, via `/prototype`. Record the result in an ADR, then delete or archive the code.
