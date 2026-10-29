@@ -70,8 +70,8 @@ _Avoid_: integration point, interface, boundary
 Automap's definition of what must hold at one seam: the vocabulary and rules every library in a composition is bound to there. Automap owns one contract per seam.
 _Avoid_: interface, API, spec, requirement
 
-**Binding** _(provisional)_:
-The connection of one library to one contract, made by a recipe and backed by evidence.
+**Binding**:
+The connection of one library to one contract, made by glue that follows a recipe and backed by evidence.
 _Avoid_: adapter, conformance, implementation
 
 **Pairing**:
@@ -82,9 +82,17 @@ _Avoid_: compatibility, combo, integration
 Code in the developer's repo that wires libraries together at their seams. The developer owns it, whoever wrote it.
 _Avoid_: boilerplate, integration code, wrapper
 
-**Recipe** _(provisional)_:
-Instructions, and the glue code they produce, for binding a library to a contract or wiring a pairing together.
+**Recipe**:
+What Automap provides for one binding or pairing: reference glue, the probes that check any glue doing the same job, and notes on adapting the reference glue.
 _Avoid_: template, snippet, tutorial, guide
+
+**Reference glue**:
+Glue that Automap has verified for a binding or pairing. The CLI writes it into new compositions; agents adapt it where glue already exists.
+_Avoid_: template, boilerplate, sample code
+
+**Probe**:
+An executable check that glue does its job for a binding or pairing, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
+_Avoid_: test (too broad), assertion, validator
 
 **Composition** _(provisional)_:
 One engine described as a set of slots, the libraries filling them, and the recipes wiring them together.
