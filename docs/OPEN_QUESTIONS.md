@@ -17,6 +17,7 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 | OQ-010 | How are console compositions verified without NDA access: self-hosted devkits, partner-run verifiers that sign evidence, or unverifiable claims? | 5, 9 | 2026-10-29 |
 | OQ-011 | What canonical identity does a composition lock have, so the same composition built through different backends shares one evidence subject? | 5, 6 | 2026-10-29 |
 | OQ-012 | Should the agent be barred from opening issues or PRs on upstream projects whose policies ban AI-generated contributions (SDL, SDL_shadercross, sokol, stb, PhysicsFS, Godot)? Policy, not capability ([SUMMARY](research/SUMMARY.md) finding 4). | 8 | 2026-10-29 |
+| OQ-013 | Which functions may rely on a remote hosted registry or package repository, and which must work offline? Research lists reproducible offline builds and vendoring-friendly output as must-haves for the persona ([05](research/05-developer-needs-2026.md)). | 6, 9 | 2026-10-29 |
 
 ## Parked
 

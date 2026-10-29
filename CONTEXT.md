@@ -34,6 +34,20 @@ _Avoid_: update, bump
 Describing an existing engine that Automap did not create as a composition, so it can be extended like any other.
 _Avoid_: import, onboard, migrate
 
+### Product
+
+**Map**:
+Automap's versioned data describing slots, libraries, contracts, pairings and recipes, plus the evidence records behind them.
+_Avoid_: catalog, database, registry, index
+
+**CLI**:
+Automap's command-line tool: the one deterministic way to query the map and act on a composition, designed for agents first.
+_Avoid_: tool, client, engine
+
+**Router skill**:
+The single agent skill that teaches a coding agent to drive the CLI.
+_Avoid_: main skill, entry skill, meta-skill
+
 ### The map
 
 **Slot** _(provisional)_:
