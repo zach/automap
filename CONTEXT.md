@@ -9,8 +9,12 @@ Automap is a curated, machine-readable map for composing a custom C++ game engin
 ### People
 
 **Framework-first indie**:
-The primary persona: a solo developer or small team, comfortable in C/C++, who builds and ships games on their own engine assembled from libraries, working with a coding agent.
+The primary persona: a solo developer or small team who builds and ships games on their own engine assembled from libraries, with a coding agent as the steward of its code. Reading the C++ is optional.
 _Avoid_: user, customer, engine developer
+
+**Steward**:
+Whoever writes and maintains an engine's code day to day. By default the developer's coding agent; the human sets direction.
+_Avoid_: maintainer, owner, author
 
 ### Jobs
 
@@ -51,6 +55,10 @@ _Avoid_: interface, API, spec
 **Pairing** _(provisional)_:
 A claim, backed by evidence, that specific libraries at stated versions work together on stated platforms.
 _Avoid_: compatibility, combo, integration
+
+**Glue**:
+Code in the developer's repo that wires libraries together at their seams. The developer owns it, whoever wrote it.
+_Avoid_: boilerplate, integration code, wrapper
 
 **Recipe** _(provisional)_:
 Instructions, and the glue code they produce, for wiring a library into a composition or wiring a pairing together.

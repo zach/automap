@@ -9,7 +9,7 @@ date: 2026-10-29
 
 With the framework-first indie as the primary persona ([ADR-0001](0001-primary-persona-framework-first-indie.md)), the order of their jobs decides what the first vertical slice proves and what "immediately useful" means. The candidate jobs were: start a new engine, extend it with a library, upgrade libraries, audit what ships (licenses, provenance, versions), and port to a new platform.
 
-Research ([SUMMARY](../research/SUMMARY.md)): package managers already handle fetching and build-level fit, but nothing handles the seams (allocators, jobs, math types, init order, build flags). Version churn breaks glue regularly; in 2026 alone, Box2D 3.2 changed its callback signatures and Lua 5.5 changed `lua_newstate`. The persona wants known-good pairings, readable glue they own, and no forced upgrades.
+Research ([SUMMARY](../research/SUMMARY.md)): package managers already handle fetching and build-level fit, but nothing handles the seams (allocators, jobs, math types, init order, build flags). Version churn breaks glue regularly; in 2026 alone, Box2D 3.2 changed its callback signatures and Lua 5.5 changed `lua_newstate`. The persona wants known-good pairings, glue they own, and no forced upgrades.
 
 ## Options
 
@@ -20,7 +20,7 @@ Research ([SUMMARY](../research/SUMMARY.md)): package managers already handle fe
 
 ## Decision
 
-The core job is **extend**: "add a library to my engine, with seam glue I own and evidence that the pairing works." **Start** is the first instance of that job, not a separate product. **Upgrade** is the second job. **Audit** and **port** come later.
+The core job is **extend**: "add a library to my engine, with seam glue I own and evidence that the pairing works." Owning the glue means it lives in the developer's repo under their control, whoever wrote it ([ADR-0005](0005-agent-is-primary-steward.md)). **Start** is the first instance of that job, not a separate product. **Upgrade** is the second job. **Audit** and **port** come later.
 
 ## Consequences
 
