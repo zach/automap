@@ -212,9 +212,9 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 // registry's baseline.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
-		Name            string   `json:"name"`
-		DefaultFeatures *bool    `json:"default-features,omitempty"`
-		Features        []any    `json:"features,omitempty"`
+		Name            string `json:"name"`
+		DefaultFeatures *bool  `json:"default-features,omitempty"`
+		Features        []any  `json:"features,omitempty"`
 	}
 	type override struct {
 		Name    string `json:"name"`

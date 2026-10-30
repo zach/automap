@@ -299,3 +299,25 @@ func TestVerifyRejectsAManifestNamingALibraryTheMapLacks(t *testing.T) {
 	run.ExpectExit(t, 2)
 	run.ExpectFailure(t, "MANIFEST_INVALID", "the map has no library jolt")
 }
+
+// A library's headless setting can differ by platform, such as an
+// offscreen video driver on Linux and the native one on hosted Windows and
+// macOS runners.
+func TestHeadlessSettingsCanDifferByPlatform(t *testing.T) {
+	repo := buildableRepo(t)
+	elsewhere := "macos-arm64-appleclang"
+	if hostPlatform == elsewhere {
+		elsewhere = "linux-x64-clang"
+	}
+	repo.EditJSON(t, "map/libraries/stub-window.json", set("versions/0/facts/platform/headless",
+		map[string]any{hostPlatform: "STUB_WINDOW_HEADLESS=1", elsewhere: "STUB_WINDOW_ELSEWHERE=1"}))
+	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	env := checkEvidence(t, run, "probed").Predicate.Conditions.Environment
+	if env["STUB_WINDOW_HEADLESS"] != "1" || env["STUB_WINDOW_ELSEWHERE"] != "" {
+		t.Errorf("run conditions' environment %v, want only %s's setting", env, hostPlatform)
+	}
+}

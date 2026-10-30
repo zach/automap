@@ -1,0 +1,4 @@
+[
+  {"id": "testbed", "with": ["sdl3", "dear-imgui:docking"]},
+  {"id": "testbed-jolt", "with": ["sdl3", "dear-imgui:docking", "jolt"]}
+]

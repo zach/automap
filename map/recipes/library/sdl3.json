@@ -75,6 +75,6 @@
   "adaptation_notes": [
     "The build fragment calls find_package(SDL3 CONFIG REQUIRED) and links SDL3::SDL3.",
     "Setup glue runs SDL_Init, creates one window and a GPU device for the platform's backend, and claims the window for the device; shutdown waits for the GPU to go idle, releases the window from the device, and destroys both before SDL_Quit.",
-    "Headless runs need no different build: verify sets SDL_VIDEO_DRIVER=offscreen, and SDL_GPU's Vulkan backend runs on Mesa lavapipe."
+    "Headless runs need no different build: on Linux, verify sets SDL_VIDEO_DRIVER=offscreen and SDL_GPU's Vulkan backend runs on Mesa lavapipe; hosted Windows and macOS runners have a desktop session, so SDL uses its native video driver with Direct3D 12 and Metal."
   ]
 }

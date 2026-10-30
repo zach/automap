@@ -164,7 +164,11 @@
             "linux-x64-clang",
             "macos-arm64-appleclang"
           ],
-          "headless": "SDL_VIDEO_DRIVER=offscreen",
+          "headless": {
+            "linux-x64-clang": "SDL_VIDEO_DRIVER=offscreen",
+            "windows-x64-msvc": "",
+            "macos-arm64-appleclang": ""
+          },
           "system_dependencies": {
             "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build their libxcrypt dependency; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },

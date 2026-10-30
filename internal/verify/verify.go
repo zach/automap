@@ -90,7 +90,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	os.MkdirAll(in(logs), 0o755)
 	os.Remove(in(paths.results))
 
-	env := headlessEnv(m, man)
+	env := headlessEnv(m, man, platform)
 	var built, smoked, probesRan, tsanRan bool
 	var setAside []TSanReport
 	var linked []Result // results the linker decided, such as MSVC's ABI define check
@@ -372,8 +372,8 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 var initFailed = regexp.MustCompile(`INIT_FAILED\([^)]*\)`)
 
 // headlessEnv is the environment each library's platform facts say it
-// needs to run headless, such as STUB_WINDOW_HEADLESS=1.
-func headlessEnv(m *mapmodel.Map, man *composition.Manifest) []string {
+// needs to run headless on the platform, such as STUB_WINDOW_HEADLESS=1.
+func headlessEnv(m *mapmodel.Map, man *composition.Manifest, platform string) []string {
 	assignment := regexp.MustCompile(`^[A-Z_][A-Z0-9_]*=\S*$`)
 	var env []string
 	for _, lib := range man.Libraries() {
@@ -381,7 +381,15 @@ func headlessEnv(m *mapmodel.Map, man *composition.Manifest) []string {
 		if l == nil {
 			continue
 		}
-		if h, ok := l.Newest().Facts["platform"]["headless"].(string); ok && assignment.MatchString(h) && !slices.Contains(env, h) {
+		// One setting for every platform, or one per platform id.
+		var h string
+		switch v := l.Newest().Facts["platform"]["headless"].(type) {
+		case string:
+			h = v
+		case map[string]any:
+			h, _ = v[platform].(string)
+		}
+		if assignment.MatchString(h) && !slices.Contains(env, h) {
 			env = append(env, h)
 		}
 	}
