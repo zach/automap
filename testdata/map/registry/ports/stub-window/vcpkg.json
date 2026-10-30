@@ -1,0 +1,11 @@
+{
+  "name": "stub-window",
+  "version": "1.0.0",
+  "description": "A tiny windowing library for Automap's fixture map.",
+  "license": "MIT-0",
+  "features": {
+    "wide-events": {
+      "description": "64-bit event ids, an ABI-affecting define consumers must match."
+    }
+  }
+}

@@ -11,7 +11,7 @@ import (
 	"github.com/zach/automap/internal/composition"
 )
 
-var startTestbed = []string{"start", "--with", "stub-window", "--with", "stub-ui", "--map", "map", "--json"}
+var startTestbed = []string{"start", "--with", "stub-window", "--with", "stub-ui", "--map", "map", "--no-verify", "--json"}
 
 func TestStartWritesATestbedComposition(t *testing.T) {
 	run := fixtureRepo(t).Automap(t, startTestbed...)
@@ -141,7 +141,7 @@ func TestBuildFragmentsReferToLibrariesByPackageAndImportedTarget(t *testing.T) 
 }
 
 func TestStartAssignsOnlyTheSlotsNamed(t *testing.T) {
-	run := fixtureRepo(t).Automap(t, "start", "--with", "stub-window", "--slot", "windowing=stub-window", "--map", "map", "--json")
+	run := fixtureRepo(t).Automap(t, "start", "--with", "stub-window", "--slot", "windowing=stub-window", "--map", "map", "--no-verify", "--json")
 
 	run.ExpectExit(t, 0)
 	if !strings.Contains(run.ReadFile(t, "automap.manifest.json"), "\"slots\": {\n    \"windowing\": \"stub-window\"\n  }") {

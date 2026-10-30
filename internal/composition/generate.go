@@ -203,9 +203,11 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	var doc struct {
 		Dependencies    []dependency `json:"dependencies"`
 		Overrides       []override   `json:"overrides"`
-		BuiltinBaseline string       `json:"builtin-baseline"`
+		BuiltinBaseline string       `json:"builtin-baseline,omitempty"`
 	}
-	doc.BuiltinBaseline = vcpkgBaseline(m)
+	if usesCurated(lock) {
+		doc.BuiltinBaseline = vcpkgBaseline(m)
+	}
 	for _, lib := range man.Libraries() {
 		l := m.Libraries[lib]
 		v := l.Newest()
@@ -238,7 +240,8 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 		Packages   []string `json:"packages"`
 	}
 	var doc struct {
-		Registries []registry `json:"registries"`
+		DefaultRegistry *struct{}  `json:"default-registry"`
+		Registries      []registry `json:"registries"`
 	}
 	doc.Registries = []registry{}
 	var automapPorts []string
@@ -253,7 +256,32 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 	if len(automapPorts) > 0 {
 		doc.Registries = append(doc.Registries, registry{Kind: "git", Repository: registryURL, Reference: "registry", Baseline: commit, Packages: automapPorts})
 	}
+	if usesCurated(lock) {
+		// vcpkg's curated registry stays the default registry, at the
+		// baseline vcpkg.json names.
+		raw := indentJSON(struct {
+			Registries []registry `json:"registries"`
+		}{doc.Registries})
+		return raw
+	}
 	return indentJSON(doc)
+}
+
+// usesCurated reports whether any library comes from vcpkg's curated
+// registry. When none does, the composition names no curated baseline and
+// disables vcpkg's default registry.
+func usesCurated(lock *Lock) bool {
+	for _, pin := range lock.Pins {
+		if pin.Registry != nil && pin.Registry.Kind == "vcpkg-curated" {
+			return true
+		}
+		for _, pp := range pin.Platforms {
+			if pp.Registry != nil && pp.Registry.Kind == "vcpkg-curated" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // AutomapRegistryURL is the Automap registry's URL from the public map's

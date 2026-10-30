@@ -2,13 +2,8 @@
   "command": "start",
   "cli_version": "0.0.0-dev",
   "ok": true,
-  "summary": "Started a testbed (stub-ui 1.0.0 default, stub-window 1.0.0 default); it is not verified yet.",
-  "warnings": [
-    {
-      "code": "NOT_VERIFIED",
-      "message": "This CLI build can't build or verify compositions yet."
-    }
-  ],
+  "summary": "Started a testbed (stub-ui 1.0.0 default, stub-window 1.0.0 default); it is not verified: run automap verify.",
+  "warnings": [],
   "failures": [],
   "files_written": [
     "CMakeLists.txt",

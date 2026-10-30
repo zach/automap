@@ -22,6 +22,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/zach/automap/schemas"
 )
@@ -86,12 +87,13 @@ type Repo struct {
 
 // Run is one finished run of the CLI.
 type Run struct {
-	Dir    string            // the repo the CLI ran in
-	Before map[string][]byte // the repo's files just before the run
-	Stdout []byte
-	Stderr []byte
-	Exit   int
-	Result Result // set when the run was given --json
+	Dir      string            // the repo the CLI ran in
+	Before   map[string][]byte // the repo's files just before the run
+	Stdout   []byte
+	Stderr   []byte
+	Exit     int
+	Duration time.Duration
+	Result   Result // set when the run was given --json
 }
 
 // NewRepo copies the fixture repo testdata/repos/<fixture> to a temporary
@@ -160,7 +162,9 @@ func (r *Repo) Automap(t *testing.T, args ...string) *Run {
 	cmd.Env = append(cleanEnv(), r.env...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	began := time.Now()
 	err := cmd.Run()
+	run.Duration = time.Since(began)
 	run.Stdout, run.Stderr = stdout.Bytes(), stderr.Bytes()
 	var exit *exec.ExitError
 	switch {
@@ -215,6 +219,29 @@ func (r *Run) ExpectUnchanged(t *testing.T) {
 		if !bytes.Equal(r.Before[p], after[p]) {
 			t.Errorf("%s changed, but the run should write nothing", p)
 		}
+	}
+}
+
+// Read returns a file in the repo, or fails the test.
+func Read(t *testing.T, r *Repo, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(r.Dir, filepath.FromSlash(path)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+// ExpectSchema fails the test unless raw is JSON valid against the named
+// published schema.
+func ExpectSchema(t *testing.T, name, raw string) {
+	t.Helper()
+	var doc any
+	if err := json.Unmarshal([]byte(raw), &doc); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if v := schemas.Validate(name, doc); v != nil {
+		t.Errorf("not valid against the %s schema: %s", name, strings.Join(v, "; "))
 	}
 }
 

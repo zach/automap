@@ -14,8 +14,8 @@ const manifestFile = composition.ManifestFile
 const usage = `usage: automap <command> [arguments] [--json]
 
 commands:
-  start --with <library>[:<variant>]... [--slot <slot>=<library>]... [--platform <id>]...
-                                             create a composition in the current directory
+  start --with <library>[:<variant>]... [--slot <slot>=<library>]... [--platform <id>]... [--no-verify]
+                                             create a composition in the current directory, then verify it
   show <library|slot|contract|recipe> <id>   show one map entry and its facts
   find [<query>] [--slot <slot>]             search the map's libraries
   verify                                     build the composition, run its smoke test and probes, write evidence
@@ -33,8 +33,8 @@ type command struct {
 }
 
 var commands = map[string]command{
-	"start":  {bools: []string{"json"}, values: []string{"map", "with", "slot", "platform"}, run: start},
-	"verify": {bools: []string{"json"}, run: verify},
+	"start":  {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
+	"verify": {bools: []string{"json"}, values: []string{"map", "platform"}, run: verifyCmd},
 	"show":   {bools: []string{"json"}, values: []string{"map"}, run: show},
 	"find":   {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
 }
@@ -97,15 +97,4 @@ func checkLock(r *result) int {
 		return exitRefused
 	}
 	return exitOK
-}
-
-func verify(a *args, r *result) int {
-	if _, err := os.Stat(manifestFile); os.IsNotExist(err) {
-		r.Summary = "Nothing to verify: no " + manifestFile + " in the current directory."
-		r.fail("NO_MANIFEST", "No composition here. Run automap start to create one, or automap adopt to adopt an existing engine.")
-		return exitUsage
-	}
-	r.Summary = "Verify cannot build a composition yet."
-	r.fail("NOT_IMPLEMENTED", "This CLI build does not build or probe compositions.")
-	return exitFailed
 }
