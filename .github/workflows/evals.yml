@@ -1,0 +1,90 @@
+name: Evals
+
+# Fresh Claude Code sessions do Automap's jobs along the journeys, graded
+# through the CLI's JSON output (ADR-0081). It runs only on demand; the API
+# key is a repository secret only this workflow reads.
+on:
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: "Comma-separated task ids (empty: every task)"
+        required: false
+        default: ""
+      model:
+        description: "The Claude model to ask for; the report names the model that answered"
+        required: false
+        default: "opus"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Eval suite (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang pkg-config jq autoconf autoconf-archive automake libtool libltdl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
+            mesa-vulkan-drivers libvulkan1
+      - name: vcpkg at the map's baseline
+        run: |
+          baseline=$(jq -r .build_backend.vcpkg.baseline map/map.json)
+          git init -q "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" fetch -q --depth 1 https://github.com/microsoft/vcpkg "$baseline"
+          git -C "$RUNNER_TEMP/vcpkg" checkout -q FETCH_HEAD
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+      - name: Restore the vcpkg binary cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}
+          restore-keys: public-map-${{ runner.os }}-
+      - name: The CLI and Claude Code
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/automap" ./cmd/automap
+          npm install -g @anthropic-ai/claude-code
+          claude --version
+      - name: Run the evals
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
+          AUTOMAP_EVAL_LOGS: ${{ runner.temp }}/eval-logs
+        run: |
+          go run ./evals/cmd/run \
+            -task "${{ inputs.tasks }}" \
+            -model "${{ inputs.model }}" \
+            -automap "$RUNNER_TEMP/bin/automap" \
+            -map map \
+            -report "$RUNNER_TEMP/eval-logs/report.json"
+      - name: Report
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/eval-logs/report.json" ]; then
+            {
+              echo "## Eval report"
+              echo
+              echo '```json'
+              cat "$RUNNER_TEMP/eval-logs/report.json"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the report and session transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: ${{ runner.temp }}/eval-logs
+          if-no-files-found: ignore

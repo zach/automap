@@ -1,0 +1,8 @@
+{
+  "id": "testbed-start",
+  "request": "Start a C++ testbed with SDL3 and Dear ImGui.",
+  "pass": {
+    "level": "probed"
+  },
+  "timeout_minutes": 45
+}
