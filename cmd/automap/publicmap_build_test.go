@@ -65,9 +65,12 @@ var testbedSeeds = []struct{ seed, code string }{
 }
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
+	// The jobs contract's seed needs a library with jobs facts; the
+	// fixture's stub-physics composition runs it (TestEveryJobsSeedIsCaught).
+	exercisedByFixture := filepath.Join("contracts", "jobs")
 	var patches int
 	filepath.WalkDir(filepath.Join(clitest.Root(t), "map"), func(p string, d os.DirEntry, err error) error {
-		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) {
+		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) && !strings.Contains(p, exercisedByFixture) {
 			patches++
 		}
 		return nil

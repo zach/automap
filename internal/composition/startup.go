@@ -16,6 +16,32 @@ type Call struct {
 	mapmodel.EntryPoint
 }
 
+// interfaceSetup is the setup each shared interface with running state
+// needs: entry points the startup calls like a recipe's, owned by automap
+// (SPEC §4.1).
+var interfaceSetup = map[string][]mapmodel.EntryPoint{
+	"jobs": {
+		{Phase: "jobs", When: "init", Call: "am_jobs_setup_init", Steps: []string{"automap:jobs.start"}},
+		{Phase: "jobs", When: "shutdown", Call: "am_jobs_setup_shutdown", Steps: []string{"automap:jobs.stop"}},
+	},
+}
+
+// InterfaceCalls lists the entry points of the composition's shared
+// interfaces' setup.
+func InterfaceCalls(m *mapmodel.Map, man *Manifest) []Call {
+	var out []Call
+	for _, cid := range Contracts(m, man) {
+		c := m.LatestContract(cid)
+		if c.SharedInterface == nil {
+			continue
+		}
+		for _, ep := range interfaceSetup[cid] {
+			out = append(out, Call{Recipe: "automap", EntryPoint: ep})
+		}
+	}
+	return out
+}
+
 // StartupPlan is the order the startup calls entry points in, and the
 // context fields they share (ADR-0080).
 type StartupPlan struct {
@@ -32,7 +58,7 @@ type StartupPlan struct {
 // a pure function of the map and the manifest.
 func PlanStartup(m *mapmodel.Map, man *Manifest) (*StartupPlan, []Failure) {
 	var fails []Failure
-	var calls []Call
+	calls := InterfaceCalls(m, man)
 	for _, rid := range Recipes(m, man) {
 		for _, ep := range m.Recipes[rid].EntryPoints {
 			calls = append(calls, Call{Recipe: rid, EntryPoint: ep})

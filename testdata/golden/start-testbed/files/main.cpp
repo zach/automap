@@ -7,8 +7,11 @@
 #include "automap/probe.h"
 #include "automap/startup.h"
 
-#if __has_include(<stub_ui.h>)
+#if defined(AUTOMAP_LIBRARY_STUB_UI)
 #include <stub_ui.h>
+#endif
+#if defined(AUTOMAP_LIBRARY_STUB_PHYSICS)
+#include <stub_physics.h>
 #endif
 
 int main(int argc, char** argv) {
@@ -25,8 +28,11 @@ int main(int argc, char** argv) {
         return 1;
     }
     for (int frame = 0; frame < frames; ++frame) {
-#if __has_include(<stub_ui.h>)
+#if defined(AUTOMAP_LIBRARY_STUB_UI)
         stub_ui_new_frame();
+#endif
+#if defined(AUTOMAP_LIBRARY_STUB_PHYSICS)
+        stub_physics_step();
 #endif
     }
     if (results != nullptr) am::probe::run(am::probe::When::running, ctx);

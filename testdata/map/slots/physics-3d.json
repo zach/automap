@@ -1,0 +1,7 @@
+{
+  "id": "physics-3d",
+  "description": "Rigid-body physics in three dimensions.",
+  "examples": [
+    "stub-physics"
+  ]
+}

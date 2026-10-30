@@ -28,6 +28,7 @@ target_compile_features(automap_glue PUBLIC cxx_std_${AUTOMAP_CXX_STANDARD})
 if(AUTOMAP_PROBE)
     target_compile_definitions(automap_glue PUBLIC AUTOMAP_PROBE)
 endif()
+target_compile_definitions(automap_glue PUBLIC AUTOMAP_LIBRARY_STUB_UI=1 AUTOMAP_LIBRARY_STUB_WINDOW=1)
 
 include(${CMAKE_CURRENT_LIST_DIR}/stub-ui.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/stub-window.cmake)

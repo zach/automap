@@ -1,0 +1,10 @@
+--- a/stub_physics_jobs.cpp
++++ b/stub_physics_jobs.cpp
+@@ -14,7 +14,6 @@
+ // Routes stub-physics's tasks through the jobs interface. Runs in the jobs
+ // phase, after the scheduler starts.
+ bool am_bind_stub_physics_jobs(am::Context&) {
+-    stub_physics_set_job_hooks(&submit, &wait, nullptr);
+     am::lifecycle::init_step("stub-physics:set_job_hooks");
+     return true;
+ }

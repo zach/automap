@@ -1,0 +1,54 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-physics",
+    "contract": "jobs",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-physics": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-physics--jobs/stub_physics_jobs.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "stub-physics--jobs/stub_physics_jobs_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "jobs",
+      "when": "init",
+      "call": "am_bind_stub_physics_jobs",
+      "steps": [
+        "stub-physics:set_job_hooks"
+      ],
+      "after": [
+        "automap:jobs.start"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "jobs.routed-through-interface",
+      "check": "am_probe_stub_physics_jobs(): a step submits its tasks through the jobs interface, and they run.",
+      "seeded_violation": {
+        "description": "Remove the stub_physics_set_job_hooks call from am_bind_stub_physics_jobs(), so stub-physics runs its tasks inline.",
+        "patch": "stub-physics--jobs/seeded/jobs.routed-through-interface.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "stub-physics waits for every task it submitted at the end of a step; am::jobs::wait runs queued tasks on the waiting thread, so a step never blocks a worker."
+  ]
+}

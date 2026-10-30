@@ -1,0 +1,89 @@
+{
+  "contract": "jobs",
+  "version": "1.0.0",
+  "description": "Threads and schedulers: every library's worker-thread work goes through one neutral scheduler interface.",
+  "facts": {
+    "job_model": {
+      "description": "How the library schedules work.",
+      "schema": {
+        "enum": [
+          "dependency-jobs-with-barriers",
+          "enqueue-finish",
+          "task-threads",
+          "dispatcher",
+          "scheduler",
+          "none"
+        ]
+      }
+    },
+    "interface": {
+      "description": "The library's own job interface.",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "provides_scheduler": {
+      "description": "True when the library implements the shared scheduler interface (it fills the jobs slot).",
+      "schema": {
+        "type": "boolean"
+      }
+    }
+  },
+  "choices": {
+    "scheduler": {
+      "description": "Who implements the shared interface: the reference thread pool in setup glue, or the library in the jobs slot.",
+      "schema": {
+        "enum": [
+          "reference-thread-pool",
+          "jobs-slot"
+        ]
+      },
+      "default": "reference-thread-pool"
+    },
+    "workers": {
+      "description": "Worker thread count.",
+      "schema": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "default": 3
+    }
+  },
+  "rules": [
+    {
+      "id": "jobs.routed-through-interface",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Library work that runs on worker threads is submitted through the shared scheduler interface, which observes it during a smoke run.",
+      "failure_code": "JOBS_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "jobs.tsan-clean",
+      "kind": "probed",
+      "applies_to": "composition",
+      "text": "A ThreadSanitizer build completes a smoke run with no report that has a frame, in either stack, in code the composition builds.",
+      "failure_code": "TSAN_REPORT(<summary>)",
+      "procedure": "Separate build directory; -fsanitize=thread for C, C++ and link; Debug; TSAN_OPTIONS=halt_on_error=0:exitcode=66; run the composition's executable with --probe; parse every 'WARNING: ThreadSanitizer' report; a report counts unless every frame in both stacks is in code the composition doesn't build, in which case it is recorded under set_aside_reports.",
+      "platforms": [
+        "linux-x64-clang",
+        "macos-arm64-appleclang"
+      ],
+      "seeded_violation": {
+        "description": "Add an unsynchronized counter shared by every job in the reference thread pool.",
+        "patch": "1.0.0/seeded/jobs.tsan-clean.patch"
+      }
+    },
+    {
+      "id": "jobs.no-blocking-waits-on-workers",
+      "kind": "guidance",
+      "applies_to": "composition",
+      "text": "A library must not block a worker thread waiting on work only that worker could run."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "automap/jobs.h",
+      "automap/jobs.cpp"
+    ]
+  }
+}

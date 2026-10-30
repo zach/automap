@@ -59,8 +59,8 @@ func TestEverySeedInTheFixtureMapIsTested(t *testing.T) {
 		}
 		return nil
 	})
-	if patches != len(fixtureSeeds) {
-		t.Errorf("the fixture map carries %d seed patches but the test covers %d", patches, len(fixtureSeeds))
+	if covered := len(fixtureSeeds) + len(physicsSeeds); patches != covered {
+		t.Errorf("the fixture map carries %d seed patches but the tests cover %d", patches, covered)
 	}
 }
 

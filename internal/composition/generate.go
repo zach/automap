@@ -182,7 +182,13 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 	}
 	fmt.Fprintf(&b, "target_include_directories(automap_glue PUBLIC ${AUTOMAP_ROOT}/%s)\n", include)
 	b.WriteString("target_compile_features(automap_glue PUBLIC cxx_std_${AUTOMAP_CXX_STANDARD})\n")
-	b.WriteString("if(AUTOMAP_PROBE)\n    target_compile_definitions(automap_glue PUBLIC AUTOMAP_PROBE)\nendif()\n\n")
+	b.WriteString("if(AUTOMAP_PROBE)\n    target_compile_definitions(automap_glue PUBLIC AUTOMAP_PROBE)\nendif()\n")
+	// Code that uses a library only when the composition has it tests these.
+	b.WriteString("target_compile_definitions(automap_glue PUBLIC")
+	for _, lib := range man.Libraries() {
+		fmt.Fprintf(&b, " AUTOMAP_LIBRARY_%s=1", macroName(lib))
+	}
+	b.WriteString(")\n\n")
 	for _, lib := range man.Libraries() {
 		fmt.Fprintf(&b, "include(${CMAKE_CURRENT_LIST_DIR}/%s.cmake)\n", lib)
 	}

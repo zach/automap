@@ -1,0 +1,69 @@
+==================
+WARNING: ThreadSanitizer: data race (pid=9550)
+  Read of size 4 at 0x56087507d01c by thread T2:
+    #0 operator() /tmp/claude-0/tsan.cpp:3 (tsan+0x13c2) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #1 __invoke_impl<void, main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:61 (tsan+0x1eee) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #2 __invoke<main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:96 (tsan+0x1e02) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #3 _M_invoke<0> /usr/include/c++/13/bits/std_thread.h:292 (tsan+0x1d0a) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #4 operator() /usr/include/c++/13/bits/std_thread.h:299 (tsan+0x1c66) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #5 _M_run /usr/include/c++/13/bits/std_thread.h:244 (tsan+0x1bca) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #6 <null> <null> (libstdc++.so.6+0xecdb3) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+
+  Previous write of size 4 at 0x56087507d01c by thread T1:
+    #0 operator() /tmp/claude-0/tsan.cpp:3 (tsan+0x1372) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #1 __invoke_impl<void, main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:61 (tsan+0x1f59) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #2 __invoke<main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:96 (tsan+0x1e83) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #3 _M_invoke<0> /usr/include/c++/13/bits/std_thread.h:292 (tsan+0x1d64) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #4 operator() /usr/include/c++/13/bits/std_thread.h:299 (tsan+0x1cb0) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #5 _M_run /usr/include/c++/13/bits/std_thread.h:244 (tsan+0x1c1c) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #6 <null> <null> (libstdc++.so.6+0xecdb3) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+
+  Location is global 'counter' of size 4 at 0x56087507d01c (tsan+0x501c)
+
+  Thread T2 (tid=9553, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xeceb0) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+    #2 main /tmp/claude-0/tsan.cpp:3 (tsan+0x1447) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+
+  Thread T1 (tid=9552, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xeceb0) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+    #2 main /tmp/claude-0/tsan.cpp:3 (tsan+0x1434) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+
+SUMMARY: ThreadSanitizer: data race /tmp/claude-0/tsan.cpp:3 in operator()
+==================
+==================
+WARNING: ThreadSanitizer: data race (pid=9550)
+  Write of size 4 at 0x56087507d01c by thread T2:
+    #0 operator() /tmp/claude-0/tsan.cpp:3 (tsan+0x13da) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #1 __invoke_impl<void, main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:61 (tsan+0x1eee) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #2 __invoke<main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:96 (tsan+0x1e02) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #3 _M_invoke<0> /usr/include/c++/13/bits/std_thread.h:292 (tsan+0x1d0a) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #4 operator() /usr/include/c++/13/bits/std_thread.h:299 (tsan+0x1c66) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #5 _M_run /usr/include/c++/13/bits/std_thread.h:244 (tsan+0x1bca) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #6 <null> <null> (libstdc++.so.6+0xecdb3) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+
+  Previous write of size 4 at 0x56087507d01c by thread T1:
+    #0 operator() /tmp/claude-0/tsan.cpp:3 (tsan+0x1372) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #1 __invoke_impl<void, main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:61 (tsan+0x1f59) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #2 __invoke<main()::<lambda()> > /usr/include/c++/13/bits/invoke.h:96 (tsan+0x1e83) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #3 _M_invoke<0> /usr/include/c++/13/bits/std_thread.h:292 (tsan+0x1d64) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #4 operator() /usr/include/c++/13/bits/std_thread.h:299 (tsan+0x1cb0) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #5 _M_run /usr/include/c++/13/bits/std_thread.h:244 (tsan+0x1c1c) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+    #6 <null> <null> (libstdc++.so.6+0xecdb3) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+
+  Location is global 'counter' of size 4 at 0x56087507d01c (tsan+0x501c)
+
+  Thread T2 (tid=9553, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xeceb0) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+    #2 main /tmp/claude-0/tsan.cpp:3 (tsan+0x1447) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+
+  Thread T1 (tid=9552, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xeceb0) (BuildId: 753c6c8608b61d4e67be8f0c890e03e0aa046b8b)
+    #2 main /tmp/claude-0/tsan.cpp:3 (tsan+0x1434) (BuildId: 81577da3812035e2d6cc1dca16aea19f54339fa7)
+
+SUMMARY: ThreadSanitizer: data race /tmp/claude-0/tsan.cpp:3 in operator()
+==================
+ThreadSanitizer: reported 2 warnings

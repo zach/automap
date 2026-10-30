@@ -1,0 +1,94 @@
+{
+  "id": "stub-physics",
+  "name": "Stub Physics",
+  "license": {
+    "spdx": "MIT-0",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "allowed",
+    "source": "testdata/map/README.md"
+  },
+  "slots": [
+    "physics-3d"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/zach/automap/tree/main/testdata/map/registry/ports/stub-physics"
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "released": "2026-01-15",
+      "pin": {
+        "tag": "v1.0.0",
+        "commit": "4444444444444444444444444444444444444444",
+        "content_hash": "sha512:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "stub-physics",
+          "registry": "automap"
+        }
+      },
+      "cmake": {
+        "package": "StubPhysics",
+        "targets": [
+          "StubPhysics::StubPhysics"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "The stub as built by default."
+        }
+      ],
+      "facts": {
+        "jobs": {
+          "job_model": "dispatcher",
+          "interface": "stub_physics_set_job_hooks(stub_physics_submit_fn, stub_physics_wait_fn, void*)",
+          "provides_scheduler": false
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "jobs",
+              "step": "stub-physics:set_job_hooks",
+              "after": [
+                "automap:jobs.start"
+              ]
+            },
+            {
+              "phase": "systems",
+              "step": "stub-physics:create_world"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "stub-physics:destroy_world"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": null,
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "no display needed",
+          "web": false
+        }
+      }
+    }
+  ]
+}
