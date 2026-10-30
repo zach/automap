@@ -1,0 +1,43 @@
+{
+  "contract": "diagnostics",
+  "version": "0.1.0",
+  "facts": {
+    "log_hook": "How the library's log output can be redirected.",
+    "assert_hook": "How the library's assertion failures can be redirected, and whether that is decided at the library's build time or at runtime.",
+    "query": "How glue can read back the installed hooks."
+  },
+  "choices": {
+    "backend": {
+      "type": "string",
+      "enum": [
+        "stderr"
+      ],
+      "default": "stderr"
+    }
+  },
+  "rules": [
+    {
+      "id": "diagnostics.log-routed",
+      "kind": "probed",
+      "text": "Every library whose log output can be redirected at runtime routes it through the diagnostics facade.",
+      "failure_code": "DIAG_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "diagnostics.assert-routed",
+      "kind": "probed",
+      "text": "Every library whose assertion failures can be redirected at runtime routes them through the diagnostics facade.",
+      "failure_code": "ASSERT_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "diagnostics.compile-time-asserts",
+      "kind": "guidance",
+      "text": "Libraries whose assert macro is fixed when the library is built can only be routed through a variant built with the composition's macro."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "interfaces/automap/diag.h",
+      "interfaces/automap/diag.cpp"
+    ]
+  }
+}

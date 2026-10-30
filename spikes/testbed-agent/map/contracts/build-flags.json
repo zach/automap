@@ -1,0 +1,25 @@
+{
+  "contract": "build-flags",
+  "version": "0.1.0",
+  "facts": {
+    "abi_defines": "Defines that change the library's ABI and must match between the library and every consumer.",
+    "self_check": "A call the library provides to verify consumer and library agree, if any.",
+    "language_standard": "The minimum C or C++ standard the library needs.",
+    "exceptions_rtti": "Whether the library needs exceptions or RTTI."
+  },
+  "choices": {
+    "cxx_standard": {
+      "type": "integer",
+      "default": 20
+    }
+  },
+  "rules": [
+    {
+      "id": "build-flags.abi-match",
+      "kind": "probed",
+      "text": "Every library's self-check passes at startup, and the composition's language standard covers every library's minimum.",
+      "failure_code": "DEFINE_MISMATCH(<library>)"
+    }
+  ],
+  "shared_interface": null
+}

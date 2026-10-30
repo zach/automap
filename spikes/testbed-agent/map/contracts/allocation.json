@@ -1,0 +1,44 @@
+{
+  "contract": "allocation",
+  "version": "0.1.0",
+  "facts": {
+    "hook": "How the library accepts allocator hooks: the API, its signatures, and whether it supports aligned allocation.",
+    "install_constraint": "When the hooks must be installed (for example 'before any other call into the library').",
+    "query": "How glue can read back the installed hooks, if the library allows it.",
+    "pre_install_check": "How glue can tell nothing was allocated before the hooks were installed, if the library allows it."
+  },
+  "choices": {
+    "allocator": {
+      "type": "string",
+      "enum": [
+        "system"
+      ],
+      "default": "system"
+    }
+  },
+  "rules": [
+    {
+      "id": "allocation.hooks-before-first-allocation",
+      "kind": "probed",
+      "text": "Every library's allocator hooks are installed, in the memory phase, before the library allocates anything.",
+      "failure_code": "ALLOC_HOOK_LATE(<library>)"
+    },
+    {
+      "id": "allocation.routed-through-facade",
+      "kind": "probed",
+      "text": "Each library's installed hooks are the facade's, and the facade observes allocations from that library during a smoke run.",
+      "failure_code": "ALLOC_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "allocation.same-allocator-across-modules",
+      "kind": "guidance",
+      "text": "Memory allocated by one module is freed by the same allocator; across DLL or hot-reload boundaries the hooks are installed per module."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "interfaces/automap/alloc.h",
+      "interfaces/automap/alloc.cpp"
+    ]
+  }
+}

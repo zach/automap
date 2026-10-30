@@ -1,0 +1,149 @@
+{
+  "library": "jolt",
+  "name": "Jolt Physics",
+  "license": "MIT",
+  "contribution_policy": {
+    "ai_generated_contributions": "not stated; CLA required",
+    "source": "https://github.com/jrouwe/JoltPhysics"
+  },
+  "slots": [
+    "physics-3d"
+  ],
+  "versions": [
+    {
+      "version": "5.6.0",
+      "pin": {
+        "git": "https://github.com/jrouwe/JoltPhysics",
+        "tag": "v5.6.0",
+        "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a"
+      },
+      "vcpkg": {
+        "port": "joltphysics",
+        "version": "5.6.0",
+        "features": []
+      },
+      "cmake": {
+        "package": "Jolt",
+        "targets": [
+          "Jolt::Jolt"
+        ],
+        "from_source": {
+          "fetchcontent_name": "JoltPhysics",
+          "source_subdir": "Build",
+          "options": {
+            "TARGET_UNIT_TESTS": "OFF",
+            "TARGET_HELLO_WORLD": "OFF",
+            "TARGET_PERFORMANCE_TEST": "OFF",
+            "TARGET_SAMPLES": "OFF",
+            "TARGET_VIEWER": "OFF",
+            "ENABLE_ALL_WARNINGS": "OFF",
+            "OVERRIDE_CXX_FLAGS": "OFF",
+            "INTERPROCEDURAL_OPTIMIZATION": "OFF",
+            "ENABLE_INSTALL": "OFF",
+            "JPH_USE_DX12": "OFF",
+            "JPH_USE_VK": "OFF",
+            "JPH_USE_MTL": "OFF"
+          },
+          "notes": "Jolt's CMake exports its ABI-affecting defines as PUBLIC compile definitions on the Jolt target, so consumers that link Jolt::Jolt get matching defines. OVERRIDE_CXX_FLAGS defaults ON and would replace the consumer's flags."
+        }
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        },
+        {
+          "name": "double-precision",
+          "build_options": {
+            "DOUBLE_PRECISION": "ON"
+          },
+          "notes": "Changes RVec3 to DVec3; ABI-affecting."
+        }
+      ]
+    }
+  ],
+  "facts": {
+    "allocation": {
+      "hook": "Assign the global function pointers JPH::Allocate (void*(size_t)), JPH::Reallocate (void*(void* block, size_t old_size, size_t new_size)), JPH::Free (void(void*)), JPH::AlignedAllocate (void*(size_t size, size_t alignment)), JPH::AlignedFree (void(void*)). JPH::RegisterDefaultAllocator() installs Jolt's own.",
+      "install_constraint": "Before JPH::Factory and JPH::RegisterTypes(), and before any other Jolt object is created. Unavailable when Jolt is built with DISABLE_CUSTOM_ALLOCATOR.",
+      "query": "Read the same global function pointers back.",
+      "pre_install_check": "JPH::Factory::sInstance == nullptr at install time."
+    },
+    "diagnostics": {
+      "log_hook": "Assign JPH::Trace (void(const char* fmt, ...)).",
+      "assert_hook": "Runtime, only when built with asserts enabled (JPH_ENABLE_ASSERTS): assign JPH::AssertFailed (bool(const char* expression, const char* message, const char* file, uint line); return true to break).",
+      "query": "Read JPH::Trace and JPH::AssertFailed back."
+    },
+    "jobs": {
+      "job_model": "Abstract JPH::JobSystem. Derive from JPH::JobSystemWithBarrier (which supplies barriers; call its Init(max_barriers)) and implement GetMaxConcurrency, CreateJob, QueueJob, QueueJobs and FreeJob. Jobs are reference counted: AddRef before handing a job to another thread, then Execute() and Release() it there. JobSystemThreadPool in Jolt/Core is the reference implementation of that pattern.",
+      "adapter": "QueueJob/QueueJobs submit each job to the shared scheduler as a task that calls Execute() then Release(). PhysicsSystem::Update(dt, steps, temp_allocator, job_system) takes the adapter."
+    },
+    "lifecycle": {
+      "init_steps": [
+        {
+          "phase": "memory",
+          "step": "assign JPH::Allocate and the other allocation hooks"
+        },
+        {
+          "phase": "diagnostics",
+          "step": "assign JPH::Trace and JPH::AssertFailed"
+        },
+        {
+          "phase": "jobs",
+          "step": "create the job-system adapter over the shared scheduler"
+        },
+        {
+          "phase": "systems",
+          "step": "JPH::Factory::sInstance = new JPH::Factory(); JPH::RegisterTypes()"
+        },
+        {
+          "phase": "systems",
+          "step": "TempAllocator, PhysicsSystem::Init",
+          "after": "JPH::RegisterTypes"
+        }
+      ],
+      "shutdown_steps": [
+        {
+          "phase": "systems",
+          "step": "destroy PhysicsSystem and TempAllocator"
+        },
+        {
+          "phase": "systems",
+          "step": "JPH::UnregisterTypes(); delete JPH::Factory::sInstance; JPH::Factory::sInstance = nullptr"
+        },
+        {
+          "phase": "jobs",
+          "step": "destroy the job-system adapter"
+        }
+      ]
+    },
+    "build_flags": {
+      "abi_defines": [
+        "JPH_DOUBLE_PRECISION",
+        "JPH_CROSS_PLATFORM_DETERMINISTIC",
+        "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED",
+        "JPH_PROFILE_ENABLED",
+        "JPH_EXTERNAL_PROFILE",
+        "JPH_DEBUG_RENDERER",
+        "JPH_DISABLE_TEMP_ALLOCATOR",
+        "JPH_DISABLE_CUSTOM_ALLOCATOR",
+        "JPH_OBJECT_LAYER_BITS",
+        "JPH_ENABLE_ASSERTS",
+        "JPH_OBJECT_STREAM"
+      ],
+      "self_check": "JPH::VerifyJoltVersionID() returns false when the consumer's JPH_* defines differ from the library's; RegisterTypes() also checks and aborts.",
+      "language_standard": "C++17",
+      "exceptions_rtti": "neither by default"
+    },
+    "platform": {
+      "targets": [
+        "windows-x64-msvc",
+        "linux-x64-clang",
+        "linux-x64-gcc",
+        "macos-arm64-appleclang"
+      ],
+      "headless": "No display needed.",
+      "web": true
+    }
+  }
+}

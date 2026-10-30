@@ -1,0 +1,24 @@
+{
+  "contract": "platform",
+  "version": "0.1.0",
+  "facts": {
+    "targets": "Platforms the library supports.",
+    "headless": "How to run the library without a display, for smoke runs and probes.",
+    "gpu_backends": "For GPU libraries, the backend used on each platform."
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "platform.targets-supported",
+      "kind": "probed",
+      "text": "Every library in the composition supports every platform in the manifest.",
+      "failure_code": "PLATFORM_UNSUPPORTED(<library>, <platform>)"
+    },
+    {
+      "id": "platform.main-thread",
+      "kind": "guidance",
+      "text": "Windowing and rendering calls stay on the main thread where the library requires it."
+    }
+  ],
+  "shared_interface": null
+}

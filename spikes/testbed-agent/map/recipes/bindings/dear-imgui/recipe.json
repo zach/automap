@@ -1,0 +1,25 @@
+{
+  "library": "dear-imgui",
+  "library_versions": ["1.93.0"],
+  "bindings": [
+    {
+      "contract": "allocation", "contract_version": "0.1.0",
+      "reference_glue": ["imgui_bindings.h", "imgui_bindings.cpp"],
+      "entry_points": {"memory": "imgui_bind_allocation()"},
+      "probes": {"rules": ["allocation.hooks-before-first-allocation", "allocation.routed-through-facade"], "registered_by": "imgui_register_probes()"},
+      "adaptation_notes": ["Dear ImGui has no aligned allocation hook; the facade's unaligned path is enough."]
+    },
+    {
+      "contract": "diagnostics", "contract_version": "0.1.0",
+      "reference_glue": [],
+      "probes": {"rules": [], "registered_by": null},
+      "adaptation_notes": ["Dear ImGui has no runtime log or assert hook, so neither probed diagnostics rule applies to it. Routing IM_ASSERT needs a variant built with the composition's IMGUI_USER_CONFIG (guidance rule diagnostics.compile-time-asserts)."]
+    },
+    {
+      "contract": "build-flags", "contract_version": "0.1.0",
+      "reference_glue": ["imgui_bindings.cpp"],
+      "probes": {"rules": ["build-flags.abi-match"], "registered_by": "imgui_register_probes()"},
+      "adaptation_notes": ["DebugCheckVersionAndDataLayout is what IMGUI_CHECKVERSION() calls; it also asserts on mismatch."]
+    }
+  ]
+}

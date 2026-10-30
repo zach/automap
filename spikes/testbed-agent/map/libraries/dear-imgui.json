@@ -1,0 +1,99 @@
+{
+  "library": "dear-imgui",
+  "name": "Dear ImGui",
+  "license": "MIT",
+  "contribution_policy": {
+    "ai_generated_contributions": "restricted (no AI-generated prose in issues or PRs)",
+    "source": "https://github.com/ocornut/imgui/blob/master/.github/pull_request_template.md"
+  },
+  "slots": [
+    "tools-ui"
+  ],
+  "versions": [
+    {
+      "version": "1.93.0",
+      "pin": {
+        "git": "https://github.com/ocornut/imgui",
+        "tag": "v1.93.0-docking",
+        "commit": "b916186e66aa3c02b72c6ca17455516512ed8049"
+      },
+      "vcpkg": {
+        "port": "imgui",
+        "version": "1.93.0",
+        "features": [
+          "docking-experimental",
+          "sdl3-binding",
+          "sdlgpu3-binding"
+        ]
+      },
+      "cmake": {
+        "package": "imgui",
+        "targets": [
+          "imgui::imgui"
+        ],
+        "from_source": {
+          "fetchcontent_name": "imgui",
+          "notes": "The repository has no root CMakeLists.txt. Build a static library named imgui from imgui.cpp, imgui_draw.cpp, imgui_tables.cpp, imgui_widgets.cpp, imgui_demo.cpp, and for the SDL3 pairing backends/imgui_impl_sdl3.cpp and backends/imgui_impl_sdlgpu3.cpp; include directories: the repo root and backends/; link SDL3::SDL3. Core and backends must come from the same commit."
+        }
+      },
+      "variants": [
+        {
+          "name": "docking",
+          "build_options": {},
+          "notes": "Docking and multi-viewports exist only on the docking branch."
+        }
+      ]
+    }
+  ],
+  "facts": {
+    "allocation": {
+      "hook": "ImGui::SetAllocatorFunctions(ImGuiMemAllocFunc alloc, ImGuiMemFreeFunc free, void* user_data); alloc is void*(size_t, void*), free is void(void*, void*). No aligned hook.",
+      "install_constraint": "Before ImGui::CreateContext(). Set per module when ImGui is used across DLLs.",
+      "query": "ImGui::GetAllocatorFunctions(&alloc, &free, &user_data).",
+      "pre_install_check": "ImGui::GetCurrentContext() == nullptr at install time."
+    },
+    "diagnostics": {
+      "log_hook": "None at runtime (debug log goes to the in-UI log window).",
+      "assert_hook": "Compile-time only: IM_ASSERT is a macro fixed when imgui.cpp is compiled (override via IMGUI_USER_CONFIG or imconfig.h).",
+      "query": "None."
+    },
+    "lifecycle": {
+      "init_steps": [
+        {
+          "phase": "memory",
+          "step": "ImGui::SetAllocatorFunctions"
+        },
+        {
+          "phase": "systems",
+          "step": "IMGUI_CHECKVERSION(); ImGui::CreateContext()"
+        }
+      ],
+      "shutdown_steps": [
+        {
+          "phase": "systems",
+          "step": "ImGui::DestroyContext()"
+        }
+      ]
+    },
+    "build_flags": {
+      "abi_defines": [
+        "IMGUI_USER_CONFIG",
+        "IMGUI_DISABLE_DEFAULT_ALLOCATORS",
+        "IMGUI_DEFINE_MATH_OPERATORS"
+      ],
+      "self_check": "IMGUI_CHECKVERSION() compares the version and struct sizes the caller was compiled with against the library.",
+      "language_standard": "C++11",
+      "exceptions_rtti": "neither"
+    },
+    "platform": {
+      "targets": [
+        "windows-x64-msvc",
+        "linux-x64-clang",
+        "linux-x64-gcc",
+        "macos-arm64-appleclang"
+      ],
+      "headless": "Runs wherever its platform and renderer backends run.",
+      "web": true
+    }
+  }
+}
