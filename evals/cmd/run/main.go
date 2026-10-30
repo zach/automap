@@ -97,6 +97,7 @@ func main() {
 		report.Model = *model
 	}
 	raw, _ := json.MarshalIndent(report, "", "  ")
+	os.MkdirAll(filepath.Dir(*reportPath), 0o755)
 	if err := os.WriteFile(*reportPath, append(raw, '\n'), 0o644); err != nil {
 		fail(err)
 	}
