@@ -231,7 +231,10 @@ func runExecutable(root, buildDir, logFile, target string, env []string, results
 		return err
 	}
 	defer log.Close()
-	exe := filepath.Join(root, filepath.FromSlash(buildDir), target)
+	exe, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(buildDir), target))
+	if err != nil {
+		return err
+	}
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
 	}
@@ -239,12 +242,18 @@ func runExecutable(root, buildDir, logFile, target string, env []string, results
 	defer cancel()
 	args := []string{"--frames", fmt.Sprint(SmokeFrames)}
 	if results != "" {
-		args = append(args, "--probe", results)
+		abs, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(results)))
+		if err != nil {
+			return err
+		}
+		args = append(args, "--probe", abs)
 	}
 	fmt.Fprintf(log, "$ %s %s %s\n", strings.Join(env, " "), exe, strings.Join(args, " "))
 	cmd := exec.CommandContext(ctx, exe, args...)
 	var stderr bytes.Buffer
-	cmd.Dir = root
+	// Run from the build directory, so files a library writes as it runs,
+	// such as imgui.ini, never land in the developer's repo.
+	cmd.Dir = filepath.Join(root, filepath.FromSlash(buildDir))
 	cmd.Stdout, cmd.Stderr = log, &stderr
 	cmd.Env = append(os.Environ(), env...)
 	err = cmd.Run()

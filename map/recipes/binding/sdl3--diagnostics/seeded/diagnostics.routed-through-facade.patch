@@ -1,0 +1,10 @@
+--- a/sdl3_diagnostics.cpp
++++ b/sdl3_diagnostics.cpp
+@@ -22,7 +22,6 @@
+ // Routes SDL's log output and assertions through the diagnostics facade.
+ // Runs in the diagnostics phase.
+ bool am_bind_sdl3_diagnostics(am::Context&) {
+-    SDL_SetLogOutputFunction(am_sdl3_log, nullptr);
+     SDL_SetAssertionHandler(am_sdl3_assert, nullptr);
+     am::lifecycle::init_step("sdl3:SDL_SetLogOutputFunction");
+     return true;

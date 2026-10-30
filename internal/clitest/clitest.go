@@ -255,6 +255,32 @@ func ExpectSchema(t *testing.T, name, raw string) {
 	}
 }
 
+// LogDetails logs the last lines of every failure's details file, so a
+// failing run in CI shows why.
+func (r *Run) LogDetails(t *testing.T) {
+	t.Helper()
+	for _, f := range r.Result.Failures {
+		if f.DetailsFile == "" {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(r.Dir, filepath.FromSlash(f.DetailsFile)))
+		if err != nil {
+			continue
+		}
+		lines := strings.Split(string(raw), "\n")
+		var errs []string
+		for _, l := range lines {
+			if strings.Contains(strings.ToLower(l), "error") {
+				errs = append(errs, l)
+			}
+		}
+		if len(lines) > 40 {
+			lines = lines[len(lines)-40:]
+		}
+		t.Logf("%s (%s), lines mentioning errors:\n%s\nlast lines:\n%s", f.DetailsFile, f.Code, strings.Join(errs, "\n"), strings.Join(lines, "\n"))
+	}
+}
+
 // ExpectFailure fails the test unless the run's result has a failure with
 // code whose message contains message.
 func (r *Run) ExpectFailure(t *testing.T, code, message string) {

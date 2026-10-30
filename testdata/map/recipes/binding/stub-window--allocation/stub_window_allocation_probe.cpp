@@ -7,7 +7,7 @@
 // allocation.routed-through-facade: stub-window's hooks are the facade's,
 // and the facade served stub-window during the smoke run.
 namespace {
-void am_probe_stub_window_allocation() {
+void am_probe_stub_window_allocation(am::Context&) {
     stub_window_alloc_fn alloc = nullptr;
     stub_window_free_fn release = nullptr;
     stub_window_get_allocator(&alloc, &release);
@@ -18,7 +18,7 @@ const am::probe::Registration registration("stub-window--allocation", &am_probe_
 
 // allocation.hooks-before-first-allocation: after shutdown, stub-window has
 // released nothing the facade didn't allocate.
-void am_probe_stub_window_hooks_early() {
+void am_probe_stub_window_hooks_early(am::Context&) {
     bool early = !am::alloc::released_foreign_block("stub-window");
     am::probe::check("allocation.hooks-before-first-allocation", "stub-window", early, "ALLOC_HOOK_LATE(stub-window)");
 }

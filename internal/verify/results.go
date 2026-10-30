@@ -21,9 +21,10 @@ type Result struct {
 // Expected is a probed rule that applies to the composition: once for a
 // composition or pairing rule, once per library for a library rule.
 type Expected struct {
-	Rule      mapmodel.Rule
-	Library   string
-	Platforms []string
+	Rule          mapmodel.Rule
+	Library       string
+	Platforms     []string
+	NotApplicable string // why the library's binding recipe marks the rule not-applicable, if it does
 }
 
 // ExpectedRules lists every probed rule that applies to the composition.
@@ -40,7 +41,15 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 			}
 			for _, lib := range man.Libraries() {
 				if _, ok := m.Libraries[lib].Newest().Facts[cid]; ok {
-					out = append(out, Expected{Rule: rule, Library: lib, Platforms: rule.Platforms})
+					e := Expected{Rule: rule, Library: lib, Platforms: rule.Platforms}
+					if binding := m.Recipes[lib+"--"+cid]; binding != nil {
+						for _, na := range binding.NotApplicable {
+							if na.Rule == rule.ID {
+								e.NotApplicable = na.Reason
+							}
+						}
+					}
+					out = append(out, e)
 				}
 			}
 		}
@@ -81,6 +90,8 @@ func Results(expected []Expected, platform string, obs Observed) []Result {
 	for _, e := range expected {
 		r := Result{Rule: e.Rule.ID, Library: e.Library}
 		switch got := firstNonNil(find(obs.Computed, e), find(obs.Reported, e)); {
+		case e.NotApplicable != "":
+			r.Status, r.Reason = "not-applicable", e.NotApplicable
 		case len(e.Platforms) > 0 && !slices.Contains(e.Platforms, platform):
 			r.Status, r.Reason = "not-applicable", "The rule's probe runs only on "+strings.Join(e.Platforms, ", ")+"."
 		case !obs.Ran:

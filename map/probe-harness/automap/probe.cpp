@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "automap/choices.h"
 #include "automap/lifecycle.h"
 
 namespace am::probe {
@@ -30,6 +31,20 @@ std::vector<Registered>& registry() {
     static std::vector<Registered> r;
     return r;
 }
+
+std::string& results_path() {
+    static std::string p;
+    return p;
+}
+
+// build-flags.language-settings-agree: the glue compiles with the C++
+// standard the composition chooses. The harness checks it for every
+// composition, since every composition makes the choice.
+void check_language_standard(am::Context&) {
+    bool agree = __cplusplus / 100 % 100 == AUTOMAP_BUILD_FLAGS_CXX_STANDARD % 100;
+    check("build-flags.language-settings-agree", "", agree, "LANG_SETTINGS_MISMATCH(cxx_standard)");
+}
+const Registration language_standard("automap", &check_language_standard);
 
 std::string quote(const std::string& s) {
     std::string out = "\"";
@@ -58,18 +73,32 @@ Registration::Registration(const char* recipe, Probe probe, When when) {
     registry().push_back({recipe, probe, when});
 }
 
-void run(When when) {
+void run(When when, am::Context& ctx) {
     for (const Registered& r : registry()) {
-        if (r.when == when) r.probe();
+        if (r.when == when) r.probe(ctx);
     }
 }
 
+void begin(const std::string& path) { results_path() = path; }
+
 void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code) {
+    for (Result& r : results()) {
+        if (r.rule == rule && r.library == library) {
+            r = {rule, library, failure_code, ok};
+            return;
+        }
+    }
     results().push_back({rule, library, failure_code, ok});
 }
 
-bool write_results(const std::string& path) {
-    std::FILE* f = std::fopen(path.c_str(), "w");
+void expect_failure(const std::string& rule, const std::string& library, const std::string& failure_code) {
+    check(rule, library, false, failure_code);
+    write_results();
+}
+
+bool write_results() {
+    if (results_path().empty()) return false;
+    std::FILE* f = std::fopen(results_path().c_str(), "w");
     if (f == nullptr) return false;
     bool all_ok = true;
     std::fprintf(f, "{\n  \"results\": [");

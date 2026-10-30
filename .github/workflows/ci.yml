@@ -48,3 +48,45 @@ jobs:
           python-version: "3.12"
       - run: pip install jsonschema
       - run: python3 docs/spec/check-examples.py
+
+  public-map:
+    name: Public map (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang pkg-config jq autoconf autoconf-archive automake libtool libltdl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
+            mesa-vulkan-drivers libvulkan1
+      - name: vcpkg at the map's baseline
+        run: |
+          baseline=$(jq -r .build_backend.vcpkg.baseline map/map.json)
+          git init -q "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" fetch -q --depth 1 https://github.com/microsoft/vcpkg "$baseline"
+          git -C "$RUNNER_TEMP/vcpkg" checkout -q FETCH_HEAD
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+      - name: Restore the vcpkg binary cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
+          restore-keys: public-map-${{ runner.os }}-
+      - name: The testbed starts probed and every seed is caught
+        env:
+          AUTOMAP_TEST_PUBLIC_MAP: "1"
+          AUTOMAP_TEST_BUILDS: "1"
+        run: go test ./cmd/automap -run TestTheTestbedStartsProbed -v -timeout 110m
+      - name: Save the vcpkg binary cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}

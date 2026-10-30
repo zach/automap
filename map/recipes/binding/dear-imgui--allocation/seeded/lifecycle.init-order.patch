@@ -1,0 +1,10 @@
+--- a/imgui_allocation.cpp
++++ b/imgui_allocation.cpp
+@@ -14,5 +14,7 @@
+ bool am_bind_imgui_allocation(am::Context&) {
+     ImGui::SetAllocatorFunctions(am_imgui_alloc, am_imgui_free, nullptr);
+     am::lifecycle::init_step("dear-imgui:SetAllocatorFunctions");
++    ImGui::CreateContext();
++    am::lifecycle::init_step("dear-imgui:CreateContext");
+     return true;
+ }

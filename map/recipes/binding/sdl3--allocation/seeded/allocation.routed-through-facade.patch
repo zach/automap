@@ -1,0 +1,10 @@
+--- a/sdl3_allocation.cpp
++++ b/sdl3_allocation.cpp
+@@ -15,7 +15,6 @@
+ void SDLCALL am_sdl3_free(void* block) { am::alloc::release("sdl3", block); }
+ 
+ bool am_bind_sdl3_allocation(am::Context&) {
+-    if (!SDL_SetMemoryFunctions(am_sdl3_malloc, am_sdl3_calloc, am_sdl3_realloc, am_sdl3_free)) return false;
+     am::lifecycle::init_step("sdl3:SDL_SetMemoryFunctions");
+     return true;
+ }

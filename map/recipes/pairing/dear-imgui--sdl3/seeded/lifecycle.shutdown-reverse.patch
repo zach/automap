@@ -1,0 +1,17 @@
+--- a/imgui_sdl3_gpu.cpp
++++ b/imgui_sdl3_gpu.cpp
+@@ -23,12 +23,12 @@
+ 
+ void am_pair_imgui_sdl3_shutdown(am::Context& ctx) {
+     // The renderer backend releases GPU resources the device may still be using.
++    ImGui_ImplSDLGPU3_Shutdown();
++    am::lifecycle::shutdown_step("dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown");
+     SDL_WaitForGPUIdle(ctx.sdl3.gpu_device);
+     am::lifecycle::shutdown_step("dear-imgui--sdl3:SDL_WaitForGPUIdle");
+     ImGui_ImplSDL3_Shutdown();
+     am::lifecycle::shutdown_step("dear-imgui--sdl3:ImGui_ImplSDL3_Shutdown");
+-    ImGui_ImplSDLGPU3_Shutdown();
+-    am::lifecycle::shutdown_step("dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown");
+ }
+ 
+ bool am_pair_imgui_sdl3_begin_frame(am::Context&) {

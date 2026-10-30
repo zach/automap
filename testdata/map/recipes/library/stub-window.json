@@ -26,10 +26,6 @@
     {
       "path": "stub-window/stub_window_setup.cpp",
       "role": "setup-glue"
-    },
-    {
-      "path": "stub-window/stub_window_build_flags_probe.cpp",
-      "role": "probe"
     }
   ],
   "entry_points": [
@@ -61,7 +57,7 @@
   "probes": [
     {
       "rule": "build-flags.language-settings-agree",
-      "check": "The build-flags probe compares the C++ standard each glue target compiles with against the composition's choice.",
+      "check": "The probe harness compares the C++ standard the glue compiles with against the composition's cxx_standard choice.",
       "seeded_violation": {
         "description": "Compile the glue as C++17 in stub-window's build fragment while the composition chooses C++20.",
         "patch": "stub-window/seeded/build-flags.language-settings-agree.patch"

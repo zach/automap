@@ -39,7 +39,6 @@
     "glue/stub-window/stub_window_allocation.cpp",
     "glue/stub-window/stub_window_allocation.h",
     "glue/stub-window/stub_window_allocation_probe.cpp",
-    "glue/stub-window/stub_window_build_flags_probe.cpp",
     "glue/stub-window/stub_window_diagnostics.cpp",
     "glue/stub-window/stub_window_diagnostics_probe.cpp",
     "glue/stub-window/stub_window_setup.cpp",
