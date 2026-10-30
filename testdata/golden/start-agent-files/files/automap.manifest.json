@@ -77,8 +77,7 @@
       ],
       "stub-window": [
         "glue/stub-window/stub_window_setup.h",
-        "glue/stub-window/stub_window_setup.cpp",
-        "glue/stub-window/stub_window_build_flags_probe.cpp"
+        "glue/stub-window/stub_window_setup.cpp"
       ]
     }
   }

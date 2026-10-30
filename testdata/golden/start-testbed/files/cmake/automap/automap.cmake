@@ -19,7 +19,6 @@ add_library(automap_glue OBJECT
     ${AUTOMAP_ROOT}/glue/stub-ui/stub_ui_setup.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_allocation.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_allocation_probe.cpp
-    ${AUTOMAP_ROOT}/glue/stub-window/stub_window_build_flags_probe.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_diagnostics.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_diagnostics_probe.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_setup.cpp

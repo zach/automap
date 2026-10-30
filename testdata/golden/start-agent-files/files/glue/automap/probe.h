@@ -7,13 +7,26 @@
 #pragma once
 #include <string>
 
+#include "automap/context.h"
+
 namespace am::probe {
 
+// Starts a probe run whose results go to path. The executable calls it
+// before startup when given --probe <path>.
+void begin(const std::string& path);
+
 // rule: the rule id; library: who the result is about ("" for a pairing or
-// the composition); failure_code: reported when !ok.
+// the composition); failure_code: reported when !ok. A later result for the
+// same rule and library replaces an earlier one.
 void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code);
 
-using Probe = void (*)();
+// Records a failure and writes the results file now, before a check that
+// may abort the process, such as a library's own assertion; a later check
+// replaces it.
+void expect_failure(const std::string& rule, const std::string& library, const std::string& failure_code);
+
+// A probe takes the composition's context, as entry points do.
+using Probe = void (*)(am::Context& ctx);
 
 // When a registered probe runs: after startup and the frames, or after
 // shutdown (for checks that need the libraries to have released
@@ -26,10 +39,10 @@ struct Registration {
 };
 
 // Runs every probe registered for when.
-void run(When when);
+void run(When when, am::Context& ctx);
 
-// Writes every recorded result and lifecycle step as JSON to path. Returns
-// whether every check passed.
-bool write_results(const std::string& path);
+// Writes every recorded result and lifecycle step as JSON to the results
+// file. Returns whether every check passed.
+bool write_results();
 
 } // namespace am::probe

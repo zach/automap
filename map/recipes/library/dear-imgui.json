@@ -1,0 +1,67 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "dear-imgui"
+  },
+  "applies_to": {
+    "dear-imgui": {
+      "versions": [
+        "1.93.0"
+      ],
+      "variants": [
+        "docking"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "dear-imgui/dear-imgui.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "dear-imgui/imgui_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "dear-imgui/imgui_setup.cpp",
+      "role": "setup-glue"
+    },
+    {
+      "path": "dear-imgui/imgui_build_flags_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_imgui_setup_init",
+      "steps": [
+        "dear-imgui:CreateContext"
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_imgui_setup_shutdown",
+      "steps": [
+        "dear-imgui:DestroyContext"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "build-flags.abi-defines-match",
+      "check": "am_probe_imgui_abi(): ImGui::DebugCheckVersionAndDataLayout with the glue's IMGUI_VERSION and sizes of ImGuiIO, ImGuiStyle, ImVec2, ImVec4, ImDrawVert and ImDrawIdx. The failure is recorded first, since ImGui asserts on a mismatch.",
+      "seeded_violation": {
+        "description": "Define ImDrawIdx as unsigned int for the glue in Dear ImGui's build fragment, while the imgui port is built with 16-bit indices.",
+        "patch": "dear-imgui/seeded/build-flags.abi-defines-match.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The build fragment calls find_package(imgui CONFIG REQUIRED) and links imgui::imgui, which includes the SDL3 and SDL_GPU backends the port's sdl3-binding and sdlgpu3-binding features build.",
+    "Every translation unit that includes imgui.h must see the same ImDrawIdx, ImWchar (IMGUI_USE_WCHAR32) and IMGUI_USER_CONFIG as the library.",
+    "In probe builds the setup sets io.IniFilename = nullptr so probe runs write and read no imgui.ini."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "dear-imgui",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "dear-imgui": {
+      "versions": [
+        "1.93.0"
+      ],
+      "variants": [
+        "docking"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "dear-imgui--allocation/imgui_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "dear-imgui--allocation/imgui_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_imgui_allocation",
+      "steps": [
+        "dear-imgui:SetAllocatorFunctions"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "After ImGui::DestroyContext(), the facade's probe-build block tracking shows ImGui released no block the facade didn't allocate.",
+      "seeded_violation": {
+        "description": "Allocate with ImGui::MemAlloc before ImGui::SetAllocatorFunctions and free it after, so ImGui frees a block its default allocator served.",
+        "patch": "dear-imgui--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_imgui_allocation(): ImGui::GetAllocatorFunctions returns the facade's functions, and the facade served ImGui during the run.",
+      "seeded_violation": {
+        "description": "Remove the ImGui::SetAllocatorFunctions call from am_bind_imgui_allocation().",
+        "patch": "dear-imgui--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    },
+    {
+      "rule": "lifecycle.init-order",
+      "check": "The lifecycle probe checks that dear-imgui:CreateContext, a systems-phase step, runs after every earlier phase's steps.",
+      "seeded_violation": {
+        "description": "Create the ImGui context in am_bind_imgui_allocation(), in the memory phase.",
+        "patch": "dear-imgui--allocation/seeded/lifecycle.init-order.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "ImGui::SetAllocatorFunctions sets globals for the module; call it before ImGui::CreateContext(). Across DLL boundaries each module installs its own (imgui.h).",
+    "The context belongs to the systems phase: creating it during memory setup runs it before SDL and the rest of the platform exist."
+  ]
+}

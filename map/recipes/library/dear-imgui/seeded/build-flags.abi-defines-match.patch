@@ -1,0 +1,7 @@
+--- a/dear-imgui.cmake
++++ b/dear-imgui.cmake
+@@ -4,3 +4,4 @@
+ find_package(imgui CONFIG REQUIRED)
+ 
+ target_link_libraries(automap_glue PUBLIC imgui::imgui)
++target_compile_definitions(automap_glue PUBLIC "ImDrawIdx=unsigned int")

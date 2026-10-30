@@ -1,0 +1,10 @@
+--- a/imgui_allocation.cpp
++++ b/imgui_allocation.cpp
+@@ -12,7 +12,6 @@
+ // Routes Dear ImGui's allocations through the allocation facade. Runs in
+ // the memory phase, before ImGui::CreateContext().
+ bool am_bind_imgui_allocation(am::Context&) {
+-    ImGui::SetAllocatorFunctions(am_imgui_alloc, am_imgui_free, nullptr);
+     am::lifecycle::init_step("dear-imgui:SetAllocatorFunctions");
+     return true;
+ }

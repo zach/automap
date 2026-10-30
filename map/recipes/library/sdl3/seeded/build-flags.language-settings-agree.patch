@@ -1,0 +1,7 @@
+--- a/sdl3.cmake
++++ b/sdl3.cmake
+@@ -3,3 +3,4 @@
+ find_package(SDL3 CONFIG REQUIRED)
+ 
+ target_link_libraries(automap_glue PUBLIC SDL3::SDL3)
++target_compile_options(automap_glue PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/std:c++17,-std=c++17>)

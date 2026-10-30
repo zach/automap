@@ -18,9 +18,10 @@ int main(int argc, char** argv) {
         if (std::strcmp(argv[i], "--frames") == 0) frames = std::atoi(argv[i + 1]);
         if (std::strcmp(argv[i], "--probe") == 0) results = argv[i + 1];
     }
+    if (results != nullptr) am::probe::begin(results);
     am::Context ctx;
     if (!am::startup(ctx)) {
-        if (results != nullptr) am::probe::write_results(results);
+        am::probe::write_results();
         return 1;
     }
     for (int frame = 0; frame < frames; ++frame) {
@@ -28,11 +29,11 @@ int main(int argc, char** argv) {
         stub_ui_new_frame();
 #endif
     }
-    if (results != nullptr) am::probe::run(am::probe::When::running);
+    if (results != nullptr) am::probe::run(am::probe::When::running, ctx);
     am::shutdown(ctx);
     if (results != nullptr) {
-        am::probe::run(am::probe::When::after_shutdown);
-        am::probe::write_results(results);
+        am::probe::run(am::probe::When::after_shutdown, ctx);
+        am::probe::write_results();
     }
     return 0;
 }

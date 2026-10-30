@@ -1,0 +1,10 @@
+--- a/imgui_sdl3_gpu.cpp
++++ b/imgui_sdl3_gpu.cpp
+@@ -35,7 +35,6 @@
+     bool open = true;
+     SDL_Event event;
+     while (SDL_PollEvent(&event)) {
+-        ImGui_ImplSDL3_ProcessEvent(&event);
+         if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) open = false;
+     }
+     ImGui_ImplSDLGPU3_NewFrame();

@@ -97,13 +97,14 @@ func TestResults(t *testing.T) {
 		{Rule: mapmodel.Rule{ID: "alloc.routed"}, Library: "ui"},
 		{Rule: mapmodel.Rule{ID: "jobs.tsan"}, Platforms: []string{"macos-arm64-appleclang"}},
 		{Rule: mapmodel.Rule{ID: "life.order"}},
+		{Rule: mapmodel.Rule{ID: "diag.routed"}, Library: "ui", NotApplicable: "ui has no runtime hooks."},
 	}
 	got := verify.Results(expected, "linux-x64-clang", verify.Observed{
 		Ran:      true,
 		Reported: []verify.Result{{Rule: "alloc.routed", Library: "win", Status: "fail", FailureCode: "NOT_ROUTED(win)"}},
 		Computed: []verify.Result{{Rule: "life.order", Status: "pass"}},
 	})
-	want := []string{"fail", "unverifiable", "not-applicable", "pass"}
+	want := []string{"fail", "unverifiable", "not-applicable", "pass", "not-applicable"}
 	for i, r := range got {
 		if r.Status != want[i] {
 			t.Errorf("%s %s: %s, want %s", r.Rule, r.Library, r.Status, want[i])

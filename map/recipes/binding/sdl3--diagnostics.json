@@ -1,0 +1,51 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "sdl3",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl3--diagnostics/sdl3_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "sdl3--diagnostics/sdl3_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_sdl3_diagnostics",
+      "steps": [
+        "sdl3:SDL_SetLogOutputFunction"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_sdl3_diagnostics(): a message logged with SDL_Log reaches the diagnostics facade.",
+      "seeded_violation": {
+        "description": "Remove the SDL_SetLogOutputFunction call from am_bind_sdl3_diagnostics().",
+        "patch": "sdl3--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "SDL's assertion handler is routed too; SDL_ASSERTION_BREAK is returned only when the facade asks to break."
+  ]
+}

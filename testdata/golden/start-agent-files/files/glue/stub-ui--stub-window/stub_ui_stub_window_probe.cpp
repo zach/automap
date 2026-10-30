@@ -8,7 +8,7 @@
 // stub-ui--stub-window.input-forwarded: a synthetic event pushed into
 // stub-window reaches stub-ui within one frame.
 namespace {
-void am_probe_stub_ui_stub_window_input() {
+void am_probe_stub_ui_stub_window_input(am::Context&) {
     stub_window_push_event(stub_window_event{7, 12, 34});
     stub_window_event event;
     while (stub_window_poll(&event)) am_pair_stub_ui_stub_window_event(event);
