@@ -40,7 +40,7 @@ These override the upstream skills where they conflict.
 
 ### Installed skills
 
-`.claude/skills/` holds skills vendored from [mattpocock/skills](https://github.com/mattpocock/skills) at commit `a496f55` (v1.3.2, MIT, see `.claude/skills/LICENSE-mattpocock-skills`). They were copied by hand because `npx skills` could not run in this environment. Installed: `setup-matt-pocock-skills`, `grill-with-docs` (with `grilling` and `domain-modeling`), `prototype`, `handoff`, `to-spec`, `to-tickets`, `research`.
+`.claude/skills/` holds skills vendored from [mattpocock/skills](https://github.com/mattpocock/skills) at commit `a496f55` (v1.3.2, MIT, see `.claude/skills/LICENSE-mattpocock-skills`). They were copied by hand because `npx skills` could not run in this environment. Installed for the exploration: `setup-matt-pocock-skills`, `grill-with-docs` (with `grilling` and `domain-modeling`), `prototype`, `handoff`, `to-spec`, `to-tickets`, `research`. Installed for the build ([ADR-0067](docs/adr/0067-build-team-skills.md)): `tdd`, `implement`, `implement-spec`, `code-review`, `diagnosing-bugs`.
 
 The brief names two skills differently: `/to-prd` is `to-spec`; `/to-issues` is `to-tickets`. Upstream skills call the glossary `GLOSSARY.md`; this repo uses `CONTEXT.md` at the product owner's request, so read `GLOSSARY.md` in any skill as `CONTEXT.md`.
 

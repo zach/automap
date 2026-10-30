@@ -4,8 +4,7 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 
 ## Open
 
-| ID | Question | Branch | Raised |
-| --- | --- | --- | --- |
+_None._
 
 ## Parked
 
