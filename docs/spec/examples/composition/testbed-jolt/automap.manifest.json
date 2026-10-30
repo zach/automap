@@ -1,0 +1,94 @@
+{
+  "$schema": "https://github.com/zach/automap/schemas/manifest.schema.json",
+  "format": "automap-manifest/1",
+  "map_release": "map-2026.10.29",
+  "build_backend": "vcpkg",
+  "platforms": [
+    "windows-x64-msvc",
+    "linux-x64-clang",
+    "macos-arm64-appleclang"
+  ],
+  "slots": {
+    "windowing": "sdl3",
+    "input": "sdl3",
+    "gpu": "sdl3",
+    "tools-ui": "dear-imgui",
+    "physics-3d": "jolt"
+  },
+  "variants": {
+    "sdl3": "default",
+    "dear-imgui": "docking",
+    "jolt": "default"
+  },
+  "choices": {
+    "allocation": {
+      "allocator": "system"
+    },
+    "jobs": {
+      "scheduler": "reference-thread-pool",
+      "workers": 3
+    },
+    "build-flags": {
+      "cxx_standard": "C++20"
+    },
+    "math-types": {
+      "position_precision": "float"
+    }
+  },
+  "glue": {
+    "interfaces": "glue/automap",
+    "choices_header": "glue/automap/choices.h",
+    "bindings": {
+      "sdl3/allocation": [
+        "glue/sdl3/sdl3_allocation.h",
+        "glue/sdl3/sdl3_allocation.cpp",
+        "glue/sdl3/sdl3_allocation_probe.cpp"
+      ],
+      "sdl3/diagnostics": [
+        "glue/sdl3/sdl3_diagnostics.cpp",
+        "glue/sdl3/sdl3_diagnostics_probe.cpp"
+      ],
+      "dear-imgui/allocation": [
+        "glue/dear-imgui/imgui_allocation.cpp",
+        "glue/dear-imgui/imgui_allocation_probe.cpp"
+      ],
+      "dear-imgui/diagnostics": {
+        "not_applicable": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      "jolt/allocation": [
+        "glue/jolt/jolt_allocation.cpp",
+        "glue/jolt/jolt_allocation_probe.cpp"
+      ],
+      "jolt/diagnostics": [
+        "glue/jolt/jolt_diagnostics.cpp",
+        "glue/jolt/jolt_diagnostics_probe.cpp"
+      ],
+      "jolt/jobs": [
+        "glue/jolt/jolt_job_system.h",
+        "glue/jolt/jolt_job_system.cpp",
+        "glue/jolt/jolt_jobs_probe.cpp"
+      ]
+    },
+    "pairings": {
+      "dear-imgui/sdl3": [
+        "glue/dear-imgui--sdl3/imgui_sdl3_gpu.h",
+        "glue/dear-imgui--sdl3/imgui_sdl3_gpu.cpp",
+        "glue/dear-imgui--sdl3/imgui_sdl3_gpu_probe.cpp"
+      ]
+    },
+    "setup": {
+      "sdl3": [
+        "glue/sdl3/sdl3_setup.h",
+        "glue/sdl3/sdl3_setup.cpp"
+      ],
+      "dear-imgui": [
+        "glue/dear-imgui/imgui_setup.h",
+        "glue/dear-imgui/imgui_setup.cpp"
+      ],
+      "jolt": [
+        "glue/jolt/jolt_setup.h",
+        "glue/jolt/jolt_setup.cpp"
+      ]
+    }
+  }
+}

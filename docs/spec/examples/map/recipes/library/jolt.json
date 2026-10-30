@@ -1,0 +1,50 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "jolt"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default",
+        "double-precision"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt/jolt.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "jolt/jolt_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "jolt/jolt_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_jolt_setup_init()"
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_jolt_setup_shutdown()"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(Jolt CONFIG REQUIRED), links Jolt::Jolt, and compiles glue that derives from Jolt classes with -fno-rtti (MSVC /GR-).",
+    "Setup glue runs Factory and RegisterTypes, then creates one PhysicsSystem with two object layers (non-moving, moving) mapped to two broad-phase layers, a TempAllocatorImpl, and the jobs adapter from the jolt--jobs binding.",
+    "The layer tables are placeholders the game replaces; setup glue creates no bodies.",
+    "Shutdown destroys the PhysicsSystem before UnregisterTypes and deleting the Factory."
+  ]
+}

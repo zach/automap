@@ -3,7 +3,7 @@ status: accepted
 date: 2026-10-30
 ---
 
-# v1's catalog: twelve libraries filling fifteen slots
+# v1's catalog: thirteen libraries filling fifteen slots
 
 ## Context
 
@@ -17,7 +17,7 @@ Beyond the day-one composition ([ADR-0057](0057-day-one-composition.md)), v1 nee
 
 ## Decision
 
-Option 2. v1's catalog is twelve libraries filling fifteen slots:
+Option 2. v1's catalog is thirteen libraries filling fifteen slots:
 
 | Slots | Library |
 | --- | --- |

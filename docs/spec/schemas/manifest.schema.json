@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/manifest.schema.json",
+  "title": "Manifest",
+  "description": "automap.manifest.json in the developer's repo: the composition the agent edits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "map_release",
+    "build_backend",
+    "platforms",
+    "slots",
+    "variants",
+    "choices",
+    "glue"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "$comment": {
+      "type": "string"
+    },
+    "format": {
+      "const": "automap-manifest/1"
+    },
+    "map_release": {
+      "type": "string",
+      "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$"
+    },
+    "build_backend": {
+      "const": "vcpkg"
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
+        "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+      }
+    },
+    "private_maps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "location"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "location": {
+            "type": "string"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
+              "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+            }
+          },
+          "$comment": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "slots": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "variants": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "choices": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "allocation",
+          "jobs",
+          "math-types",
+          "handles",
+          "lifecycle",
+          "diagnostics",
+          "serialization",
+          "build-flags",
+          "platform",
+          "determinism",
+          "assets"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "glue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interfaces",
+        "choices_header",
+        "bindings",
+        "pairings",
+        "setup"
+      ],
+      "properties": {
+        "interfaces": {
+          "type": "string"
+        },
+        "choices_header": {
+          "type": "string"
+        },
+        "bindings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+/[a-z0-9-]+$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "pairings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+/[a-z0-9-]+$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "setup": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

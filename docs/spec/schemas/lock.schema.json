@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/lock.schema.json",
+  "title": "Lock",
+  "description": "automap.lock.json beside the manifest, written only by the CLI, in RFC 8785 canonical form.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "map_release",
+    "pins",
+    "contracts",
+    "lock_hash"
+  ],
+  "properties": {
+    "format": {
+      "const": "automap-lock/1"
+    },
+    "map_release": {
+      "type": "string",
+      "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$"
+    },
+    "private_maps": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "commit"
+        ],
+        "properties": {
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "variant",
+          "registry",
+          "content_hash"
+        ],
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "registry": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "commit"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "vcpkg-curated",
+                  "automap",
+                  "private"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*$"
+              },
+              "commit": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          },
+          "content_hash": {
+            "type": "string",
+            "pattern": "^(sha512|sha256|git):[0-9a-f]+$"
+          }
+        }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "allocation",
+          "jobs",
+          "math-types",
+          "handles",
+          "lifecycle",
+          "diagnostics",
+          "serialization",
+          "build-flags",
+          "platform",
+          "determinism",
+          "assets"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      }
+    },
+    "lock_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 of the canonical lock with lock_hash removed."
+    }
+  }
+}

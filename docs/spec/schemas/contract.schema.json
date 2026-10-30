@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/contract.schema.json",
+  "title": "Contract",
+  "description": "Automap's definition of what must hold at one seam. map/contracts/<seam>/<version>.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "version",
+    "description",
+    "facts",
+    "choices",
+    "rules",
+    "shared_interface"
+  ],
+  "properties": {
+    "contract": {
+      "enum": [
+        "allocation",
+        "jobs",
+        "math-types",
+        "handles",
+        "lifecycle",
+        "diagnostics",
+        "serialization",
+        "build-flags",
+        "platform",
+        "determinism",
+        "assets"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "facts": {
+      "type": "object",
+      "description": "Fact ids each library declares at this seam, with a JSON Schema for each value.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "schema"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "default": true
+          },
+          "schema": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "choices": {
+      "type": "object",
+      "description": "Choice ids a composition makes at this seam.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "schema",
+          "default"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "object"
+          },
+          "default": {}
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    },
+    "shared_interface": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "files"
+          ],
+          "properties": {
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "memory",
+          "diagnostics",
+          "platform",
+          "jobs",
+          "systems",
+          "game"
+        ]
+      },
+      "description": "Lifecycle contract only: the fixed phase order."
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "text",
+        "applies_to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+)+$"
+        },
+        "kind": {
+          "enum": [
+            "probed",
+            "guidance"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "applies_to": {
+          "enum": [
+            "library",
+            "pairing",
+            "composition"
+          ]
+        },
+        "failure_code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*(\\(.*\\))?$"
+        },
+        "procedure": {
+          "type": "string",
+          "description": "How the rule is checked when it isn't a probe inside the composition, e.g. the sanitizer run."
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "probed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "failure_code"
+        ]
+      }
+    }
+  }
+}

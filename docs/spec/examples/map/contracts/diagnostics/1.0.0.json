@@ -1,0 +1,56 @@
+{
+  "contract": "diagnostics",
+  "version": "1.0.0",
+  "description": "Logging and assertions: every library's runtime log and assert hooks route to one facade.",
+  "facts": {
+    "log_hook": {
+      "description": "The runtime API that redirects the library's log output, or null if it has none.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "assert_hook": {
+      "description": "How the library's assertion failures can be redirected, including any build condition, or null.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "query": {
+      "description": "How glue reads the installed hooks back, or null.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "diagnostics.routed-through-facade",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Every runtime log and assert hook the library offers is set to the facade's handler, and a smoke run that makes the library log reaches the facade. A library with no runtime hook records not-applicable with that reason; a hook that exists only under a build condition the run doesn't meet records unverifiable.",
+      "failure_code": "DIAG_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "diagnostics.assert-policy",
+      "kind": "guidance",
+      "applies_to": "composition",
+      "text": "A library assertion that fails in a shipping build reaches the facade's fatal handler or is compiled out; it never terminates the process silently."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "automap/diag.h",
+      "automap/diag.cpp"
+    ]
+  }
+}

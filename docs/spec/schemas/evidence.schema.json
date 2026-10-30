@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/evidence.schema.json",
+  "title": "Evidence",
+  "description": "An in-toto v1 Statement whose predicate records one verification run. Signed (DSSE) except for a developer's local runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "_type",
+    "subject",
+    "predicateType",
+    "predicate"
+  ],
+  "properties": {
+    "_type": {
+      "const": "https://in-toto.io/Statement/v1"
+    },
+    "subject": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "digest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "predicateType": {
+      "const": "https://github.com/zach/automap/evidence/v1"
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_kind",
+        "subject_detail",
+        "platform",
+        "level",
+        "produced_at",
+        "map_release",
+        "conditions",
+        "results",
+        "verifier"
+      ],
+      "properties": {
+        "subject_kind": {
+          "enum": [
+            "binding",
+            "pairing",
+            "composition"
+          ]
+        },
+        "subject_detail": {
+          "type": "object",
+          "description": "binding: library, version, variant, contract, contract_version; pairing: two libraries with versions and variants; composition: lock_hash."
+        },
+        "platform": {
+          "type": "string",
+          "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
+          "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+        },
+        "level": {
+          "enum": [
+            "none",
+            "builds",
+            "smoke",
+            "probed",
+            "behavioral",
+            "hardware"
+          ]
+        },
+        "produced_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "map_release": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "build_type",
+            "compiler",
+            "environment",
+            "sanitizers"
+          ],
+          "properties": {
+            "build_type": {
+              "type": "string"
+            },
+            "compiler": {
+              "type": "string"
+            },
+            "runner_image": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "sanitizers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rule",
+              "status"
+            ],
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "library": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "not-applicable",
+                  "unverifiable"
+                ]
+              },
+              "failure_code": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "fail"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "failure_code"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "not-applicable",
+                        "unverifiable"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "reason"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "set_aside_reports": {
+          "type": "array",
+          "description": "Sanitizer reports wholly inside code the composition doesn't build.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tool",
+              "summary",
+              "reason"
+            ],
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "verifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "automap-ci",
+                "developer-ci",
+                "developer-local",
+                "nda-holder"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "signed": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}

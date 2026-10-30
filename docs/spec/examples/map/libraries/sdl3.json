@@ -1,0 +1,180 @@
+{
+  "id": "sdl3",
+  "name": "SDL3",
+  "license": {
+    "spdx": "Zlib",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "banned",
+    "source": "https://github.com/libsdl-org/SDL/blob/main/AGENTS.md"
+  },
+  "slots": [
+    "windowing",
+    "input",
+    "gpu"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/libsdl-org/SDL"
+  },
+  "console_variants": [
+    {
+      "platform_family": "Nintendo Switch and Switch 2",
+      "distributed_by": "SDL maintainers, to developers under that platform's NDA"
+    },
+    {
+      "platform_family": "PlayStation 4 and 5",
+      "distributed_by": "SDL maintainers, to developers under that platform's NDA"
+    }
+  ],
+  "versions": [
+    {
+      "version": "3.4.18",
+      "released": "2026-10-02",
+      "pin": {
+        "tag": "release-3.4.18",
+        "commit": "829a65d769d935c4852f8159e964312c0957260a"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "sdl3",
+          "registry": "curated"
+        }
+      },
+      "cmake": {
+        "package": "SDL3",
+        "targets": [
+          "SDL3::SDL3"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "SDL_SetMemoryFunctions",
+              "signature": "bool(SDL_malloc_func, SDL_calloc_func, SDL_realloc_func, SDL_free_func)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "any other call into SDL, including SDL_SetHint",
+          "query": "SDL_GetMemoryFunctions"
+        },
+        "diagnostics": {
+          "log_hook": "SDL_SetLogOutputFunction(SDL_LogOutputFunction, void*)",
+          "assert_hook": "SDL_SetAssertionHandler(SDL_AssertionHandler, void*) at runtime",
+          "query": "SDL_GetLogOutputFunction, SDL_GetAssertionHandler"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "sdl3:SDL_SetMemoryFunctions"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "sdl3:SDL_SetLogOutputFunction"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_Init"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_CreateWindow",
+              "after": [
+                "sdl3:SDL_Init"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_CreateGPUDevice",
+              "after": [
+                "sdl3:SDL_Init"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_ClaimWindowForGPUDevice",
+              "after": [
+                "sdl3:SDL_CreateWindow",
+                "sdl3:SDL_CreateGPUDevice"
+              ]
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_WaitForGPUIdle"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_ReleaseWindowFromGPUDevice",
+              "after": [
+                "sdl3:SDL_WaitForGPUIdle"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_DestroyGPUDevice",
+              "after": [
+                "sdl3:SDL_ReleaseWindowFromGPUDevice"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_DestroyWindow",
+              "after": [
+                "sdl3:SDL_ReleaseWindowFromGPUDevice"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_Quit",
+              "after": [
+                "sdl3:SDL_DestroyGPUDevice",
+                "sdl3:SDL_DestroyWindow"
+              ]
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": "SDL_GetVersion() == SDL_VERSION and an even minor version",
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "SDL_VIDEO_DRIVER=offscreen set in the environment before SDL_Init",
+          "headless_build_options": {
+            "linux-x64-clang": {
+              "SDL_X11": "OFF",
+              "SDL_WAYLAND": "OFF",
+              "SDL_UNIX_CONSOLE_BUILD": "ON"
+            }
+          },
+          "gpu_backends": {
+            "windows-x64-msvc": "direct3d12",
+            "linux-x64-clang": "vulkan",
+            "macos-arm64-appleclang": "metal"
+          },
+          "web": false
+        }
+      }
+    }
+  ]
+}

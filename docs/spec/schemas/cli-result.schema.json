@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/cli-result.schema.json",
+  "title": "CLI result",
+  "description": "The JSON output of every CLI command (--json).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command",
+    "cli_version",
+    "ok",
+    "summary",
+    "failures"
+  ],
+  "properties": {
+    "command": {
+      "enum": [
+        "start",
+        "extend",
+        "upgrade",
+        "adopt",
+        "eject",
+        "verify",
+        "find",
+        "show"
+      ]
+    },
+    "cli_version": {
+      "type": "string"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "string",
+      "description": "The one-line verdict."
+    },
+    "level": {
+      "enum": [
+        "none",
+        "builds",
+        "smoke",
+        "probed",
+        "behavioral",
+        "hardware"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*(\\(.*\\))?$"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "library": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details_file": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files_written": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_file": {
+      "type": "string"
+    }
+  }
+}

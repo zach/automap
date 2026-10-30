@@ -1,0 +1,63 @@
+{
+  "contract": "platform",
+  "version": "1.0.0",
+  "description": "Which target platforms each library supports, and what it needs to run headless.",
+  "facts": {
+    "targets": {
+      "description": "Automap platform ids the library supports.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$"
+        }
+      }
+    },
+    "headless": {
+      "description": "How the library runs without a display, as Automap's CI runs it.",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "headless_build_options": {
+      "required": false,
+      "description": "Build options the headless CI build needs, per platform id.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gpu_backends": {
+      "required": false,
+      "description": "The GPU API the library uses on each platform id.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    },
+    "web": {
+      "description": "Whether the library builds for the web.",
+      "schema": {
+        "type": "boolean"
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "platform.targets-supported",
+      "kind": "probed",
+      "applies_to": "composition",
+      "text": "Every library in the composition lists every platform in the manifest among its targets, and the composition builds and completes a probe run on each.",
+      "failure_code": "PLATFORM_UNSUPPORTED(<library>,<platform>)"
+    }
+  ],
+  "shared_interface": null
+}

@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/recipe.schema.json",
+  "title": "Recipe",
+  "description": "What Automap provides for one binding, pairing or library. map/recipes/<kind>/<subject>.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "subject",
+    "applies_to",
+    "reference_glue",
+    "probes",
+    "adaptation_notes"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "binding",
+        "pairing",
+        "library"
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "library": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "contract": {
+          "enum": [
+            "allocation",
+            "jobs",
+            "math-types",
+            "handles",
+            "lifecycle",
+            "diagnostics",
+            "serialization",
+            "build-flags",
+            "platform",
+            "determinism",
+            "assets"
+          ]
+        },
+        "contract_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "libraries": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          }
+        }
+      }
+    },
+    "applies_to": {
+      "type": "object",
+      "description": "Library versions and variants this recipe was verified for, keyed by library id.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "versions",
+          "variants"
+        ],
+        "properties": {
+          "versions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          }
+        }
+      }
+    },
+    "reference_glue": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "role"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "glue",
+              "build-fragment",
+              "setup-glue",
+              "probe"
+            ]
+          }
+        }
+      }
+    },
+    "entry_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "when",
+          "call"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "memory",
+              "diagnostics",
+              "platform",
+              "jobs",
+              "systems",
+              "game"
+            ]
+          },
+          "when": {
+            "enum": [
+              "init",
+              "shutdown"
+            ]
+          },
+          "call": {
+            "type": "string"
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Steps this one must follow within its phase."
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Pairing recipes only: the pairing's own rules.",
+      "items": {
+        "$ref": "contract.schema.json#/$defs/rule"
+      }
+    },
+    "ordering": {
+      "type": "array",
+      "description": "Pairing recipes only: cross-library ordering constraints. The 'before' step must run before the 'after' step; steps are '<owner>:<name>', where the owner is a library id or this pairing's id.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "before",
+          "after",
+          "when"
+        ],
+        "properties": {
+          "before": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          },
+          "when": {
+            "enum": [
+              "init",
+              "shutdown"
+            ]
+          }
+        }
+      }
+    },
+    "probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule",
+          "check",
+          "seeded_violation"
+        ],
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "check": {
+            "type": "string",
+            "description": "The glue function or procedure that performs the check."
+          },
+          "seeded_violation": {
+            "type": "string",
+            "description": "The known mistake CI introduces to show the probe fails."
+          }
+        }
+      }
+    },
+    "not_applicable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule",
+          "reason"
+        ],
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "adaptation_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "binding"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "required": [
+              "library",
+              "contract",
+              "contract_version"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "pairing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "required": [
+              "libraries"
+            ]
+          }
+        },
+        "required": [
+          "rules"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "library"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "required": [
+              "library"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
