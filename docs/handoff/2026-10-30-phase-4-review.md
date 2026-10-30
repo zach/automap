@@ -1,4 +1,4 @@
-# Handoff: Phase 4 written, definition-of-done review awaiting sign-off
+# Handoff: exploration complete, implementation starts with ticket 01
 
 Date: 2026-10-30. Branch: `exploration` on `zach/automap`, pushed.
 
@@ -8,13 +8,12 @@ Date: 2026-10-30. Branch: `exploration` on `zach/automap`, pushed.
 - **Decisions** are ADR-0001 to ADR-0082 in `docs/adr/`; terms are in `CONTEXT.md`. `docs/OPEN_QUESTIONS.md` holds only OQ-008 and OQ-011, both deferred past v1.
 - **The spec** is `docs/spec/SPEC.md` (the brief's twelve sections), with nine JSON Schemas in `docs/spec/schemas/`, 45 example files in `docs/spec/examples/`, and `docs/spec/check-examples.py`, which validates them all. SPEC §12.3 lists the details no ADR records; the product owner confirmed them as spec defaults.
 - **The feature spec and tickets** are in `docs/issues/automap-v1/`: `spec.md` and 38 vertical-slice tickets, each with blocking edges and acceptance criteria, all `ready-for-agent`.
-- **The definition-of-done review** is `docs/spec/definition-of-done.md`. All eight items are done, including two fresh-agent tests; the second found nothing foundational. It waits only for the product owner's sign-off.
+- **The definition-of-done review** is `docs/spec/definition-of-done.md`. All eight items are done, including two fresh-agent tests; the second found nothing foundational. The product owner signed it off on 2026-10-30.
 
 ## What happens next
 
-1. **The product owner signs off** the definition-of-done review.
-2. **`exploration` merges to `main`** with a merge commit; `spike/testbed-agent` stays unmerged ([ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)).
-3. **Ticket 01 starts on `main`.** It switches the instruction files to `AGENTS.md` ([ADR-0066](../adr/0066-build-repo-uses-agents-md.md)), which ends the exploration's "no product code" rule. Work the frontier of `docs/issues/automap-v1/` from there, with the build-team skills ([ADR-0067](../adr/0067-build-team-skills.md)).
+1. **`exploration` merges to `main`** through a pull request, with a merge commit; `spike/testbed-agent` stays unmerged ([ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)).
+2. **Ticket 01 starts on `main`.** It switches the instruction files to `AGENTS.md` ([ADR-0066](../adr/0066-build-repo-uses-agents-md.md)), which ends the exploration's "no product code" rule. Work the frontier of `docs/issues/automap-v1/` from there, with the build-team skills ([ADR-0067](../adr/0067-build-team-skills.md)).
 
 ## Prerequisites the build will hit
 

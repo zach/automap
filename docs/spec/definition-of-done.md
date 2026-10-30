@@ -1,6 +1,6 @@
 # Definition-of-done review
 
-The brief's definition of done (section 6), checked item by item, with the evidence for each.
+The brief's definition of done (section 6), checked item by item, with the evidence for each. The product owner signed off this review on 2026-10-30.
 
 | # | Item | Status | Evidence |
 | --- | --- | --- | --- |
