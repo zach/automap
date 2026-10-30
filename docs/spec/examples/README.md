@@ -1,6 +1,6 @@
 # Spec examples
 
-Complete, valid examples of every schema in [`../schemas/`](../schemas/). `python3 docs/spec/check-examples.py` validates each file against its schema, checks library facts and manifest choices against their contracts, checks references between files, and recomputes each lock's canonical form and `lock_hash`.
+Complete, valid examples of every schema in [`schemas/`](../../../schemas/). `python3 docs/spec/check-examples.py` validates each file against its schema, checks library facts and manifest choices against their contracts, checks references between files, and recomputes each lock's canonical form and `lock_hash`.
 
 | Directory | Contents |
 | --- | --- |

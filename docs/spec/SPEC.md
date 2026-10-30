@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](../../schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -253,15 +253,15 @@ All formats are JSON validated by JSON Schema 2020-12 [ADR-0042](../adr/0042-man
 
 | Format | Schema | Lives at | Example |
 | --- | --- | --- | --- |
-| Map metadata | [`map`](schemas/map.schema.json) | `<map>/map.json` | [public](examples/map/map.json), [private](examples/private-map/map.json), [NDA](examples/private-map-nebula/map.json) |
-| Slot | [`slot`](schemas/slot.schema.json) | `map/slots/<slot>.json` | [`physics-3d`](examples/map/slots/physics-3d.json) and five more |
-| Contract | [`contract`](schemas/contract.schema.json) | `map/contracts/<seam>/<version>.json` | [`allocation`](examples/map/contracts/allocation/1.0.0.json), [`jobs`](examples/map/contracts/jobs/1.0.0.json), [`lifecycle`](examples/map/contracts/lifecycle/1.0.0.json) and four more |
-| Library | [`library`](schemas/library.schema.json) | `<map>/libraries/<library>.json` | [`jolt`](examples/map/libraries/jolt.json); private: [`acme-jobs`](examples/private-map/libraries/acme-jobs.json) |
-| Recipe (binding, pairing, library) | [`recipe`](schemas/recipe.schema.json) | `<map>/recipes/<kind>/<id>.json`, reference glue in `<map>/recipes/<kind>/<id>/` | [binding](examples/map/recipes/binding/jolt--jobs.json), [pairing](examples/map/recipes/pairing/dear-imgui--sdl3.json), [library](examples/map/recipes/library/jolt.json) |
-| Manifest | [`manifest`](schemas/manifest.schema.json) | `automap.manifest.json` in the developer's repo | [testbed + Jolt](examples/composition/testbed-jolt/automap.manifest.json), [Acme](examples/composition/acme-engine/automap.manifest.json) |
-| Lock | [`lock`](schemas/lock.schema.json) | `automap.lock.json` beside the manifest | [testbed + Jolt](examples/composition/testbed-jolt/automap.lock.json) |
-| Evidence | [`evidence`](schemas/evidence.schema.json) | `<map>/evidence/...`, or `evidence/<platform>.json` in the developer's repo | [binding](examples/map/evidence/binding/jolt--jobs/jolt-5.6.0-default/linux-x64-clang.json), [composition](examples/composition/testbed-jolt/evidence/linux-x64-clang.json) |
-| CLI result | [`cli-result`](schemas/cli-result.schema.json) | stdout of any command with `--json` | [extend](examples/composition/cli-results/extend-jolt.json), [failed verify](examples/composition/cli-results/verify-hook-late.json) |
+| Map metadata | [`map`](../../schemas/map.schema.json) | `<map>/map.json` | [public](examples/map/map.json), [private](examples/private-map/map.json), [NDA](examples/private-map-nebula/map.json) |
+| Slot | [`slot`](../../schemas/slot.schema.json) | `map/slots/<slot>.json` | [`physics-3d`](examples/map/slots/physics-3d.json) and five more |
+| Contract | [`contract`](../../schemas/contract.schema.json) | `map/contracts/<seam>/<version>.json` | [`allocation`](examples/map/contracts/allocation/1.0.0.json), [`jobs`](examples/map/contracts/jobs/1.0.0.json), [`lifecycle`](examples/map/contracts/lifecycle/1.0.0.json) and four more |
+| Library | [`library`](../../schemas/library.schema.json) | `<map>/libraries/<library>.json` | [`jolt`](examples/map/libraries/jolt.json); private: [`acme-jobs`](examples/private-map/libraries/acme-jobs.json) |
+| Recipe (binding, pairing, library) | [`recipe`](../../schemas/recipe.schema.json) | `<map>/recipes/<kind>/<id>.json`, reference glue in `<map>/recipes/<kind>/<id>/` | [binding](examples/map/recipes/binding/jolt--jobs.json), [pairing](examples/map/recipes/pairing/dear-imgui--sdl3.json), [library](examples/map/recipes/library/jolt.json) |
+| Manifest | [`manifest`](../../schemas/manifest.schema.json) | `automap.manifest.json` in the developer's repo | [testbed + Jolt](examples/composition/testbed-jolt/automap.manifest.json), [Acme](examples/composition/acme-engine/automap.manifest.json) |
+| Lock | [`lock`](../../schemas/lock.schema.json) | `automap.lock.json` beside the manifest | [testbed + Jolt](examples/composition/testbed-jolt/automap.lock.json) |
+| Evidence | [`evidence`](../../schemas/evidence.schema.json) | `<map>/evidence/...`, or `evidence/<platform>.json` in the developer's repo | [binding](examples/map/evidence/binding/jolt--jobs/jolt-5.6.0-default/linux-x64-clang.json), [composition](examples/composition/testbed-jolt/evidence/linux-x64-clang.json) |
+| CLI result | [`cli-result`](../../schemas/cli-result.schema.json) | stdout of any command with `--json` | [extend](examples/composition/cli-results/extend-jolt.json), [failed verify](examples/composition/cli-results/verify-hook-late.json) |
 
 Pairings have no format of their own: a pairing is declared by its pairing recipe.
 
@@ -453,7 +453,7 @@ A private map has the same layout, plus `ports/` for its overlay ports. Maps lay
 
 ### 5.4 CLI
 
-Every command takes `--json` and then prints one object conforming to [`cli-result`](schemas/cli-result.schema.json): a one-line summary, warnings, failures with failure codes and details files, files written and the evidence file [ADR-0041](../adr/0041-cli-json-output-and-failure-codes.md). Exit status is 0 on success, 1 when a rule or build fails, 2 on a usage error and 3 when the CLI refuses (for example `LOCK_EDITED`).
+Every command takes `--json` and then prints one object conforming to [`cli-result`](../../schemas/cli-result.schema.json): a one-line summary, warnings, failures with failure codes and details files, files written and the evidence file [ADR-0041](../adr/0041-cli-json-output-and-failure-codes.md). Exit status is 0 on success, 1 when a rule or build fails, 2 on a usage error and 3 when the CLI refuses (for example `LOCK_EDITED`).
 
 | Command | Does |
 | --- | --- |
@@ -755,18 +755,18 @@ One repository, `github.com/zach/automap` [ADR-0065](../adr/0065-one-repository-
 
 ```
 cmd/automap/          CLI entry point
-internal/             CLI packages: resolve, manifest, lock, recipes, vcpkg, cmake, verify, evidence, skill
+internal/             CLI packages: cli (commands), clitest (the test harness), resolve, manifest, lock, recipes, vcpkg, cmake, verify, evidence, skill
 map/                  the public map (§5.3)
-schemas/              the published JSON Schemas (from docs/spec/schemas/)
+schemas/              the published JSON Schemas
 evals/                eval suite tasks and fixtures (including Acme's engine)
-testdata/             golden CLI outputs
+testdata/             fixture repos, the fixture map and golden CLI outputs
 docs/                 this spec, ADRs, CONTEXT.md, issues
 registry (branch)     the Automap vcpkg registry
 ```
 
 ### 10.2 Instructions
 
-When implementation starts, `AGENTS.md` becomes the one instruction file: build and test commands, the repo layout, and the working rules that still apply (documents state the current version only; ADRs record only what the product owner agreed; agents are not assumed to be weaker stewards than humans). `CLAUDE.md` becomes a single `@AGENTS.md` import line. Multi-step procedures live in skills [ADR-0066](../adr/0066-build-repo-uses-agents-md.md).
+`AGENTS.md` is the one instruction file: build and test commands, the repo layout, and the working rules that still apply (documents state the current version only; ADRs record only what the product owner agreed; agents are not assumed to be weaker stewards than humans). `CLAUDE.md` is a single `@AGENTS.md` import line. Multi-step procedures live in skills [ADR-0066](../adr/0066-build-repo-uses-agents-md.md).
 
 ### 10.3 Skills
 
