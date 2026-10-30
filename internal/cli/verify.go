@@ -148,20 +148,23 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 			return exitOK
 		}
 	}
-	got, details := "it reported no failure", ""
+	// The scratch copy goes away: keep the log that says why, the failing
+	// run's or else the probe run's (ThreadSanitizer's for its rule).
+	got, log := "it reported no failure", "build/automap/probe-"+platform+".log"
+	if seed.Rule == verify.TSanRule {
+		log = "build/automap/tsan-" + platform + ".log"
+	}
 	for _, f := range out.Failures {
 		if f.Rule == "" {
-			got = "the run failed with " + f.Code + " instead"
-			// The scratch copy goes away: keep the failing run's log.
-			if f.DetailsFile != "" {
-				if data, err := os.ReadFile(filepath.Join(scratch, filepath.FromSlash(f.DetailsFile))); err == nil {
-					details = "build/automap/seed-" + strings.NewReplacer(":", "-", "/", "-").Replace(spec) + ".log"
-					os.MkdirAll("build/automap", 0o755)
-					os.WriteFile(filepath.FromSlash(details), data, 0o644)
-				}
-			}
+			got, log = "the run failed with "+f.Code+" instead", f.DetailsFile
 			break
 		}
+	}
+	details := ""
+	if data, err := os.ReadFile(filepath.Join(scratch, filepath.FromSlash(log))); err == nil && log != "" {
+		details = "build/automap/seed-" + strings.NewReplacer(":", "-", "/", "-").Replace(spec) + ".log"
+		os.MkdirAll("build/automap", 0o755)
+		os.WriteFile(filepath.FromSlash(details), data, 0o644)
 	}
 	r.Summary = fmt.Sprintf("The probe didn't catch the seeded violation of %s.", spec)
 	r.fail("SEED_NOT_CAUGHT("+spec+")", seed.Description+" The probe for "+seed.Rule+" didn't fail: "+got+".")

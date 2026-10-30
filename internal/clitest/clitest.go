@@ -270,7 +270,7 @@ func (r *Run) LogDetails(t *testing.T) {
 		lines := strings.Split(string(raw), "\n")
 		var errs []string
 		for _, l := range lines {
-			if strings.Contains(strings.ToLower(l), "error") {
+			if ll := strings.ToLower(l); strings.Contains(ll, "error") || strings.Contains(ll, "threadsanitizer") {
 				errs = append(errs, l)
 			}
 		}
