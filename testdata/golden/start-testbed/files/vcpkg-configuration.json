@@ -1,0 +1,14 @@
+{
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/zach/automap",
+      "reference": "registry",
+      "baseline": "3333333333333333333333333333333333333333",
+      "packages": [
+        "stub-ui",
+        "stub-window"
+      ]
+    }
+  ]
+}

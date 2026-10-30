@@ -1,0 +1,21 @@
+{
+  "dependencies": [
+    {
+      "name": "stub-ui"
+    },
+    {
+      "name": "stub-window"
+    }
+  ],
+  "overrides": [
+    {
+      "name": "stub-ui",
+      "version": "1.0.0"
+    },
+    {
+      "name": "stub-window",
+      "version": "1.0.0"
+    }
+  ],
+  "builtin-baseline": "0000000000000000000000000000000000000001"
+}

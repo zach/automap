@@ -13,4 +13,4 @@
 
 ## Comments
 
-- The map model enforces every rule `check-examples.py` applies to map files: map metadata, slots, contracts, libraries and their private extensions, recipes, seeds, and published evidence. Each has a case in `cmd/automap/map_invalid_test.go`. The checker's rules about a composition (manifest against map, lock canonical form and hash, pins against the map, composition evidence against its lock) belong to the resolver and lock codec, and land with ticket 03; the manifest's private maps are checked against their `map.json` here.
+- The map model enforces every rule `check-examples.py` applies to map files: map metadata, slots, contracts, libraries and their private extensions, recipes, seeds, and published evidence. Each has a case in `cmd/automap/map_invalid_test.go`. The checker's rules about a composition (manifest against map, lock canonical form and hash, pins against the map, composition evidence against its lock) belong to reading an existing composition, and land with the first command that reads one (ticket 04's `verify`); the manifest's private maps are checked against their `map.json` here.
