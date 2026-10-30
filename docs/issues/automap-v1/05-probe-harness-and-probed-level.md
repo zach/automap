@@ -1,6 +1,6 @@
 # 05: Probe harness and the probed level
 
-**What to build:** The composition's entry point supports `--probe`: after init and the smoke frames it runs every probe, records rule results and each lifecycle step through the probe harness, and writes a results file. `verify` reads it, checks lifecycle order and pairing ordering constraints, assigns each rule a status, and reaches the probed level when every applicable probed rule passes.
+**What to build:** The composition's executable supports `--probe`: after init and the smoke frames it runs every probe, records rule results and each lifecycle step through the probe harness, and writes a results file. `verify` reads it, checks lifecycle order and pairing ordering constraints, assigns each rule a status, and reaches the probed level when every applicable probed rule passes.
 
 **Blocked by:** [04: Verify reaches smoke](04-verify-reaches-smoke.md)
 

@@ -22,7 +22,8 @@
       "released": "2026-07-11",
       "pin": {
         "tag": "v5.6.0",
-        "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a"
+        "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+        "content_hash": "sha512:bc6f2436bef91a6ffd09eee98186be645f6e9a9b3f65a7a645abf00432ac40ada03320c1fe946661817a94eda372cf8d88e4889991cdd25f1c16ecf9a4486677"
       },
       "build_backend": {
         "vcpkg": {

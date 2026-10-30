@@ -155,7 +155,8 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "commit"
+            "commit",
+            "content_hash"
           ],
           "properties": {
             "tag": {
@@ -164,6 +165,11 @@
             "commit": {
               "type": "string",
               "pattern": "^[0-9a-f]{40}$"
+            },
+            "content_hash": {
+              "type": "string",
+              "pattern": "^(sha512|sha256|git):[0-9a-f]+$",
+              "description": "Hash of the source archive the build backend fetches (vcpkg's SHA-512 for curated ports)."
             }
           },
           "description": "Required unless the library's source kind is path; a path library is identified in the lock by its content hash."

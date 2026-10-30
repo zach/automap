@@ -95,7 +95,7 @@ glue/automap/              shared interfaces, the probe harness, choices.h
 glue/<library>/            bindings and setup glue for one library
 glue/<a>--<b>/             glue for one pairing
 evidence/<platform>.json   composition evidence, one record per platform
-main.cpp                   the testbed's entry point (testbeds only)
+main.cpp                   the testbed's executable source (testbeds only)
 AGENTS.md                  with one Automap section between markers
 .claude/skills/automap/    the router skill (and each other agent's skill directory)
 ```
@@ -252,6 +252,7 @@ All formats are JSON validated by JSON Schema 2020-12 [ADR-0042](../adr/0042-man
 
 | Format | Schema | Lives at | Example |
 | --- | --- | --- | --- |
+| Map metadata | [`map`](schemas/map.schema.json) | `<map>/map.json` | [public](examples/map/map.json), [private](examples/private-map/map.json), [NDA](examples/private-map-nebula/map.json) |
 | Slot | [`slot`](schemas/slot.schema.json) | `map/slots/<slot>.json` | [`physics-3d`](examples/map/slots/physics-3d.json) and five more |
 | Contract | [`contract`](schemas/contract.schema.json) | `map/contracts/<seam>/<version>.json` | [`allocation`](examples/map/contracts/allocation/1.0.0.json), [`jobs`](examples/map/contracts/jobs/1.0.0.json), [`lifecycle`](examples/map/contracts/lifecycle/1.0.0.json) and four more |
 | Library | [`library`](schemas/library.schema.json) | `<map>/libraries/<library>.json` | [`jolt`](examples/map/libraries/jolt.json); private: [`acme-jobs`](examples/private-map/libraries/acme-jobs.json) |
@@ -272,7 +273,11 @@ Pairings have no format of their own: a pairing is declared by its pairing recip
 - A lifecycle step is `<owner>:<name>`, where the owner is a library id, a pairing id, or `automap` for shared-interface setup.
 - A failure code matches `^[A-Z][A-Z0-9_]*(\(.*\))?$`, such as `ALLOC_HOOK_LATE(sdl3)` [ADR-0041](../adr/0041-cli-json-output-and-failure-codes.md).
 
-### 4.2 Slots
+### 4.2 Map metadata
+
+Every map has a `map.json` naming its id and kind. The public map's also records the vcpkg curated-registry baseline (and, once used, the Automap registry commit) that its facts and evidence were verified against, so resolution is a pure function of the manifest and the maps. An NDA platform's private map lists the platform ids it may add to libraries' targets [ADR-0075](../adr/0075-variants-per-platform.md).
+
+### 4.3 Slots
 
 Three of the six slot examples:
 
@@ -282,7 +287,7 @@ Three of the six slot examples:
 { "id": "jobs", "description": "A scheduler that runs work on worker threads; when filled, it implements the jobs contract's shared interface.", "examples": ["enkits"] }
 ```
 
-### 4.3 Contracts
+### 4.4 Contracts
 
 A contract states its **facts** (each with a JSON Schema the libraries' values must satisfy), its **choices** (each with a schema and a default), its **rules** and its **shared interface** (a list of glue source files, or `null`). The lifecycle contract also lists the phases. A probed rule has a failure code and may have a `procedure` (how a rule that isn't checked inside the composition, such as the ThreadSanitizer run, is checked) and `platforms` [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md).
 
@@ -292,13 +297,13 @@ The example contracts are allocation, jobs, lifecycle, diagnostics, build flags,
 { "id": "jobs.tsan-clean", "kind": "probed", "applies_to": "composition",
   "text": "A ThreadSanitizer build completes a smoke run with no report that has a frame, in either stack, in code the composition builds.",
   "failure_code": "TSAN_REPORT(<summary>)",
-  "procedure": "Separate build directory; -fsanitize=thread for C, C++ and link; Debug; TSAN_OPTIONS=halt_on_error=0:exitcode=66; run the entry point with --probe; parse every 'WARNING: ThreadSanitizer' report; a report counts unless every frame in both stacks is in code the composition doesn't build, in which case it is recorded under set_aside_reports.",
+  "procedure": "Separate build directory; -fsanitize=thread for C, C++ and link; Debug; TSAN_OPTIONS=halt_on_error=0:exitcode=66; run the composition's executable with --probe; parse every 'WARNING: ThreadSanitizer' report; a report counts unless every frame in both stacks is in code the composition doesn't build, in which case it is recorded under set_aside_reports.",
   "platforms": ["linux-x64-clang", "macos-arm64-appleclang"] }
 ```
 
-### 4.4 Libraries
+### 4.5 Libraries
 
-A library records its license as a fact [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md), its upstream contribution policy [ADR-0046](../adr/0046-four-agent-nevers.md), the slots it can fill, its source and, in the public map only, which console variants exist and who distributes them [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). Each version records its release date, its pin, its vcpkg port and registry, its CMake package and targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md), any bundled copies of other libraries, its variants, and its facts keyed by contract [ADR-0074](../adr/0074-spike-format-fixes.md). A variant lists its build options and may override facts, the registry and the pin.
+A library records its license as a fact [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md), its upstream contribution policy [ADR-0046](../adr/0046-four-agent-nevers.md), the slots it can fill, its source and, in the public map only, which console variants exist and who distributes them [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). Each version records its release date, its pin (commit and source content hash), its vcpkg port and registry, its CMake package and targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md), any bundled copies of other libraries, its variants, and its facts keyed by contract [ADR-0074](../adr/0074-spike-format-fixes.md). A variant lists its build options and may override facts, the registry and the pin. A version's first variant is its default, used when a command names none.
 
 A library whose `source.kind` is `path` is a directory in the developer's repo. It has no pin and no build backend: it joins the build as ordinary CMake targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md), and the lock identifies it by path and content hash. The complete private library example is Acme's in-house scheduler, [`examples/private-map/libraries/acme-jobs.json`](examples/private-map/libraries/acme-jobs.json):
 
@@ -339,25 +344,25 @@ A library whose `source.kind` is `path` is a directory in the developer's repo. 
 
 It uses the same schema, the same contracts and the same checks as Jolt; nothing in the CLI treats it differently.
 
-### 4.5 Recipes
+### 4.6 Recipes
 
 A recipe names its subject, the library versions and variants it applies to, its reference glue (each file with a role: glue, build fragment, setup glue or probe), its entry points (each with a phase and whether it runs at init or shutdown [ADR-0074](../adr/0074-spike-format-fixes.md)), its probes (each naming its rule, its check, and its seeded violation as a description and a patch CI applies [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md)), rules it marks not-applicable with reasons, and adaptation notes. A pairing recipe also states the pairing's own rules and its cross-library ordering constraints: each names a step that must run `before` another, at init or shutdown.
 
-### 4.6 Manifest
+### 4.7 Manifest
 
 The manifest names the map release, the build backend (`vcpkg`), the platforms, any private maps, the library in each slot, each library's variant (once, or per platform with a default [ADR-0075](../adr/0075-variants-per-platform.md)), the composition's choices keyed by contract, and where glue lives: the shared interfaces directory, the choices header, and each binding's, pairing's and library's setup glue as a list of files or `not_applicable` with a reason [ADR-0074](../adr/0074-spike-format-fixes.md).
 
-### 4.7 Lock
+### 4.8 Lock
 
 The lock records the map release, each private map's commit, each contract's version, and a pin per library: version, commit where the library has one, variant, registry at a commit (or path for an in-repo library), content hash and license [ADR-0036](../adr/0036-what-a-pin-contains.md), [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md). A library whose variant differs on some platform has a pin for each such platform [ADR-0075](../adr/0075-variants-per-platform.md). The lock is written in RFC 8785 canonical form; `lock_hash` is the SHA-256 of the canonical lock with `lock_hash` removed [ADR-0042](../adr/0042-manifest-and-lock-are-json-with-schemas.md). The CLI refuses to act on a lock whose hash doesn't match, with `LOCK_EDITED` [ADR-0046](../adr/0046-four-agent-nevers.md).
 
-### 4.8 Evidence
+### 4.9 Evidence
 
 Evidence is an in-toto v1 Statement [ADR-0030](../adr/0030-evidence-is-signed-and-stored-in-the-map.md). Its subject is the thing verified: the source archive or commit for a binding or pairing, or the lock file for a composition. Its predicate (`https://github.com/zach/automap/evidence/v1`) records the subject kind and exact pins (or the composition's `lock_hash`), the platform, the level, the time, the map release, the run conditions, each rule's result, any sanitizer reports set aside [ADR-0073](../adr/0073-tsan-reports-count-when-they-touch-composition-code.md), and the verifier. The checks in §6.2 decide the level.
 
-### 4.9 The choices header
+### 4.10 The choices header
 
-The CLI writes `glue/automap/choices.h` from the manifest's choices, and glue reads choices only through it [ADR-0074](../adr/0074-spike-format-fixes.md). For the testbed with Jolt:
+The CLI writes `glue/automap/choices.h` from the manifest's choices, and glue reads choices only through it [ADR-0074](../adr/0074-spike-format-fixes.md). Every choice, with contract defaults filled in, becomes `AUTOMAP_<CONTRACT>_<CHOICE>`: an integer or boolean as its value (booleans as 0 or 1), a string as a flag `AUTOMAP_<CONTRACT>_<CHOICE>_<VALUE> 1`. Names are upper-cased with every non-alphanumeric run replaced by `_`. For the testbed with Jolt:
 
 ```cpp
 // Written by automap from automap.manifest.json. Edit the manifest, not this file.
@@ -426,6 +431,7 @@ flowchart LR
 
 ```
 map/
+  map.json
   slots/<slot>.json
   libraries/<library>.json
   contracts/<seam>/<version>.json
@@ -447,7 +453,7 @@ Every command takes `--json` and then prints one object conforming to [`cli-resu
 
 | Command | Does |
 | --- | --- |
-| `automap start --with <lib>[:<variant>]... [--platform <id>]...` | Creates a composition in the current directory, writes everything in §2.3, then verifies on the host platform. |
+| `automap start --with <lib>[:<variant>]... [--slot <slot>=<lib>]... [--platform <id>]...` | Creates a composition in the current directory, writes everything in §2.3, then verifies on the host platform. Each library fills every slot it can, unless `--slot` assigns slots explicitly. |
 | `automap extend <lib>[:<variant>] [--slot <slot>]...` | Adds a library to the slots it fills (or those named), writes its recipe's glue and build fragment, re-resolves, verifies. Warns before adding a copyleft or proprietary library [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md). |
 | `automap upgrade [<lib>...] [--map-release <release>]` | Moves to a newer map release (the newest by default), re-resolves, applies changed reference glue where the composition's glue still matches the old reference, verifies. |
 | `automap adopt` | Reads an existing CMake and vcpkg project, matches its targets to map libraries, reports unmapped targets, and writes a manifest pointing at existing glue. |
@@ -456,18 +462,19 @@ Every command takes `--json` and then prints one object conforming to [`cli-resu
 | `automap fetch` | Fills the caches for offline work. |
 | `automap vendor` | Copies sources, ports and evidence into the repo. |
 | `automap find [<query>] [--slot <slot>]` | Searches the map: libraries for a slot, with their evidence state for the composition's platforms. |
-| `automap show <library\|slot\|contract\|recipe>` | Shows one map entry, its facts and its evidence states. |
+| `automap show <kind> <id>` | Shows one map entry (kind: `library`, `slot`, `contract` or `recipe`), its facts and its evidence states. |
 
 ### 5.5 Build-backend integration
 
-- **vcpkg** in manifest mode is the only v1 build backend [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md). The CLI writes `vcpkg.json` with each library's port and features, `overrides` that pin versions, and `builtin-baseline`; and `vcpkg-configuration.json` with vcpkg's curated registry at the baseline commit, the Automap registry at a commit for the ports it supplies, and each private map's overlay ports.
-- **The Automap registry** supplies variants vcpkg's additive features can't express (Jolt double precision), libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md).
+- **vcpkg** in manifest mode is the only v1 build backend [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md). The CLI writes `vcpkg.json` with each library's port and features, `overrides` that pin versions, and `builtin-baseline`; and `vcpkg-configuration.json` with vcpkg's curated registry at the baseline commit from the public map's `map.json`, the Automap registry at a commit for the ports it supplies, and each private map's overlay ports. The CLI uses the vcpkg at `VCPKG_ROOT` if set, and otherwise bootstraps a pinned vcpkg into its cache.
+- **The Automap registry** supplies variants vcpkg's additive features can't express (Jolt double precision), libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md). Its location is configurable, so the CLI's tests point it at a filesystem registry inside the fixture map.
 - **CMake** is the only glue and build target [ADR-0035](../adr/0035-glue-targets-cmake-only.md). Glue refers to libraries only by CMake package and imported target, such as `find_package(Jolt CONFIG REQUIRED)` and `Jolt::Jolt`. Each library's build fragment lives in `cmake/automap/<library>.cmake`; `cmake/automap/automap.cmake` includes them and defines the glue targets; the developer's `CMakeLists.txt` includes that file once. In-repo libraries join with `add_subdirectory`.
-- **Pins** carry vcpkg's SHA-512 of each source archive as the content hash [ADR-0036](../adr/0036-what-a-pin-contains.md).
+- **Pins** carry vcpkg's SHA-512 of each source archive as the content hash, recorded in the map beside each version's commit [ADR-0036](../adr/0036-what-a-pin-contains.md).
+- **Headless runs** use the same build as windowed runs: `verify` sets each library's `headless` environment from its platform facts, such as `SDL_VIDEO_DRIVER=offscreen`, and Automap's CI images install the libraries' system build dependencies.
 
 ### 5.6 Glue at runtime
 
-The composition's entry point runs the lifecycle phases in order, calling each recipe's init entry points for that phase, then the game; at exit it calls shutdown entry points in reverse. With `--probe`, the entry point also runs every probe after init and a set number of headless frames, records results and lifecycle steps through the probe harness, and writes them to a results file the CLI reads. Probe code is compiled only into probe builds.
+The composition's executable runs the lifecycle phases in order, calling each recipe's init entry points for that phase, then the game; at exit it calls shutdown entry points in reverse. With `--probe`, the executable also runs every probe after init and a set number of headless frames, records results and lifecycle steps through the probe harness, and writes them to a results file the CLI reads. Probe code is compiled only into probe builds.
 
 ### 5.7 Agent interface
 
@@ -479,7 +486,7 @@ The agent interface is the CLI, the router skill and the `AGENTS.md` section (§
 
 ### 6.1 Probes and seeded violations
 
-Each probed rule has a probe in the recipe that binds a library (or in the contract, for composition rules). Automap's CI runs every probe against at least one seeded violation, for example installing hooks late, running init steps out of order or mismatching a define, and the rule counts as probed only once the probe reports failure. Each seeded violation is a patch: recipes carry them for library and pairing rules, contracts for composition rules, and CI applies each to reference glue or the manifest, runs `verify`, and expects the rule's failure code. A probe that passes its seeded violation is treated as guidance until fixed. Seeded-violation runs repeat whenever a probe or its library changes [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md).
+Each probed rule has a probe in the recipe that binds a library (or in the contract, for composition rules). Automap's CI runs every probe against at least one seeded violation, for example installing hooks late, running init steps out of order or mismatching a define, and the rule counts as probed only once the probe reports failure. Each seeded violation is a patch: recipes carry them for library and pairing rules, contracts for composition rules. A patch is written against the map paths of the reference glue (or the shared interfaces, or the manifest); to apply one to a composition, the CLI maps each reference file to the file the manifest records for it. CI applies each patch, runs `verify`, and expects the rule's failure code. A probe that passes its seeded violation is treated as guidance until fixed. Seeded-violation runs repeat whenever a probe or its library changes [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md).
 
 ### 6.2 Evidence levels
 
@@ -785,13 +792,14 @@ Human checkpoints exist only for any new or changed ADR; what the map covers and
 - The map contains SDL3 and Dear ImGui (docking), the allocation, diagnostics, lifecycle, build-flags and platform contracts, the `dear-imgui--sdl3` pairing, and both library recipes.
 - `automap start` writes the manifest, lock, `vcpkg.json`, `vcpkg-configuration.json`, CMake files, shared interfaces, probe harness, choices header, reference glue, testbed entry point, `AGENTS.md` section and router skill.
 - `automap verify` builds, runs headless for a set number of frames on lavapipe, runs the probes, and writes unsigned evidence at the probed level.
+- `automap find` and `automap show` query the map.
 - Every probe in the slice fails its seeded violation in CI.
 - **Acceptance:** the `testbed-start` eval: a fresh agent session given a one-line request ends with a running testbed whose verification reports probed. Plus unit and golden tests for every command and format the slice adds.
 
 **Slice 2: extend with Jolt, on Linux** [ADR-0061](../adr/0061-first-three-vertical-slices.md).
 - Adds Jolt, the jobs contract with its shared interface and reference thread pool, the math-types contract, and Jolt's bindings and library recipe.
 - Probes for allocation, lifecycle and build flags, including Jolt's `VerifyJoltVersionID()`, and the ThreadSanitizer run with the frame rule [ADR-0073](../adr/0073-tsan-reports-count-when-they-touch-composition-code.md).
-- `automap extend`, `find` and `show`.
+- `automap extend`.
 - **Acceptance:** the `testbed-extend` eval ends probed on Linux; seeded violations for every new probe fail.
 
 **Slice 3: three platforms and published evidence** [ADR-0061](../adr/0061-first-three-vertical-slices.md).
@@ -847,9 +855,10 @@ These details are needed to build v1 but no ADR records them. They follow from t
 4. Fact, choice and failure-code names in the example contracts, including the `allocator-slot`, `logging-slot` and `profiling-slot` choices and the C++20 default.
 5. Fetching evidence for a lock's pins from the main branch rather than from the lock's map release (§5.3).
 6. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
-7. The `--probe` mode and probe results file (§5.6), the choices header's macro names (§4.9), and seeded violations as patch files (§6.1).
+7. The `--probe` mode and probe results file (§5.6), the choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
 8. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
 9. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
+10. Map metadata files and the vcpkg baseline they carry (§4.2), the default variant (§4.5), how the CLI obtains vcpkg and the configurable registry location (§5.5), and one build for windowed and headless runs (§5.5).
 
 ### 12.4 ADR index
 

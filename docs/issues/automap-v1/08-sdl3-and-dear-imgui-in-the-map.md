@@ -1,6 +1,6 @@
 # 08: SDL3 and Dear ImGui in the map
 
-**What to build:** SDL3 and Dear ImGui (docking) enter the public map with library entries, library recipes (build fragments, setup glue), their bindings, the `dear-imgui--sdl3` pairing recipe with its rules, ordering constraints and probes, and the testbed entry point. A Linux job in Automap's CI starts the testbed on Mesa lavapipe with SDL's offscreen driver and reaches probed.
+**What to build:** SDL3 and Dear ImGui (docking) enter the public map with library entries, library recipes (build fragments, setup glue), their bindings, the `dear-imgui--sdl3` pairing recipe with its rules, ordering constraints and probes, and the testbed's executable source. A Linux job in Automap's CI starts the testbed on Mesa lavapipe with SDL's offscreen driver and reaches probed.
 
 **Blocked by:** [07: Slice-1 contracts and shared interfaces](07-slice-1-contracts-and-shared-interfaces.md)
 

@@ -68,12 +68,12 @@
       "description": "The C++ standard the composition compiles with.",
       "schema": {
         "enum": [
-          "C++17",
-          "C++20",
-          "C++23"
+          17,
+          20,
+          23
         ]
       },
-      "default": "C++20"
+      "default": 20
     }
   },
   "rules": [

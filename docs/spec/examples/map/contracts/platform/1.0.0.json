@@ -14,22 +14,9 @@
       }
     },
     "headless": {
-      "description": "How the library runs without a display, as Automap's CI runs it.",
+      "description": "The environment `verify` sets to run the library without a display, as Automap's CI runs it. The build is the same as for windowed runs.",
       "schema": {
         "type": "string"
-      }
-    },
-    "headless_build_options": {
-      "required": false,
-      "description": "Build options the headless CI build needs, per platform id.",
-      "schema": {
-        "type": "object",
-        "additionalProperties": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
       }
     },
     "gpu_backends": {

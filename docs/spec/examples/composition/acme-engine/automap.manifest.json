@@ -50,7 +50,7 @@
       "workers": 7
     },
     "build-flags": {
-      "cxx_standard": "C++20"
+      "cxx_standard": 20
     },
     "math-types": {
       "position_precision": "float"

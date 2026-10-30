@@ -24,7 +24,8 @@
       "released": "2026-10-02",
       "pin": {
         "tag": "release-3.4.18",
-        "commit": "829a65d769d935c4852f8159e964312c0957260a"
+        "commit": "829a65d769d935c4852f8159e964312c0957260a",
+        "content_hash": "sha512:12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50"
       },
       "build_backend": {
         "vcpkg": {
@@ -44,7 +45,8 @@
           "build_options": {},
           "description": "SDL 3.4.18 plus Acme's fix for a gamepad hot-plug crash, kept private: SDL bans AI-generated contributions, so the agent never sends it upstream.",
           "pin": {
-            "commit": "dd156bf4a8f781c5c67dc56efdc489d75d33bc5d"
+            "commit": "dd156bf4a8f781c5c67dc56efdc489d75d33bc5d",
+            "content_hash": "sha256:dc28e58754db0721cd42bce078476d20d1b31046ce71c0b7bc5bea4374aff269"
           },
           "registry": "private"
         }
@@ -154,14 +156,7 @@
             "linux-x64-clang",
             "macos-arm64-appleclang"
           ],
-          "headless": "SDL_VIDEO_DRIVER=offscreen set in the environment before SDL_Init",
-          "headless_build_options": {
-            "linux-x64-clang": {
-              "SDL_X11": "OFF",
-              "SDL_WAYLAND": "OFF",
-              "SDL_UNIX_CONSOLE_BUILD": "ON"
-            }
-          },
+          "headless": "SDL_VIDEO_DRIVER=offscreen",
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
             "linux-x64-clang": "vulkan",

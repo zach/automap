@@ -2,8 +2,6 @@
 
 Automap is a curated, machine-readable map for composing a custom C++ game engine from many libraries, used by game developers and their coding agents to assemble, extend and maintain that engine.
 
-> Terms marked _(provisional)_ are not yet decided; Phase 2 branch 3 (domain model) sharpens them into schema-ready definitions. Open ambiguities are tracked in `docs/OPEN_QUESTIONS.md`.
-
 ## Language
 
 ### People

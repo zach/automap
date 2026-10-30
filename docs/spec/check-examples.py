@@ -73,6 +73,16 @@ def check_against(path, where, value, schema):
 for name, s in schemas.items():
     Draft202012Validator.check_schema(s)
 
+# ---- map metadata ----
+maps = {}
+for p in sorted(EX.glob("*/map.json")):
+    d = validate(p, "map")
+    maps[p.parent.name] = d
+    if (p.parent.name == "map") != (d["kind"] == "public"):
+        fail(p, "only the public map has kind public")
+public_map = maps.get("map", {})
+map_ids = {d["id"]: name for name, d in maps.items()}
+
 # ---- slots ----
 slots = {}
 for p in sorted(EX.glob("*/slots/*.json")):
@@ -117,6 +127,7 @@ library_files = sorted(EX.glob("map/libraries/*.json")) + sorted(
     p for p in EX.glob("*/libraries/*.json") if p.parts[-3] != "map")
 for p in library_files:
     d = validate(p, "library")
+    nda_platforms = set(maps.get(p.relative_to(EX).parts[0], {}).get("platforms", []))
     if d["id"] in libraries:
         base = libraries[d["id"]][1]
         for k in ("name", "license", "contribution_policy", "slots", "source"):
@@ -135,6 +146,8 @@ for p in library_files:
             strip = lambda f: {**f, "platform": {k: x for k, x in f.get("platform", {}).items() if k != "targets"}}
             if strip(v["facts"]) != strip(bv["facts"]) or not set(old_t) <= set(new_t):
                 fail(p, f"extends {d['id']} {v['version']}: facts may only gain platform targets")
+            elif set(new_t) - set(old_t) - nda_platforms:
+                fail(p, f"extends {d['id']} {v['version']}: only an NDA platform's map may add targets, and only its own platforms")
             elif new_t:
                 bv["facts"]["platform"]["targets"] = old_t + [t for t in new_t if t not in old_t]
             existing = {x["name"]: x for x in bv["variants"]}
@@ -236,7 +249,11 @@ for p in sorted(EX.glob("*/recipes/*/*.json")):
     if d["kind"] == "library" and not any(g["role"] == "build-fragment" for g in d["reference_glue"]):
         fail(p, "a library recipe ships a build fragment")
     if d["kind"] != "library" and not any(g["role"] == "probe" for g in d["reference_glue"]):
-        fail(p, "binding and pairing recipes ship their probes")
+        # A binding with nothing to probe says why for every probed library rule of its contract.
+        lib_rules = {r["id"] for r in contracts.get(subj.get("contract"), {}).get("rules", [])
+                     if r["kind"] == "probed" and r["applies_to"] == "library"}
+        if d["kind"] == "pairing" or not lib_rules or lib_rules - {n["rule"] for n in d.get("not_applicable", [])}:
+            fail(p, "binding and pairing recipes ship their probes, unless every probed library rule is not-applicable")
     owners = set(subj.get("libraries", [])) | {rid}
     for o in d.get("ordering", []):
         for step in (o["before"], o["after"]):
@@ -267,6 +284,11 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
             if part not in used and part not in contracts:
                 fail(m_path, f"glue entry {key} names {part}, which isn't in this composition")
     private = {pm["id"] for pm in m.get("private_maps", [])}
+    for pm in m.get("private_maps", []):
+        if pm["id"] not in map_ids:
+            fail(m_path, f"private map {pm['id']} has no example map.json")
+        elif set(pm.get("platforms", [])) != set(maps[map_ids[pm["id"]]].get("platforms", [])):
+            fail(m_path, f"private map {pm['id']}: platforms differ from its map.json")
 
     lock_path = comp / "automap.lock.json"
     raw = lock_path.read_text()
@@ -292,9 +314,14 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
         if v is None:
             fail(lock_path, f"{where}: {lib} {pin['version']} ({pin['variant']}) is not in the map")
             return None
-        expected = (variant_of(v, pin["variant"]).get("pin") or v.get("pin") or {}).get("commit")
-        if pin.get("commit") != expected:
+        map_pin = variant_of(v, pin["variant"]).get("pin") or v.get("pin") or {}
+        if pin.get("commit") != map_pin.get("commit"):
             fail(lock_path, f"{where}: {lib}: pinned commit differs from the map")
+        if map_pin and pin["content_hash"] != map_pin["content_hash"]:
+            fail(lock_path, f"{where}: {lib}: content hash differs from the map")
+        reg = pin.get("registry", {})
+        if reg.get("kind") == "vcpkg-curated" and reg.get("commit") != public_map["build_backend"]["vcpkg"]["baseline"]:
+            fail(lock_path, f"{where}: {lib}: curated registry commit differs from the map's vcpkg baseline")
         if pin["license"] != libraries[lib][1]["license"]["spdx"]:
             fail(lock_path, f"{where}: {lib}: license differs from the map")
         source = libraries[lib][1].get("source", {})

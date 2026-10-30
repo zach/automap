@@ -24,7 +24,8 @@
       "released": "2026-10-02",
       "pin": {
         "tag": "release-3.4.18",
-        "commit": "829a65d769d935c4852f8159e964312c0957260a"
+        "commit": "829a65d769d935c4852f8159e964312c0957260a",
+        "content_hash": "sha512:12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50"
       },
       "build_backend": {
         "vcpkg": {
@@ -44,7 +45,8 @@
           "build_options": {},
           "registry": "private",
           "pin": {
-            "commit": "c8e957a20bfb5872857effd13397e0331630873a"
+            "commit": "c8e957a20bfb5872857effd13397e0331630873a",
+            "content_hash": "sha256:84d564718ccc37fa90afa891c90c9e7a88620109d47b9ed4ff1e1f62f4a3fc64"
           },
           "description": "SDL's port for the hypothetical Nebula console, distributed by the SDL maintainers to Nebula developers under NDA.",
           "facts": {
@@ -165,14 +167,7 @@
             "linux-x64-clang",
             "macos-arm64-appleclang"
           ],
-          "headless": "SDL_VIDEO_DRIVER=offscreen set in the environment before SDL_Init",
-          "headless_build_options": {
-            "linux-x64-clang": {
-              "SDL_X11": "OFF",
-              "SDL_WAYLAND": "OFF",
-              "SDL_UNIX_CONSOLE_BUILD": "ON"
-            }
-          },
+          "headless": "SDL_VIDEO_DRIVER=offscreen",
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
             "linux-x64-clang": "vulkan",
