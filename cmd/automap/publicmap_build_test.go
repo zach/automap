@@ -127,7 +127,10 @@ var joltSeeds = []struct{ seed, code string }{
 
 func TestTheTestbedExtendsWithJoltProbed(t *testing.T) {
 	requirePublicMapBuilds(t)
-	requireTSan(t)
+	tsan := hostPlatform != "windows-x64-msvc" // the jobs contract's ThreadSanitizer rule doesn't run on Windows
+	if tsan {
+		requireTSan(t)
+	}
 	repo := testbedRepo(t)
 	if run := repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json"); run.Exit != 0 {
 		t.Fatalf("start: exit %d\n%s", run.Exit, run.Stdout)
@@ -141,8 +144,14 @@ func TestTheTestbedExtendsWithJoltProbed(t *testing.T) {
 		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
 	}
 	e := checkEvidence(t, run, "probed")
-	want := map[string]bool{"build-flags.abi-defines-match": false, "jobs.tsan-clean": false, "jobs.routed-through-interface": false}
+	want := map[string]bool{"build-flags.abi-defines-match": false, "jobs.routed-through-interface": false}
+	if tsan {
+		want["jobs.tsan-clean"] = false
+	}
 	for _, r := range e.Predicate.Results {
+		if r.Rule == "jobs.tsan-clean" && !tsan && r.Status != "not-applicable" {
+			t.Errorf("jobs.tsan-clean %+v on %s, want not-applicable", r, hostPlatform)
+		}
 		if _, ok := want[r.Rule]; ok && r.Status == "pass" {
 			want[r.Rule] = true
 		}
@@ -159,6 +168,9 @@ func TestTheTestbedExtendsWithJoltProbed(t *testing.T) {
 	}
 
 	for _, c := range joltSeeds {
+		if c.seed == "jobs.tsan-clean" && !tsan {
+			continue
+		}
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

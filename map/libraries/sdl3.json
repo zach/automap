@@ -53,10 +53,10 @@
         {
           "name": "default",
           "build_options": {
-            "vcpkg_features": "vulkan,x11,wayland",
+            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux]",
             "vcpkg_default_features": "false"
           },
-          "description": "SDL with the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers on Linux; the port's other default Linux feature, IBus input methods, is off."
+          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers; the port's other default Linux feature, IBus input methods, is off. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
         }
       ],
       "facts": {

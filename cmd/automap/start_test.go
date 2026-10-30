@@ -2,12 +2,14 @@ package main_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"regexp"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/zach/automap/internal/clitest"
 	"github.com/zach/automap/internal/composition"
 )
 
@@ -205,4 +207,33 @@ func TestEveryCommandRefusesAHandEditedLock(t *testing.T) {
 			run.ExpectFailure(t, "LOCK_EDITED", "automap.lock.json")
 		})
 	}
+}
+
+// A variant's vcpkg feature can name the platforms it applies to, as
+// vcpkg's platform expression in brackets; vcpkg.json carries it as the
+// feature's platform.
+func TestAVariantFeatureCanBeLimitedToPlatforms(t *testing.T) {
+	repo := fixtureRepo(t)
+	repo.EditJSON(t, "map/libraries/stub-window.json", set("versions/0/variants/1/build_options/vcpkg_features", "wide-events[linux | osx]"))
+
+	repo.Automap(t, "start", "--with", "stub-window:wide-events", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	var doc struct {
+		Dependencies []struct {
+			Name     string
+			Features []any
+		}
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg.json")), &doc)
+	for _, d := range doc.Dependencies {
+		if d.Name != "stub-window" {
+			continue
+		}
+		want := map[string]any{"name": "wide-events", "platform": "linux | osx"}
+		if len(d.Features) != 1 || fmt.Sprint(d.Features[0]) != fmt.Sprint(want) {
+			t.Errorf("stub-window's features %v, want [%v]", d.Features, want)
+		}
+		return
+	}
+	t.Error("vcpkg.json has no stub-window dependency")
 }
