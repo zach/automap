@@ -41,7 +41,14 @@ std::string& results_path() {
 // standard the composition chooses. The harness checks it for every
 // composition, since every composition makes the choice.
 void check_language_standard(am::Context&) {
-    bool agree = __cplusplus / 100 % 100 == AUTOMAP_BUILD_FLAGS_CXX_STANDARD % 100;
+    // MSVC reports the standard in _MSVC_LANG; its __cplusplus stays 199711L
+    // without /Zc:__cplusplus.
+#ifdef _MSVC_LANG
+    long standard = _MSVC_LANG;
+#else
+    long standard = __cplusplus;
+#endif
+    bool agree = standard / 100 % 100 == AUTOMAP_BUILD_FLAGS_CXX_STANDARD % 100;
     check("build-flags.language-settings-agree", "", agree, "LANG_SETTINGS_MISMATCH(cxx_standard)");
 }
 const Registration language_standard("automap", &check_language_standard);
