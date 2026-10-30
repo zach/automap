@@ -9,7 +9,7 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | 0. Orientation | Install skills, seed glossary, plan, start research | `CLAUDE.md`, `CONTEXT.md`, `docs/agents/`, this file | Done 2026-10-29 |
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
 | 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | Done 2026-10-30 (ADRs 0001–0069) |
-| 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Next |
+| 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Spike run 2026-10-30 ([07](research/07-spike-testbed-agent.md)); decisions pending |
 | 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Not started |
 
 ## Phase 1 research topics
@@ -64,6 +64,6 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 14 | Success measures | 1, 13 | Done | 0062, 0063 |
 | 15 | Agent-driven build plan: how Automap itself is built by agents (spec section 10): repo conventions, instruction files, build-team skills, test strategy, human checkpoints | 13 | Done | 0064–0069 |
 
-## Planned spike
+## Spike
 
-From a draft manifest and recipes, a fresh agent session generates an SDL3 + SDL_GPU + Dear ImGui + Jolt testbed; record where it went wrong.
+From a draft manifest and recipes, a fresh agent session generated an SDL3 + SDL_GPU + Dear ImGui + Jolt testbed. Findings: `docs/research/07-spike-testbed-agent.md`; code archived on the `spike/testbed-agent` branch.
