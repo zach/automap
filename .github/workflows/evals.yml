@@ -41,9 +41,10 @@ jobs:
       - name: vcpkg at the map's baseline
         run: |
           baseline=$(jq -r .build_backend.vcpkg.baseline map/map.json)
-          git init -q "$RUNNER_TEMP/vcpkg"
-          git -C "$RUNNER_TEMP/vcpkg" fetch -q --depth 1 https://github.com/microsoft/vcpkg "$baseline"
-          git -C "$RUNNER_TEMP/vcpkg" checkout -q FETCH_HEAD
+          # Versioned ports, such as a curated library's pinned port
+          # version, are read from vcpkg's history: clone it without blobs.
+          git clone -q --filter=blob:none https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
           "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
       - name: Restore the vcpkg binary cache
