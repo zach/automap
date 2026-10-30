@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/zach/automap/internal/composition"
 )
 
-const manifestFile = "automap.manifest.json"
+const manifestFile = composition.ManifestFile
 
 const usage = `usage: automap <command> [arguments] [--json]
 
 commands:
+  start --with <library>[:<variant>]... [--slot <slot>=<library>]... [--platform <id>]...
+                                             create a composition in the current directory
   show <library|slot|contract|recipe> <id>   show one map entry and its facts
   find [<query>] [--slot <slot>]             search the map's libraries
   verify                                     build the composition, run its smoke test and probes, write evidence
@@ -29,6 +33,7 @@ type command struct {
 }
 
 var commands = map[string]command{
+	"start":  {bools: []string{"json"}, values: []string{"map", "with", "slot", "platform"}, run: start},
 	"verify": {bools: []string{"json"}, run: verify},
 	"show":   {bools: []string{"json"}, values: []string{"map"}, run: show},
 	"find":   {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
@@ -53,6 +58,9 @@ func Run(argv []string, stdout, stderr io.Writer) int {
 		r.fail("USAGE", err.Error())
 		return finish(r, exitUsage, hasJSONFlag(argv), stdout, stderr)
 	}
+	if status := checkLock(r); status != exitOK {
+		return finish(r, status, a.bools["json"], stdout, stderr)
+	}
 	status := cmd.run(a, r)
 	return finish(r, status, a.bools["json"], stdout, stderr)
 }
@@ -74,6 +82,21 @@ func finish(r *result, status int, asJSON bool, stdout, stderr io.Writer) int {
 		return exitFailed
 	}
 	return status
+}
+
+// checkLock refuses to act on a lock in the current directory whose hash
+// doesn't match: only the CLI writes the lock (ADR-0046).
+func checkLock(r *result) int {
+	raw, err := os.ReadFile(composition.LockFile)
+	if err != nil {
+		return exitOK
+	}
+	if _, err := composition.CheckLock(raw); err != nil {
+		r.Summary = "Refusing to act on a hand-edited lock."
+		r.fail("LOCK_EDITED", composition.LockFile+" was edited by hand: "+err.Error()+". Only the CLI writes the lock: restore it from version control and make the change through the CLI.")
+		return exitRefused
+	}
+	return exitOK
 }
 
 func verify(a *args, r *result) int {

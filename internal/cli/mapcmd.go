@@ -196,7 +196,7 @@ func find(a *args, r *result) int {
 	sort.Strings(ids)
 	var found []string
 	for _, id := range ids {
-		v := newest(m.Libraries[id])
+		v := m.Libraries[id].Newest()
 		var variants []string
 		for _, x := range v.Variants {
 			variants = append(variants, x.Name)
@@ -223,17 +223,6 @@ func find(a *args, r *result) int {
 		r.Summary = fmt.Sprintf("1 library fills %s: %s.", slot, found[0])
 	}
 	return exitOK
-}
-
-// newest returns a library's most recently released version.
-func newest(lib *mapmodel.Library) mapmodel.Version {
-	best := lib.Versions[0]
-	for _, v := range lib.Versions[1:] {
-		if v.Released >= best.Released {
-			best = v
-		}
-	}
-	return best
 }
 
 func plural(n int, one, many string) string {

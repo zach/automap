@@ -25,13 +25,14 @@ var Version = "0.0.0-dev"
 // result is a CLI result, the JSON every command prints with --json
 // (schemas/cli-result.schema.json).
 type result struct {
-	Command    string    `json:"command"`
-	CLIVersion string    `json:"cli_version"`
-	OK         bool      `json:"ok"`
-	Summary    string    `json:"summary"`
-	Warnings   []warning `json:"warnings"`
-	Failures   []failure `json:"failures"`
-	Entries    []entry   `json:"entries,omitempty"`
+	Command      string    `json:"command"`
+	CLIVersion   string    `json:"cli_version"`
+	OK           bool      `json:"ok"`
+	Summary      string    `json:"summary"`
+	Warnings     []warning `json:"warnings"`
+	Failures     []failure `json:"failures"`
+	FilesWritten []string  `json:"files_written,omitempty"`
+	Entries      []entry   `json:"entries,omitempty"`
 }
 
 // entry is one map entry in a find or show result.

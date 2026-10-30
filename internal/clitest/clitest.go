@@ -196,6 +196,28 @@ func cleanEnv() []string {
 	return env
 }
 
+// ReadFile returns a file in the repo after the run, or fails the test.
+func (r *Run) ReadFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(r.Dir, filepath.FromSlash(path)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+// ExpectUnchanged fails the test if the run added, changed or removed any
+// file in the repo.
+func (r *Run) ExpectUnchanged(t *testing.T) {
+	t.Helper()
+	after := readTree(t, r.Dir)
+	for _, p := range union(r.Before, after) {
+		if !bytes.Equal(r.Before[p], after[p]) {
+			t.Errorf("%s changed, but the run should write nothing", p)
+		}
+	}
+}
+
 // ExpectFailure fails the test unless the run's result has a failure with
 // code whose message contains message.
 func (r *Run) ExpectFailure(t *testing.T, code, message string) {

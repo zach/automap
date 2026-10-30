@@ -27,6 +27,8 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `cmd/automap/` | The CLI's entry point and its process-level tests. |
 | `internal/cli/` | The commands and the CLI result. |
 | `internal/mapmodel/` | Loads, validates and layers the public and private maps. |
+| `internal/composition/` | The manifest and lock, resolution, startup planning, and the files a composition is made of. |
+| `internal/canonical/` | RFC 8785 canonical JSON, for the lock. |
 | `internal/clitest/` | The test harness that runs the CLI as a process. |
 | `schemas/` | The published JSON Schemas, embedded in the binary. |
 | `testdata/map/` | The fixture map: two stub libraries with recipes, probes and seeded violations. |

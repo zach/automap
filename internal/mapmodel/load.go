@@ -37,8 +37,9 @@ type Map struct {
 	Libraries map[string]*Library   // by id, with private extensions merged
 	Recipes   map[string]*Recipe    // by recipe id
 
-	origins  map[string][]string // "<kind> <id>" -> ids of the maps that define it
-	problems []Problem
+	origins    map[string][]string // "<kind> <id>" -> ids of the maps that define it
+	recipeDirs map[string]string   // recipe id -> the directory its reference glue paths are relative to
+	problems   []Problem
 }
 
 // file is one JSON file in a map, decoded once for schema validation.
@@ -61,6 +62,8 @@ func Load(dir string, privates []PrivateMap) (*Map, []Problem) {
 		Libraries: map[string]*Library{},
 		Recipes:   map[string]*Recipe{},
 		origins:   map[string][]string{},
+
+		recipeDirs: map[string]string{},
 	}
 	var files []*file
 	public := m.readMap(dir, "public", nil)
@@ -517,6 +520,7 @@ func (m *Map) loadRecipes(files []*file) {
 			continue
 		}
 		m.Recipes[rid] = &r
+		m.recipeDirs[rid] = filepath.Join(f.meta.Dir, filepath.FromSlash(path.Dir(f.rel)))
 		m.origin("recipe", rid, f.meta.ID)
 	}
 }
@@ -586,6 +590,52 @@ func (m *Map) loadEvidence(files []*file) {
 			m.fail(name, "known-good level with failing or unverifiable results")
 		}
 	}
+}
+
+// RecipeFile is the path on disk of a file a recipe names, such as its
+// reference glue or a seeded violation's patch.
+func (m *Map) RecipeFile(rid, rel string) string {
+	return filepath.Join(m.recipeDirs[rid], filepath.FromSlash(rel))
+}
+
+// ContractFile is the path on disk of a file a contract version names,
+// such as a shared interface source.
+func (m *Map) ContractFile(c *Contract, rel string) string {
+	for _, meta := range m.Maps {
+		p := filepath.Join(meta.Dir, "contracts", c.Contract, c.Version, filepath.FromSlash(rel))
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return filepath.Join(m.Maps[0].Dir, "contracts", c.Contract, c.Version, filepath.FromSlash(rel))
+}
+
+// PublicDir is the public map's directory, which holds the testbed
+// template and the probe harness.
+func (m *Map) PublicDir() string { return m.Maps[0].Dir }
+
+// LatestContract returns a contract's newest version in the map, or nil.
+func (m *Map) LatestContract(id string) *Contract { return m.latestContract(id) }
+
+// Newest returns the library's most recently released version.
+func (l *Library) Newest() *Version {
+	best := &l.Versions[0]
+	for i := range l.Versions[1:] {
+		if v := &l.Versions[i+1]; v.Released >= best.Released {
+			best = v
+		}
+	}
+	return best
+}
+
+// Variant returns the version's variant with the given name, or nil.
+func (v *Version) Variant(name string) *Variant {
+	for i := range v.Variants {
+		if v.Variants[i].Name == name {
+			return &v.Variants[i]
+		}
+	}
+	return nil
 }
 
 // KnownGood reports whether an evidence level means every applicable rule
