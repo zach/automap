@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0080](../adr/0080-the-cli-generates-startup.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0081](../adr/0081-eval-suite-runs-claude-code-headless.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -678,6 +678,8 @@ Every library has a library recipe with a build fragment and setup glue [ADR-007
 
 ### 8.7 Journey evals
 
+The eval suite runs Claude Code in headless mode on GitHub-hosted runners, each task in a fresh environment holding only the CLI and its starting repo, with the newest Claude model at the time (named in the report) and an Anthropic API key kept as a repository secret for the eval workflow alone. Each task runs once per map release and on demand. A monthly spending cap set by the product owner bounds the cost; a run the cap stops is reported as skipped, not failed [ADR-0081](../adr/0081-eval-suite-runs-claude-code-headless.md).
+
 | Eval task | Starts from | Passes when |
 | --- | --- | --- |
 | testbed-start | an empty repo and "Start a C++ testbed with SDL3 and Dear ImGui." | the testbed runs and `automap verify` reports probed, with no human input |
@@ -950,3 +952,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0078](../adr/0078-exploration-merges-to-main-after-review.md) | The exploration merges to main when the definition of done is signed off |
 | [0079](../adr/0079-map-from-a-directory-before-releases.md) | The CLI can read the map from a directory, recorded as a commit or as unreleased |
 | [0080](../adr/0080-the-cli-generates-startup.md) | The CLI generates the composition's startup from its recipes |
+| [0081](../adr/0081-eval-suite-runs-claude-code-headless.md) | The eval suite runs Claude Code headless, under a spending cap |

@@ -120,7 +120,7 @@ Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI 
 - **Automap registry.** A vcpkg git registry on its own branch for variants vcpkg can't express (Jolt double precision and deterministic), missing libraries and fresh commits.
 - **Automap CI.** Verifies declared edges on the three platforms (lavapipe on Linux, WARP on Windows, paravirtual Metal on macOS), runs each probe's seeded violation, signs evidence into the map, re-verifies on input change and every 30 days, cuts map releases, and runs the eval suite.
 - **Watcher and curation agents.** Detect upstream releases and open map changes; the cooldown and evidence gate decides merging.
-- **Eval suite.** Runs fresh agent sessions on the journey tasks and computes the four measures.
+- **Eval suite.** Runs fresh Claude Code sessions in headless mode on the journey tasks, once per map release and on demand, under a spending cap on its API key, and computes the four measures.
 
 ### Formats
 

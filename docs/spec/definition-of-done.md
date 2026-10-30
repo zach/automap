@@ -4,7 +4,7 @@ The brief's definition of done (section 6), checked item by item, with the evide
 
 | # | Item | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | A fresh agent could begin slice 1 without asking anything foundational | Open: four questions below | Fresh-agent test, 2026-10-30 (below) |
+| 1 | A fresh agent could begin slice 1 without asking anything foundational | Re-test under way: the four foundational questions from the first test are resolved | Fresh-agent test, 2026-10-30 (below) |
 | 2 | Every schema has a complete, valid example | Done | Nine schemas, 43 example files; `python3 docs/spec/check-examples.py` reports all valid, and fails on seeded mistakes |
 | 3 | Every known-good pairing names its verification method | Done | [SPEC §8.5](SPEC.md#85-pairings) |
 | 4 | Testbed, starter engine and custom integration each have a worked journey | Done | [SPEC §2.4–2.6](SPEC.md#24-journey-1-testbed-start-then-extend), with example files |
@@ -24,7 +24,7 @@ A general-purpose agent with no conversation history was given only the repo and
 | 1 | Has implementation been authorised, and on which branch? `CLAUDE.md` still says "No product code", and `main` holds only `LICENSE`. | Foundational | The exploration merges to `main` with a merge commit when this review is signed off; ticket 01 starts there and switches the instruction files ([ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)) |
 | 2 | Where does the CLI read the public map in slices 1–2, and what goes in `map_release` before the first release in slice 3? | Foundational | The CLI reads the map from a directory given by `--map` or `AUTOMAP_MAP`, recorded as `git:<commit>` or `unreleased`; unreleased evidence is never signed ([ADR-0079](../adr/0079-map-from-a-directory-before-releases.md)) |
 | 3 | How do recipe entry points become running code: a generated startup or a hand-written `main`? What supplies arguments such as the window and GPU device? | Foundational | The CLI generates the startup from the recipes; entry points take one context whose fields recipes declare; adopted engines may keep their own startup ([ADR-0080](../adr/0080-the-cli-generates-startup.md)) |
-| 4 | Which agent runtime and model run the eval suite, with what credentials and budget? | Foundational | To decide with the product owner |
+| 4 | Which agent runtime and model run the eval suite, with what credentials and budget? | Foundational | Claude Code headless on GitHub-hosted runners, newest Claude model named in each report, API key as a repository secret, once per map release and on demand, under a monthly cap the product owner sets ([ADR-0081](../adr/0081-eval-suite-runs-claude-code-headless.md)) |
 | 5 | Where do `content_hash` and the vcpkg baseline come from, if resolution is pure? | Minor | Library pins carry the content hash; the public map's new `map.json` carries the vcpkg baseline (SPEC §4.2, §4.5) |
 | 6 | How is vcpkg obtained? | Minor | `VCPKG_ROOT` if set, else a pinned vcpkg bootstrapped into the CLI's cache (SPEC §5.5) |
 | 7 | CLI surface: `show <id>` is ambiguous; how `--slot` attaches in `start`; no default variant; "unless pinned" has no field | Minor | `show <kind> <id>`; `start --slot <slot>=<lib>`; a version's first variant is its default; "unless pinned" removed (SPEC §4.5, §5.4) |
