@@ -268,10 +268,16 @@ func (r *Run) LogDetails(t *testing.T) {
 			continue
 		}
 		lines := strings.Split(string(raw), "\n")
-		if len(lines) > 80 {
-			lines = lines[len(lines)-80:]
+		var errs []string
+		for _, l := range lines {
+			if strings.Contains(strings.ToLower(l), "error") {
+				errs = append(errs, l)
+			}
 		}
-		t.Logf("%s (%s), last lines:\n%s", f.DetailsFile, f.Code, strings.Join(lines, "\n"))
+		if len(lines) > 40 {
+			lines = lines[len(lines)-40:]
+		}
+		t.Logf("%s (%s), lines mentioning errors:\n%s\nlast lines:\n%s", f.DetailsFile, f.Code, strings.Join(errs, "\n"), strings.Join(lines, "\n"))
 	}
 }
 
