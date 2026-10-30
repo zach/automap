@@ -18,6 +18,7 @@ type Seed struct {
 	Rule        string
 	Library     string // the library a library rule's seed is about, or ""
 	Owner       string // the recipe or contract that carries it
+	Subject     string // the library or pairing whose recipe carries it, or ""
 	Description string
 	Patch       string            // the patch file on disk
 	Targets     map[string]string // a file the patch names -> the composition's file
@@ -33,7 +34,10 @@ func Seeds(m *mapmodel.Map, man *composition.Manifest) []Seed {
 		for _, p := range r.Probes {
 			seed := Seed{Rule: p.Rule, Owner: rid, Description: p.SeededViolation.Description,
 				Patch: m.RecipeFile(rid, p.SeededViolation.Patch), Targets: map[string]string{}}
-			if r.Kind != "pairing" && isLibraryRule(m, p.Rule) {
+			seed.Subject = r.Subject.Library
+			if r.Kind == "pairing" {
+				seed.Subject = rid
+			} else if isLibraryRule(m, p.Rule) {
 				seed.Library = r.Subject.Library
 			}
 			recipeDir := strings.Split(p.SeededViolation.Patch, "/")[0]

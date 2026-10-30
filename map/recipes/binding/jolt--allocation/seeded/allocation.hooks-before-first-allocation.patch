@@ -1,0 +1,17 @@
+--- a/jolt_allocation.cpp
++++ b/jolt_allocation.cpp
+@@ -15,11 +15,14 @@
+ // Routes Jolt's allocations through the allocation facade. Runs in the
+ // memory phase, before JPH::Factory and JPH::RegisterTypes().
+ bool am_bind_jolt_allocation(am::Context&) {
++    JPH::RegisterDefaultAllocator();
++    void* early = JPH::Allocate(64); // from Jolt's default allocator
+     JPH::Allocate = &am_jolt_allocate;
+     JPH::Reallocate = &am_jolt_reallocate;
+     JPH::Free = &am_jolt_free;
+     JPH::AlignedAllocate = &am_jolt_aligned_allocate;
+     JPH::AlignedFree = &am_jolt_aligned_free;
++    JPH::Free(early);
+     am::lifecycle::init_step("jolt:allocation-hooks");
+     return true;
+ }

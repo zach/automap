@@ -20,6 +20,12 @@
 #define AUTOMAP_TESTBED_SDL3 1
 #endif
 
+#if defined(AUTOMAP_LIBRARY_JOLT)
+#include <Jolt/Jolt.h>
+
+#include <Jolt/Physics/PhysicsSystem.h>
+#endif
+
 int main(int argc, char** argv) {
     int frames = -1;
     const char* results = nullptr;
@@ -37,6 +43,9 @@ int main(int argc, char** argv) {
         return 1;
     }
     for (int frame = 0; frames < 0 || frame < frames; ++frame) {
+#if defined(AUTOMAP_LIBRARY_JOLT)
+        ctx.jolt.physics_system->Update(1.0f / 60.0f, 1, ctx.jolt.temp_allocator, ctx.jolt.job_system);
+#endif
 #if defined(AUTOMAP_TESTBED_IMGUI)
         if (!am_pair_imgui_sdl3_begin_frame(ctx)) break;
         ImGui::Begin("Automap testbed");

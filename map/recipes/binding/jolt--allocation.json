@@ -1,0 +1,61 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--allocation/jolt_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--allocation/jolt_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_jolt_allocation",
+      "steps": [
+        "jolt:allocation-hooks"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "After Jolt shuts down, the facade's probe-build block tracking shows Jolt released no block the facade didn't allocate; one it did fails the rule as ALLOC_HOOK_LATE(jolt).",
+      "seeded_violation": {
+        "description": "Register Jolt's default allocator and allocate a block before installing the hooks, then free it through them.",
+        "patch": "jolt--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_jolt_allocation(): JPH::Allocate, Reallocate, Free, AlignedAllocate and AlignedFree are the five jolt trampolines, and the facade served Jolt during the run.",
+      "seeded_violation": {
+        "description": "Install Jolt's default allocator with JPH::RegisterDefaultAllocator() in place of the hooks.",
+        "patch": "jolt--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "Jolt's allocation functions are global function pointers, null until set: install them before JPH::Factory and JPH::RegisterTypes(), and don't call JPH::RegisterDefaultAllocator().",
+    "The hooks are unavailable when Jolt is built with JPH_DISABLE_CUSTOM_ALLOCATOR; the joltphysics port builds with them.",
+    "Jolt passes the old size to Reallocate; the facade doesn't need it."
+  ]
+}

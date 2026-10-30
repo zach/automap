@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "math-types",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "math-types.adapters-round-trip",
+      "reason": "The composition has no math library for Jolt's types to convert to."
+    }
+  ],
+  "adaptation_notes": [
+    "Jolt's RVec3 is single precision in the default variant, matching position_precision float; verify judges math-types.precision-agrees from the library facts."
+  ]
+}

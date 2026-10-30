@@ -95,7 +95,9 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 	rule, library, _ := strings.Cut(spec, ":")
 	var matches []verify.Seed
 	for _, s := range verify.Seeds(m, man) {
-		if s.Rule == rule && (library == "" || s.Library == library) {
+		// A composition rule's seed is named by the library or pairing
+		// whose recipe carries it.
+		if s.Rule == rule && (library == "" || s.Library == library || s.Library == "" && s.Subject == library) {
 			matches = append(matches, s)
 		}
 	}
@@ -107,7 +109,11 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 	case len(matches) > 1:
 		var names []string
 		for _, s := range matches {
-			names = append(names, s.Rule+":"+s.Library)
+			name := s.Library
+			if name == "" {
+				name = s.Subject
+			}
+			names = append(names, s.Rule+":"+name)
 		}
 		r.Summary = "More than one seeded violation matches " + spec + "."
 		r.fail("USAGE", "Name the library: "+strings.Join(names, ", "))

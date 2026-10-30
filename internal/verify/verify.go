@@ -107,7 +107,10 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	}
 	reached := Level(built, smoked, false, nil)
 	obs := Observed{Level: reached}
-	if smoked {
+	// The probes run even when the smoke run failed: a probe that records
+	// its failure before startup stops, such as a library's ABI check,
+	// says why.
+	if built {
 		if err := build(opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
 			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
 		} else {
@@ -123,6 +126,11 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 				obs.Ran = true
 				obs.Reported = harness.Results
 				obs.Computed = append(CheckLifecycle(DeclaredLifecycle(m, man), harness.InitSteps, harness.ShutdownSteps), CheckTargets(m, man))
+				precision := "float"
+				if p, ok := man.Choices["math-types"]["position_precision"].(string); ok {
+					precision = p
+				}
+				obs.Computed = append(obs.Computed, CheckPrecision(precision, Precisions(m, man)))
 				if err != nil {
 					out.Failures = append(out.Failures, Failure{Code: "PROBE_FAILED", Message: "The probe run didn't exit cleanly: " + err.Error(), DetailsFile: paths.probeLog})
 				}

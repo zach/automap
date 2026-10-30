@@ -17,8 +17,10 @@ void begin(const std::string& path);
 
 // rule: the rule id; library: who the result is about ("" for a pairing or
 // the composition); failure_code: reported when !ok. A later result for the
-// same rule and library replaces an earlier one.
-void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code);
+// same rule and library replaces an earlier one. reason, when given, says
+// under what condition the result holds, such as a check the build left out.
+void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code,
+           const std::string& reason = "");
 
 // Records a failure and writes the results file now, before a check that
 // may abort the process, such as a library's own assertion; a later check

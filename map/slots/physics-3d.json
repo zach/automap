@@ -1,0 +1,7 @@
+{
+  "id": "physics-3d",
+  "description": "3D rigid-body physics simulation.",
+  "examples": [
+    "jolt"
+  ]
+}

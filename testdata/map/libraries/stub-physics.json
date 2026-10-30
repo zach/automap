@@ -50,6 +50,15 @@
           "interface": "stub_physics_set_job_hooks(stub_physics_submit_fn, stub_physics_wait_fn, void*)",
           "provides_scheduler": false
         },
+        "math-types": {
+          "types": [
+            {
+              "name": "stub_physics_vec3",
+              "scalar": "float"
+            }
+          ],
+          "position_precision": "float"
+        },
         "lifecycle": {
           "init_steps": [
             {

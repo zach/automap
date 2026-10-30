@@ -12,7 +12,7 @@ namespace am::probe {
 namespace {
 
 struct Result {
-    std::string rule, library, failure_code;
+    std::string rule, library, failure_code, reason;
     bool ok;
 };
 
@@ -81,14 +81,15 @@ void run(When when, am::Context& ctx) {
 
 void begin(const std::string& path) { results_path() = path; }
 
-void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code) {
+void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code,
+           const std::string& reason) {
     for (Result& r : results()) {
         if (r.rule == rule && r.library == library) {
-            r = {rule, library, failure_code, ok};
+            r = {rule, library, failure_code, reason, ok};
             return;
         }
     }
-    results().push_back({rule, library, failure_code, ok});
+    results().push_back({rule, library, failure_code, reason, ok});
 }
 
 void expect_failure(const std::string& rule, const std::string& library, const std::string& failure_code) {
@@ -108,6 +109,7 @@ bool write_results() {
         std::fprintf(f, "%s\n    {\"rule\": %s, \"library\": %s, \"status\": %s", i ? "," : "", quote(r.rule).c_str(),
                      quote(r.library).c_str(), r.ok ? "\"pass\"" : "\"fail\"");
         if (!r.ok) std::fprintf(f, ", \"failure_code\": %s", quote(r.failure_code).c_str());
+        if (!r.reason.empty()) std::fprintf(f, ", \"reason\": %s", quote(r.reason).c_str());
         std::fprintf(f, "}");
     }
     std::fprintf(f, "\n  ],\n");

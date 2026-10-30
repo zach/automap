@@ -121,3 +121,24 @@ func TestResultsWhenProbesDidntRun(t *testing.T) {
 		t.Errorf("%+v, want unverifiable because no probe ran", got[0])
 	}
 }
+
+func TestCheckPrecision(t *testing.T) {
+	for _, c := range []struct {
+		name       string
+		choice     string
+		precisions map[string]string
+		want       verify.Result
+	}{
+		{"every library agrees", "float", map[string]string{"jolt": "float", "other": "float"},
+			verify.Result{Rule: "math-types.precision-agrees", Status: "pass"}},
+		{"a library differs", "double", map[string]string{"jolt": "float"},
+			verify.Result{Rule: "math-types.precision-agrees", Status: "fail", FailureCode: "PRECISION_MISMATCH(jolt)",
+				Reason: "jolt uses float world positions, but the composition chooses double."}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			if got := verify.CheckPrecision(c.choice, c.precisions); got != c.want {
+				t.Errorf("got %+v, want %+v", got, c.want)
+			}
+		})
+	}
+}

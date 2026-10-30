@@ -1,0 +1,7 @@
+[
+  {
+    "op": "replace",
+    "path": "/choices/math-types/position_precision",
+    "value": "double"
+  }
+]

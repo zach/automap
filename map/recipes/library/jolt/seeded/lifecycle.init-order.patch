@@ -1,0 +1,11 @@
+--- a/jolt_setup.cpp
++++ b/jolt_setup.cpp
+@@ -80,6 +80,8 @@
+     JPH::Factory::sInstance = new JPH::Factory();
+     JPH::RegisterTypes();
+     am::lifecycle::init_step("jolt:Factory+RegisterTypes");
++    JPH::Trace = [](const char*, ...) {}; // a diagnostics hook installed in the systems phase
++    am::lifecycle::init_step("jolt:Trace+AssertFailed");
+ 
+     ctx.jolt.temp_allocator = new JPH::TempAllocatorImpl(temp_allocator_bytes);
+     ctx.jolt.physics_system = new JPH::PhysicsSystem();

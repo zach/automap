@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-physics",
+    "contract": "math-types",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-physics": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "math-types.adapters-round-trip",
+      "reason": "The fixture has no math library to convert to."
+    }
+  ],
+  "adaptation_notes": [
+    "stub_physics_vec3 is single precision."
+  ]
+}

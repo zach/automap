@@ -56,7 +56,7 @@ func ChoicesHeader(m *mapmodel.Map, man *Manifest, lock *Lock) string {
 
 // pointee is the identifier a pointer type points to, such as stub_window
 // for "stub_window*", or "" for any other type.
-var pointerType = regexp.MustCompile(`^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\*\s*$`)
+var pointerType = regexp.MustCompile(`^\s*((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_][A-Za-z0-9_]*)\s*\*\s*$`)
 
 func cIdent(s string) string { return nonAlnum.ReplaceAllString(s, "_") }
 
@@ -84,8 +84,20 @@ func ContextHeader(plan *StartupPlan) string {
 		b.WriteString("\n")
 		seen := map[string]bool{}
 		for _, f := range forward {
-			if !seen[f] {
-				seen[f] = true
+			if seen[f] {
+				continue
+			}
+			seen[f] = true
+			// A C type is a struct; a namespaced C++ type is declared as a
+			// class inside its namespaces.
+			if i := strings.LastIndex(f, "::"); i >= 0 {
+				var open, close string
+				for _, ns := range strings.Split(f[:i], "::") {
+					open += "namespace " + ns + " { "
+					close += " }"
+				}
+				fmt.Fprintf(&b, "%sclass %s;%s\n", open, f[i+2:], close)
+			} else {
 				fmt.Fprintf(&b, "struct %s;\n", f)
 			}
 		}

@@ -1,0 +1,52 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--diagnostics/jolt_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--diagnostics/jolt_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_jolt_diagnostics",
+      "steps": [
+        "jolt:Trace+AssertFailed"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_jolt_diagnostics(): a message traced through JPH::Trace reaches the facade and, when Jolt's assertions are compiled in (JPH_ENABLE_ASSERTS), JPH::AssertFailed is the facade's hook. Without assertions the result passes on the trace alone and its reason says the assert hook wasn't checked.",
+      "seeded_violation": {
+        "description": "Remove the JPH::Trace assignment from am_bind_jolt_diagnostics().",
+        "patch": "jolt--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "JPH::Trace takes a printf-style format; the glue formats it into a buffer before passing it to the facade.",
+    "JPH::AssertFailed exists only when Jolt is built with JPH_ENABLE_ASSERTS, which Jolt's CMake turns on for Debug builds; wrap the assignment in JPH_IF_ENABLE_ASSERTS."
+  ]
+}
