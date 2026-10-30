@@ -23,7 +23,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zach/automap/schemas"
 )
 
@@ -40,6 +39,29 @@ type Result struct {
 	Failures     []Failure `json:"failures"`
 	FilesWritten []string  `json:"files_written"`
 	EvidenceFile string    `json:"evidence_file"`
+	Entries      []Entry   `json:"entries"`
+}
+
+// Entry is one map entry in a find or show result.
+type Entry map[string]any
+
+// Get walks a path of object keys and array indexes through the entry.
+func (e Entry) Get(path ...any) any {
+	var v any = map[string]any(e)
+	for _, k := range path {
+		switch k := k.(type) {
+		case string:
+			m, _ := v.(map[string]any)
+			v = m[k]
+		case int:
+			a, _ := v.([]any)
+			if k >= len(a) {
+				return nil
+			}
+			v = a[k]
+		}
+	}
+	return v
 }
 
 type Warning struct {
@@ -55,49 +77,135 @@ type Failure struct {
 	DetailsFile string `json:"details_file"`
 }
 
-// Run is one finished run of the CLI.
-type Run struct {
-	Fixture string // the fixture repo's name
-	Dir     string // the temporary copy the CLI ran in
-	Stdout  []byte
-	Stderr  []byte
-	Exit    int
-	Result  Result // set when the run was given --json
+// Repo is a temporary copy of a fixture repo that a test prepares, then
+// runs the CLI in.
+type Repo struct {
+	Dir string
+	env []string
 }
 
-// Automap copies the fixture repo testdata/repos/<fixture> to a temporary
-// directory, runs the CLI there with args, and returns the run. When args
-// include --json, stdout must be exactly one CLI result that validates
-// against the published schema.
-func Automap(t *testing.T, fixture string, args ...string) *Run {
+// Run is one finished run of the CLI.
+type Run struct {
+	Dir    string            // the repo the CLI ran in
+	Before map[string][]byte // the repo's files just before the run
+	Stdout []byte
+	Stderr []byte
+	Exit   int
+	Result Result // set when the run was given --json
+}
+
+// NewRepo copies the fixture repo testdata/repos/<fixture> to a temporary
+// directory.
+func NewRepo(t *testing.T, fixture string) *Repo {
 	t.Helper()
-	bin := binary(t)
 	dir := t.TempDir()
 	copyTree(t, filepath.Join(Root(t), "testdata", "repos", fixture), dir)
+	return &Repo{Dir: dir}
+}
+
+// Copy copies a file or directory from the module root (such as
+// testdata/map) to dst in the repo.
+func (r *Repo) Copy(t *testing.T, src, dst string) {
+	t.Helper()
+	copyTree(t, filepath.Join(Root(t), filepath.FromSlash(src)), filepath.Join(r.Dir, filepath.FromSlash(dst)))
+}
+
+// EditJSON decodes the JSON file at path in the repo, passes it to edit, and
+// writes back what edit returns.
+func (r *Repo) EditJSON(t *testing.T, path string, edit func(doc any) any) {
+	t.Helper()
+	full := filepath.Join(r.Dir, filepath.FromSlash(path))
+	raw, err := os.ReadFile(full)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatalf("%s: %v", path, err)
+	}
+	out, err := json.MarshalIndent(edit(doc), "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, full, append(out, '\n'))
+}
+
+// WriteFile writes data to path in the repo.
+func (r *Repo) WriteFile(t *testing.T, path string, data string) {
+	t.Helper()
+	writeFile(t, filepath.Join(r.Dir, filepath.FromSlash(path)), []byte(data))
+}
+
+// Setenv sets an environment variable for the repo's runs.
+func (r *Repo) Setenv(key, value string) {
+	r.env = append(r.env, key+"="+value)
+}
+
+// Automap copies the fixture repo and runs the CLI in it with args.
+func Automap(t *testing.T, fixture string, args ...string) *Run {
+	t.Helper()
+	return NewRepo(t, fixture).Automap(t, args...)
+}
+
+// Automap runs the CLI in the repo with args and returns the run. When args
+// include --json, stdout must be exactly one CLI result that validates
+// against the published schema.
+func (r *Repo) Automap(t *testing.T, args ...string) *Run {
+	t.Helper()
+	bin := binary(t)
+	run := &Run{Dir: r.Dir, Before: readTree(t, r.Dir)}
 
 	cmd := exec.Command(bin, args...)
-	cmd.Dir = dir
+	cmd.Dir = r.Dir
+	cmd.Env = append(cleanEnv(), r.env...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	err := cmd.Run()
-	r := &Run{Fixture: fixture, Dir: dir, Stdout: stdout.Bytes(), Stderr: stderr.Bytes()}
+	run.Stdout, run.Stderr = stdout.Bytes(), stderr.Bytes()
 	var exit *exec.ExitError
 	switch {
 	case errors.As(err, &exit):
-		r.Exit = exit.ExitCode()
+		run.Exit = exit.ExitCode()
 	case err != nil:
 		t.Fatalf("running automap %s: %v", strings.Join(args, " "), err)
 	}
 
 	for _, a := range args {
 		if a == "--json" {
-			validateResult(t, r)
-			if err := json.Unmarshal(r.Stdout, &r.Result); err != nil {
+			validateResult(t, run)
+			if err := json.Unmarshal(run.Stdout, &run.Result); err != nil {
 				t.Fatalf("CLI result: %v", err)
+			}
+			if run.Result.OK != (len(run.Result.Failures) == 0) {
+				t.Errorf("ok is %v with %d failures; ok must be true exactly when there are none", run.Result.OK, len(run.Result.Failures))
 			}
 		}
 	}
-	return r
+	return run
+}
+
+// cleanEnv is the test process's environment without AUTOMAP_ variables, so
+// a developer's own settings never reach the CLI under test.
+func cleanEnv() []string {
+	var env []string
+	for _, kv := range os.Environ() {
+		if !strings.HasPrefix(kv, "AUTOMAP_") {
+			env = append(env, kv)
+		}
+	}
+	return env
+}
+
+// ExpectFailure fails the test unless the run's result has a failure with
+// code whose message contains message.
+func (r *Run) ExpectFailure(t *testing.T, code, message string) {
+	t.Helper()
+	for _, f := range r.Result.Failures {
+		if f.Code == code && strings.Contains(f.Message, message) {
+			return
+		}
+	}
+	t.Errorf("no failure %s with message containing %q; failures:\n%s", code, message, r.Stdout)
 }
 
 // ExpectExit fails the test unless the CLI exited with status want.
@@ -109,12 +217,12 @@ func (r *Run) ExpectExit(t *testing.T, want int) {
 }
 
 // ExpectGolden compares stdout with testdata/golden/<name>/result.json, and
-// the repo after the run with the fixture overlaid by
+// the repo after the run with the repo before it overlaid by
 // testdata/golden/<name>/files/.
 func (r *Run) ExpectGolden(t *testing.T, name string) {
 	t.Helper()
 	golden := filepath.Join(Root(t), "testdata", "golden", name)
-	fixture := readTree(t, filepath.Join(Root(t), "testdata", "repos", r.Fixture))
+	before := r.Before
 	after := readTree(t, r.Dir)
 
 	if *update {
@@ -123,7 +231,7 @@ func (r *Run) ExpectGolden(t *testing.T, name string) {
 		}
 		writeFile(t, filepath.Join(golden, "result.json"), r.Stdout)
 		for path, data := range after {
-			if old, ok := fixture[path]; !ok || !bytes.Equal(old, data) {
+			if old, ok := before[path]; !ok || !bytes.Equal(old, data) {
 				writeFile(t, filepath.Join(golden, "files", path), data)
 			}
 		}
@@ -138,7 +246,10 @@ func (r *Run) ExpectGolden(t *testing.T, name string) {
 		t.Errorf("stdout differs from %s\ngot:\n%s\nwant:\n%s", rel(t, golden, "result.json"), r.Stdout, want)
 	}
 
-	expected := fixture
+	expected := map[string][]byte{}
+	for path, data := range before {
+		expected[path] = data
+	}
 	if written, err := os.Stat(filepath.Join(golden, "files")); err == nil && written.IsDir() {
 		for path, data := range readTree(t, filepath.Join(golden, "files")) {
 			expected[path] = data
@@ -186,22 +297,14 @@ func binary(t *testing.T) string {
 	return binPath
 }
 
-var cliResultSchema = sync.OnceValues(func() (*jsonschema.Schema, error) {
-	return schemas.Compile("cli-result")
-})
-
 func validateResult(t *testing.T, r *Run) {
 	t.Helper()
-	schema, err := cliResultSchema()
-	if err != nil {
-		t.Fatalf("compiling cli-result schema: %v", err)
-	}
-	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(r.Stdout))
-	if err != nil {
+	var doc any
+	if err := json.Unmarshal(r.Stdout, &doc); err != nil {
 		t.Fatalf("stdout is not one JSON value: %v\nstdout:\n%s\nstderr:\n%s", err, r.Stdout, r.Stderr)
 	}
-	if err := schema.Validate(doc); err != nil {
-		t.Fatalf("stdout does not conform to the cli-result schema: %v\n%s", err, r.Stdout)
+	if v := schemas.Validate("cli-result", doc); v != nil {
+		t.Fatalf("stdout does not conform to the cli-result schema: %s\n%s", strings.Join(v, "; "), r.Stdout)
 	}
 }
 

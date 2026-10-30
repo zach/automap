@@ -1,0 +1,145 @@
+{
+  "command": "show",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "recipe stub-ui--stub-window, from automap.",
+  "warnings": [],
+  "failures": [],
+  "entries": [
+    {
+      "definition": {
+        "kind": "pairing",
+        "subject": {
+          "libraries": [
+            "stub-ui",
+            "stub-window"
+          ]
+        },
+        "applies_to": {
+          "stub-ui": {
+            "versions": [
+              "1.0.0"
+            ],
+            "variants": [
+              "default"
+            ]
+          },
+          "stub-window": {
+            "versions": [
+              "1.0.0"
+            ],
+            "variants": [
+              "default",
+              "wide-events"
+            ]
+          }
+        },
+        "reference_glue": [
+          {
+            "path": "stub-ui--stub-window/stub_ui_stub_window.h",
+            "role": "glue"
+          },
+          {
+            "path": "stub-ui--stub-window/stub_ui_stub_window.cpp",
+            "role": "glue"
+          },
+          {
+            "path": "stub-ui--stub-window/stub_ui_stub_window_probe.cpp",
+            "role": "probe"
+          }
+        ],
+        "entry_points": [
+          {
+            "phase": "systems",
+            "when": "init",
+            "call": "am_pair_stub_ui_stub_window_init",
+            "after": [
+              "stub-ui:create_context"
+            ],
+            "reads": [
+              "stub-window.window"
+            ],
+            "steps": [
+              "stub-ui--stub-window:attach",
+              "stub-ui--stub-window:route_input"
+            ]
+          },
+          {
+            "phase": "systems",
+            "when": "shutdown",
+            "call": "am_pair_stub_ui_stub_window_shutdown",
+            "steps": [
+              "stub-ui--stub-window:unroute_input",
+              "stub-ui--stub-window:detach"
+            ]
+          }
+        ],
+        "rules": [
+          {
+            "id": "stub-ui--stub-window.input-forwarded",
+            "kind": "probed",
+            "text": "Every stub-window event the game polls is passed to stub-ui before the next UI frame starts.",
+            "applies_to": "pairing",
+            "failure_code": "INPUT_NOT_FORWARDED(stub-ui--stub-window)"
+          }
+        ],
+        "ordering": [
+          {
+            "before": "stub-window:open_window",
+            "after": "stub-ui--stub-window:attach",
+            "when": "init"
+          },
+          {
+            "before": "stub-ui--stub-window:attach",
+            "after": "stub-ui--stub-window:route_input",
+            "when": "init"
+          },
+          {
+            "before": "stub-ui--stub-window:unroute_input",
+            "after": "stub-ui--stub-window:detach",
+            "when": "shutdown"
+          },
+          {
+            "before": "stub-ui--stub-window:detach",
+            "after": "stub-window:close_window",
+            "when": "shutdown"
+          }
+        ],
+        "probes": [
+          {
+            "rule": "stub-ui--stub-window.input-forwarded",
+            "check": "am_probe_stub_ui_stub_window_input(): pushes a synthetic event, runs one frame, and checks stub-ui saw it.",
+            "seeded_violation": {
+              "description": "Skip forwarding events to stub-ui in the event loop.",
+              "patch": "stub-ui--stub-window/seeded/stub-ui--stub-window.input-forwarded.patch"
+            }
+          },
+          {
+            "rule": "lifecycle.init-order",
+            "check": "The lifecycle probe checks this recipe's init ordering constraints.",
+            "seeded_violation": {
+              "description": "Route input to stub-ui before attaching it to the window in am_pair_stub_ui_stub_window_init().",
+              "patch": "stub-ui--stub-window/seeded/lifecycle.init-order.patch"
+            }
+          },
+          {
+            "rule": "lifecycle.shutdown-reverse",
+            "check": "The lifecycle probe checks this recipe's shutdown ordering constraints.",
+            "seeded_violation": {
+              "description": "Detach stub-ui before unrouting its input in am_pair_stub_ui_stub_window_shutdown().",
+              "patch": "stub-ui--stub-window/seeded/lifecycle.shutdown-reverse.patch"
+            }
+          }
+        ],
+        "adaptation_notes": [
+          "Forward every polled stub-window event to stub_ui_feed_event before stub_ui_new_frame."
+        ]
+      },
+      "id": "stub-ui--stub-window",
+      "kind": "recipe",
+      "maps": [
+        "automap"
+      ]
+    }
+  ]
+}

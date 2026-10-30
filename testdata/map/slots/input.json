@@ -1,0 +1,7 @@
+{
+  "id": "input",
+  "description": "Keyboard, mouse and gamepad input.",
+  "examples": [
+    "stub-window"
+  ]
+}

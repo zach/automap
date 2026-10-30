@@ -26,8 +26,10 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | --- | --- |
 | `cmd/automap/` | The CLI's entry point and its process-level tests. |
 | `internal/cli/` | The commands and the CLI result. |
+| `internal/mapmodel/` | Loads, validates and layers the public and private maps. |
 | `internal/clitest/` | The test harness that runs the CLI as a process. |
 | `schemas/` | The published JSON Schemas, embedded in the binary. |
+| `testdata/map/` | The fixture map: two stub libraries with recipes, probes and seeded violations. |
 | `testdata/repos/` | Fixture repos the CLI runs in. |
 | `testdata/golden/` | Golden CLI results and written files, one directory per case. |
 | `docs/spec/` | `SPEC.md`, its examples and `check-examples.py`. |

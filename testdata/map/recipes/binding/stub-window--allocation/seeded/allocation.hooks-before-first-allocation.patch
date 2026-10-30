@@ -1,0 +1,10 @@
+--- a/stub_window_allocation.cpp
++++ b/stub_window_allocation.cpp
+@@ -13,6 +13,7 @@
+ } // namespace
+ 
+ bool am_bind_stub_window_allocation(am::Context&) {
++    stub_window_set_name("probe");
+     stub_window_set_allocator(&trampoline_alloc, &trampoline_free);
+     am::lifecycle::init_step("stub-window:set_allocator");
+     return true;

@@ -1,0 +1,61 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "stub-ui"
+  },
+  "applies_to": {
+    "stub-ui": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-ui/stub-ui.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "stub-ui/stub_ui_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "stub-ui/stub_ui_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_stub_ui_setup_init",
+      "steps": [
+        "stub-ui:create_context"
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_stub_ui_setup_shutdown",
+      "steps": [
+        "stub-ui:destroy_context"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "build-flags.abi-defines-match",
+      "check": "stub_ui_abi_check() compares the STUB_UI_WIDE_IDS the glue saw with the one stub-ui was built with.",
+      "seeded_violation": {
+        "description": "Drop STUB_UI_WIDE_IDS=1 from the glue's compile definitions.",
+        "patch": "stub-ui/seeded/build-flags.abi-defines-match.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The build fragment calls find_package(StubUI CONFIG REQUIRED), links StubUI::StubUI and defines STUB_UI_WIDE_IDS=1 for every consumer."
+  ]
+}

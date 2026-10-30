@@ -1,0 +1,105 @@
+{
+  "contract": "allocation",
+  "version": "1.0.0",
+  "description": "Who owns memory, and when each library's allocator hooks are installed.",
+  "facts": {
+    "hook_style": {
+      "description": "How the library accepts allocator hooks.",
+      "schema": {
+        "enum": [
+          "function-pointer-globals",
+          "callback-struct",
+          "per-instance",
+          "interface-object",
+          "template-allocator",
+          "build-flag-gated",
+          "link-time-symbols",
+          "global-override",
+          "none"
+        ]
+      }
+    },
+    "hooks": {
+      "description": "The hook APIs and their signatures.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "api",
+            "signature"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "signature": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "aligned": {
+      "description": "Whether the library asks for aligned allocations through its hooks.",
+      "schema": {
+        "type": "boolean"
+      }
+    },
+    "install_before": {
+      "description": "What the hooks must be installed before.",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "query": {
+      "description": "How glue reads the installed hooks back, or null.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "choices": {
+    "allocator": {
+      "description": "Who backs the allocation facade: the system allocator, or the library in the allocator slot.",
+      "schema": {
+        "enum": [
+          "system",
+          "allocator-slot"
+        ]
+      },
+      "default": "system"
+    }
+  },
+  "rules": [
+    {
+      "id": "allocation.hooks-before-first-allocation",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Every library's hooks are installed in the memory phase, before the library allocates. In probe builds the facade tracks live blocks; releasing a block the facade never allocated fails the rule.",
+      "failure_code": "ALLOC_HOOK_LATE(<library>)"
+    },
+    {
+      "id": "allocation.routed-through-facade",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Each library's installed hooks are the facade's, and the facade observes allocations from that library during a smoke run.",
+      "failure_code": "ALLOC_NOT_ROUTED(<library>)"
+    },
+    {
+      "id": "allocation.same-allocator-across-modules",
+      "kind": "guidance",
+      "applies_to": "composition",
+      "text": "Memory is freed by the allocator that allocated it; across DLL or hot-reload boundaries the hooks are installed per module."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "automap/alloc.h",
+      "automap/alloc.cpp"
+    ]
+  }
+}

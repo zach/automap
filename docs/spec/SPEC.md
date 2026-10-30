@@ -453,7 +453,7 @@ A private map has the same layout, plus `ports/` for its overlay ports. Maps lay
 
 ### 5.4 CLI
 
-Every command takes `--json` and then prints one object conforming to [`cli-result`](../../schemas/cli-result.schema.json): a one-line summary, warnings, failures with failure codes and details files, files written and the evidence file [ADR-0041](../adr/0041-cli-json-output-and-failure-codes.md). Exit status is 0 on success, 1 when a rule or build fails, 2 on a usage error and 3 when the CLI refuses (for example `LOCK_EDITED`).
+Every command takes `--json` and then prints one object conforming to [`cli-result`](../../schemas/cli-result.schema.json): a one-line summary, warnings, failures with failure codes and details files, files written and the evidence file [ADR-0041](../adr/0041-cli-json-output-and-failure-codes.md). Exit status is 0 on success, 1 when a rule or build fails, 2 on a usage error and 3 when the CLI refuses (for example `LOCK_EDITED`). A command that reads the map first validates every map file it reads; a file that breaks its schema or a cross-file rule is `MAP_INVALID(<file>)` with the reason, and the command stops with exit status 2.
 
 | Command | Does |
 | --- | --- |
@@ -466,7 +466,7 @@ Every command takes `--json` and then prints one object conforming to [`cli-resu
 | `automap fetch` | Fills the caches for offline work. |
 | `automap vendor` | Copies sources, ports and evidence into the repo. |
 | `automap find [<query>] [--slot <slot>]` | Searches the map: libraries for a slot, with their evidence state for the composition's platforms, in the result's `entries` ([example](examples/composition/cli-results/find-physics-3d.json)). |
-| `automap show <kind> <id>` | Shows one map entry (kind: `library`, `slot`, `contract` or `recipe`), its facts and its evidence states. |
+| `automap show <kind> <id>` | Shows one map entry (kind: `library`, `slot`, `contract` or `recipe`), its facts and its evidence states, in the result's `entries`: the entry's `definition` as the layered maps define it, the `maps` that define or extend it, and for a slot the `libraries` that fill it. |
 
 ### 5.5 Build-backend integration
 

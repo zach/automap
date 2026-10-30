@@ -1,0 +1,64 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-window",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-window": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default",
+        "wide-events"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-window--allocation/stub_window_allocation.h",
+      "role": "glue"
+    },
+    {
+      "path": "stub-window--allocation/stub_window_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "stub-window--allocation/stub_window_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_stub_window_allocation",
+      "steps": [
+        "stub-window:set_allocator"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "The facade's probe-build block tracking: a block stub-window releases that the facade never allocated fails the rule as ALLOC_HOOK_LATE(stub-window).",
+      "seeded_violation": {
+        "description": "Allocate through stub-window before am_bind_stub_window_allocation() installs the hooks.",
+        "patch": "stub-window--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_stub_window_allocation(): the facade's stub-window counter rises across a smoke run.",
+      "seeded_violation": {
+        "description": "Remove the stub_window_set_allocator call from am_bind_stub_window_allocation().",
+        "patch": "stub-window--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "stub_window_set_allocator must run before any other call into stub-window; the memory phase guarantees this."
+  ]
+}

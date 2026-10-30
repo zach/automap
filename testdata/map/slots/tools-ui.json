@@ -1,0 +1,7 @@
+{
+  "id": "tools-ui",
+  "description": "Immediate-mode UI for tools, editors and debug overlays.",
+  "examples": [
+    "stub-ui"
+  ]
+}

@@ -1,0 +1,7 @@
+--- a/stub-ui.cmake
++++ b/stub-ui.cmake
+@@ -3,4 +3,3 @@
+ find_package(StubUI CONFIG REQUIRED)
+ 
+ target_link_libraries(automap_glue PUBLIC StubUI::StubUI)
+-target_compile_definitions(automap_glue PUBLIC STUB_UI_WIDE_IDS=1)

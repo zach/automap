@@ -1,0 +1,15 @@
+--- a/stub_ui_stub_window.cpp
++++ b/stub_ui_stub_window.cpp
+@@ -5,10 +5,10 @@
+ #include "automap/lifecycle.h"
+ 
+ bool am_pair_stub_ui_stub_window_init(am::Context& ctx) {
+-    if (!stub_ui_attach(ctx.stub_window.window)) return false;
+-    am::lifecycle::init_step("stub-ui--stub-window:attach");
+     stub_ui_enable_input();
+     am::lifecycle::init_step("stub-ui--stub-window:route_input");
++    if (!stub_ui_attach(ctx.stub_window.window)) return false;
++    am::lifecycle::init_step("stub-ui--stub-window:attach");
+     return true;
+ }
+ 
