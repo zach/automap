@@ -18,13 +18,23 @@ jobs:
           go-version-file: go.mod
       - name: Build tools
         run: sudo apt-get install -y ninja-build clang
+      - name: vcpkg
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+      - name: vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('testdata/map/registry/**') }}
+          restore-keys: vcpkg-${{ runner.os }}-
       - name: gofmt
         run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
       - name: go vet
         run: go vet ./...
       - name: go test
         env:
-          VCPKG_ROOT: ${{ env.VCPKG_INSTALLATION_ROOT }}
           AUTOMAP_TEST_BUILDS: "1"
         run: go test ./...
 
