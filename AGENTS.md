@@ -44,7 +44,7 @@ SPEC §10.1 gives the layout later tickets add: `map/`, `evals/`, and the `regis
 
 - Work the frontier of `docs/issues/automap-v1/`: a ticket whose blockers are all done. Branch from `main`.
 - Work test-first with the `tdd` skill, at the CLI seam.
-- When every acceptance criterion is met and CI is green, open a pull request to `main` and merge it with a merge commit. Then set the ticket's `Status:` to `done`.
+- When every acceptance criterion is met, make the last commit on the branch tick the ticket's criteria and set its `Status:` to `done`. Once CI is green, open a pull request to `main` and merge it with a merge commit.
 - Where the spec fills in a detail no ADR decided (SPEC §12.3), follow it as a default; change it if the build needs to, and update the spec to match.
 
 ## Working rules
