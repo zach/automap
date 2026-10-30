@@ -84,6 +84,10 @@ _Avoid_: curator (humans decide coverage), maintainer bot
 Automap's CI suite in which fresh agent sessions carry out the v1 jobs along the worked journeys, on every map release. The source of every success measure.
 _Avoid_: benchmark, test suite, telemetry
 
+**Fixture map**:
+A small map of stub libraries, with their own recipes, probes and seeded violations, that the CLI's own tests run against so builds take seconds.
+_Avoid_: mock map, test map
+
 **Automap registry**:
 Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express, libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale.
 _Avoid_: the map (the map describes; the registry builds), overlay, fork
@@ -101,6 +105,10 @@ _Avoid_: category, module, component, layer
 **Library**:
 A body of code that can fill one or more slots, whether third-party, proprietary or the developer's own. The developer's own code is a library like any other; its source may be a directory in their repo.
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
+
+**Contribution policy**:
+A library's upstream rule on AI-generated contributions (banned, restricted, allowed or unknown), recorded as a fact. The agent never opens an issue or pull request upstream where it is banned.
+_Avoid_: contributing guide, CoC
 
 **Seam**:
 A kind of point where libraries, or a library and the engine around it, must agree to work together. Automap's seams are allocation, jobs, math types, handles, lifecycle, diagnostics, serialization, build flags, platform, determinism and assets.
@@ -131,8 +139,12 @@ The header the CLI writes from the manifest, committed with the build files, thr
 _Avoid_: config header, generated config
 
 **Shared interface**:
-An interface Automap delivers as glue source, such as a neutral job-system interface. Contracts define all of them except the probe harness. Never an Automap library the engine links.
+An interface Automap delivers as glue source: the allocator facade, the jobs interface, the diagnostics facade (log, assert and profile) and the assets file-I/O interface, plus the probe harness. Contracts define all of them except the probe harness. Never an Automap library the engine links.
 _Avoid_: adapter, abstraction layer, API
+
+**Reference thread pool**:
+The small scheduler in the jobs interface's setup glue that runs jobs when no library fills the jobs slot. Its worker count comes from the composition's choices.
+_Avoid_: default scheduler, built-in job system
 
 **Rule**:
 One requirement that glue must meet, stated by a contract or by a pairing's recipe. A rule is either probed (it has a probe, and passing it counts as evidence) or guidance (labeled, and never counts as evidence). A probed rule may name the platforms its probe can run on; elsewhere its result is not-applicable.
@@ -194,6 +206,10 @@ _Avoid_: outcome, verdict
 What a piece of evidence was produced under: build type, compiler version, environment variables and sanitizer options.
 _Avoid_: environment, settings, config
 
+**Set-aside report**:
+A sanitizer report whose every frame is in code the composition doesn't build, such as an uninstrumented GPU driver. It is recorded in the evidence but doesn't fail the rule.
+_Avoid_: suppression, ignored report, false positive
+
 **Evidence level**:
 How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed. Probed requires every applicable probed rule to pass, with none unverifiable.
 _Avoid_: tier, grade, rung
@@ -241,6 +257,10 @@ _Avoid_: version (a pin is more than a version), reference
 **Variant**:
 A named set of build options for a library, such as "Jolt, double precision", or a build from different source, such as a patched fork or a console port, with its own pin. Bindings, pairings and evidence are per variant, and every library has at least one. A composition chooses each library's variant once or per platform.
 _Avoid_: feature (a vcpkg term), option, configuration, flavor
+
+**Console variant**:
+A variant of a library for an NDA platform, distributed by its maintainers to that platform's licensees. The public map says only that it exists and who distributes it; the variant itself lives in that platform's private map.
+_Avoid_: console port (fine in prose, but not as the term), platform fork
 
 **Testbed**:
 A small composition that opens a window and runs a render and input loop, made for experiments. Starting a new engine typically produces one.
