@@ -34,6 +34,14 @@ _Avoid_: update, bump
 Describing an existing engine that Automap did not create as a composition, so it can be extended like any other.
 _Avoid_: import, onboard, migrate
 
+**Audit**:
+Reporting what a composition ships: licenses, provenance and versions. Comes after v1, beyond license warnings at extend time.
+_Avoid_: compliance check, scan
+
+**Port**:
+Bringing a composition to a new platform. Comes after v1.
+_Avoid_: migrate, cross-compile
+
 **Eject**:
 Leaving Automap: one CLI step that vendors any Automap registry ports into the developer's repo and removes the manifest and lock, leaving a plain CMake and vcpkg project.
 _Avoid_: uninstall, export, detach
