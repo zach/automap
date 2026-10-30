@@ -122,6 +122,10 @@ _Avoid_: setting, option, config
 One of the six fixed stages of an engine's startup, in order: memory, diagnostics, platform, jobs, systems, game. Each library's init steps belong to a phase; shutdown runs in exact reverse.
 _Avoid_: stage, level, loading phase, init order
 
+**Ordering constraint**:
+A requirement in a pairing's recipe that one lifecycle step run before another, across the two libraries, at init or shutdown. The lifecycle probe checks it.
+_Avoid_: dependency (used for `after` within a library), sequencing
+
 **Choices header**:
 The header the CLI writes from the manifest, committed with the build files, through which glue reads the composition's choices instead of hard-coding them.
 _Avoid_: config header, generated config
@@ -161,6 +165,10 @@ _Avoid_: CMake snippet, build recipe
 **Setup glue**:
 Reference glue that creates the minimal objects the engine needs to use a library, or a shared interface from the composition's choices. Never game logic.
 _Avoid_: boilerplate, scaffolding, sample code
+
+**Entry point**:
+A call in a recipe's glue that the composition's startup makes in one phase, at init or at shutdown.
+_Avoid_: hook (a library's own), callback, init function
 
 **Probe harness**:
 The shared interface every composition includes, through which probes record their results for the CLI and glue records each lifecycle step it runs.
@@ -202,6 +210,10 @@ _Avoid_: verified, certified, compatible, tested
 An OS, a CPU architecture and a toolchain, such as Windows x64 with MSVC 2026. Evidence is always for exactly one platform.
 _Avoid_: target, triplet (a vcpkg term), OS
 
+**NDA platform**:
+A platform whose SDKs and APIs are available only under its holder's non-disclosure agreement, such as a console. Its content lives in a private map of its own.
+_Avoid_: closed platform, console (not every NDA platform is one)
+
 **Cooldown**:
 The minimum age, 7 days, an upstream release must reach before it can enter the map. Security fixes may skip it; nothing skips the evidence.
 _Avoid_: quarantine, embargo, delay
@@ -209,6 +221,10 @@ _Avoid_: quarantine, embargo, delay
 **Composition**:
 One engine as Automap describes it: which library fills each slot, and where the glue for each binding and pairing lives. It consists of a manifest and a lock in the developer's repo.
 _Avoid_: stack, project, build, configuration
+
+**Reference composition**:
+A composition Automap's CI maintains and verifies on every platform, such as the testbed.
+_Avoid_: sample project, template, demo
 
 **Manifest**:
 The file in the developer's repo, edited by the agent, that declares a composition: the library in each slot, the composition's choices, and where each binding's and pairing's glue lives.
@@ -229,3 +245,7 @@ _Avoid_: feature (a vcpkg term), option, configuration, flavor
 **Testbed**:
 A small composition that opens a window and runs a render and input loop, made for experiments. Starting a new engine typically produces one.
 _Avoid_: sandbox, demo, prototype, hello world, tier
+
+**Journey**:
+One of the spec's three worked examples of the jobs in sequence: testbed, starter engine and custom integration. A journey is an example, not a kind of composition.
+_Avoid_: tier, use case, scenario

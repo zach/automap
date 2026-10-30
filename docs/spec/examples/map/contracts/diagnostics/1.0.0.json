@@ -1,7 +1,7 @@
 {
   "contract": "diagnostics",
   "version": "1.0.0",
-  "description": "Logging and assertions: every library's runtime log and assert hooks route to one facade.",
+  "description": "Logging, asserts and profiling: every library's runtime hooks route to one facade, whose backends the composition chooses.",
   "facts": {
     "log_hook": {
       "description": "The runtime API that redirects the library's log output, or null if it has none.",
@@ -31,7 +31,28 @@
       }
     }
   },
-  "choices": {},
+  "choices": {
+    "log": {
+      "description": "The facade's log backend: standard error, or the library in the logging slot.",
+      "schema": {
+        "enum": [
+          "stderr",
+          "logging-slot"
+        ]
+      },
+      "default": "stderr"
+    },
+    "profiler": {
+      "description": "The facade's profiling backend: none, or the library in the profiling slot.",
+      "schema": {
+        "enum": [
+          "none",
+          "profiling-slot"
+        ]
+      },
+      "default": "none"
+    }
+  },
   "rules": [
     {
       "id": "diagnostics.routed-through-facade",
