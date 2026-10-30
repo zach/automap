@@ -163,7 +163,7 @@ Reference glue that creates the minimal objects the engine needs to use a librar
 _Avoid_: boilerplate, scaffolding, sample code
 
 **Probe harness**:
-The shared interface every composition includes, through which probes record their results for the CLI.
+The shared interface every composition includes, through which probes record their results for the CLI and glue records each lifecycle step it runs.
 _Avoid_: test framework, test runner
 
 **Probe**:

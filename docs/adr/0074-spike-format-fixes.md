@@ -20,7 +20,7 @@ Option 1. The spec requires:
 
 1. Facts are recorded per library version, and per variant where they differ.
 2. A manifest glue entry is a list of files, or "not-applicable" with a reason.
-3. Lifecycle `after` dependencies are passed to the lifecycle interface and checked by its probe.
+3. Glue records each lifecycle step, with its `after` dependencies, through the probe harness, and the lifecycle probe checks them.
 4. Pairings can declare cross-library ordering constraints, checked by the same probe.
 5. Recipe entry points name a phase and whether they run at init or shutdown.
 6. Manifest choices reach glue only through a **choices header** the CLI writes from the manifest, committed like other build files.
