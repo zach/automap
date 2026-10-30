@@ -69,7 +69,7 @@
         "macos-arm64-appleclang"
       ],
       "seeded_violation": {
-        "description": "Add an unsynchronized counter shared by every job in the reference thread pool.",
+        "description": "Add an unsynchronized counter that the reference thread pool's submit() and its workers both increment, outside the lock.",
         "patch": "1.0.0/seeded/jobs.tsan-clean.patch"
       }
     },

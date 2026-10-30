@@ -1,10 +1,19 @@
 --- a/jolt_setup.cpp
 +++ b/jolt_setup.cpp
-@@ -80,6 +80,8 @@
+@@ -58,6 +58,8 @@
+ constexpr JPH::uint max_contact_constraints = 1024;
+ constexpr size_t temp_allocator_bytes = 10 * 1024 * 1024;
+ 
++void late_trace(const char*, ...) {}
++
+ } // namespace
+ 
+ bool am_jolt_setup_init(am::Context& ctx) {
+@@ -80,6 +82,8 @@
      JPH::Factory::sInstance = new JPH::Factory();
      JPH::RegisterTypes();
      am::lifecycle::init_step("jolt:Factory+RegisterTypes");
-+    JPH::Trace = [](const char*, ...) {}; // a diagnostics hook installed in the systems phase
++    JPH::Trace = &late_trace; // a diagnostics hook installed in the systems phase
 +    am::lifecycle::init_step("jolt:Trace+AssertFailed");
  
      ctx.jolt.temp_allocator = new JPH::TempAllocatorImpl(temp_allocator_bytes);
