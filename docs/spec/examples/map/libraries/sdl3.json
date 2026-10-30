@@ -52,7 +52,10 @@
       "variants": [
         {
           "name": "default",
-          "build_options": {}
+          "build_options": {
+            "vcpkg_features": "vulkan"
+          },
+          "description": "SDL with the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend."
         }
       ],
       "facts": {
@@ -161,6 +164,9 @@
             "macos-arm64-appleclang"
           ],
           "headless": "SDL_VIDEO_DRIVER=offscreen",
+          "system_dependencies": {
+            "linux-x64-clang": "X11, Wayland, IBus and D-Bus development packages, for the sdl3 port's default Linux features"
+          },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
             "linux-x64-clang": "vulkan",

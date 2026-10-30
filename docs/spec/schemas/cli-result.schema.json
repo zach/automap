@@ -103,6 +103,61 @@
     },
     "evidence_file": {
       "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "description": "find and show: the map entries found, each with its kind, id, facts and evidence states.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "id"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "library",
+              "slot",
+              "contract",
+              "recipe"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "subject",
+                "platform",
+                "level",
+                "state"
+              ],
+              "properties": {
+                "subject": {
+                  "type": "string"
+                },
+                "platform": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string"
+                },
+                "state": {
+                  "enum": [
+                    "current",
+                    "stale",
+                    "broken",
+                    "none"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -6,7 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] A library fills every slot it can unless `--slot` names some; a slot already filled is `SLOT_TAKEN(<slot>)`.
+- [ ] In a repo with no CMake project, `start` writes the top-level CMake file and `main.cpp` from the map's testbed template and records the executable in the manifest; the fixture map has a testbed template.
+- [ ] A library fills every slot it can unless `--slot <slot>=<library>` assigns slots; a slot already filled is `SLOT_TAKEN(<slot>)`.
 - [ ] Resolution and lock canonicalization are pure functions with unit tests; the lock is in RFC 8785 canonical form with a correct `lock_hash` (ADR-0042).
 - [ ] `map_release` records `git:<commit>` for a map read from a clean checkout and `unreleased` otherwise (ADR-0079).
 - [ ] Every written file matches golden files; `start` in a directory that already holds a composition refuses with `COMPOSITION_EXISTS`.

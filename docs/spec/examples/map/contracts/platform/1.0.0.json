@@ -34,6 +34,16 @@
       "schema": {
         "type": "boolean"
       }
+    },
+    "system_dependencies": {
+      "required": false,
+      "description": "System packages a platform's build needs that vcpkg doesn't supply, per platform id.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
     }
   },
   "choices": {},
@@ -42,11 +52,11 @@
       "id": "platform.targets-supported",
       "kind": "probed",
       "applies_to": "composition",
-      "text": "Every library in the composition lists every platform in the manifest among its targets, and the composition builds and completes a probe run on each.",
+      "text": "Every library in the composition lists the evidence's platform among its targets, and the composition builds and completes a probe run on it. The CLI also refuses to resolve a manifest naming a platform some library doesn't list.",
       "failure_code": "PLATFORM_UNSUPPORTED(<library>,<platform>)",
       "seeded_violation": {
         "description": "Add to the manifest a platform one library doesn't list.",
-        "patch": "1.0.0/seeded/platform.targets-supported.patch"
+        "patch": "1.0.0/seeded/platform.targets-supported.json-patch"
       }
     }
   ],

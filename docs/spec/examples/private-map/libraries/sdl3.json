@@ -42,7 +42,9 @@
       "variants": [
         {
           "name": "acme-patched",
-          "build_options": {},
+          "build_options": {
+            "vcpkg_features": "vulkan"
+          },
           "description": "SDL 3.4.18 plus Acme's fix for a gamepad hot-plug crash, kept private: SDL bans AI-generated contributions, so the agent never sends it upstream.",
           "pin": {
             "commit": "dd156bf4a8f781c5c67dc56efdc489d75d33bc5d",
@@ -157,6 +159,9 @@
             "macos-arm64-appleclang"
           ],
           "headless": "SDL_VIDEO_DRIVER=offscreen",
+          "system_dependencies": {
+            "linux-x64-clang": "X11, Wayland, IBus and D-Bus development packages, for the sdl3 port's default Linux features"
+          },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
             "linux-x64-clang": "vulkan",

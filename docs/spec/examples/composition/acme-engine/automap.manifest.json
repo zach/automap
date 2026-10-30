@@ -9,6 +9,9 @@
     "linux-x64-clang",
     "nebula-arm64-clang"
   ],
+  "executable": {
+    "target": "acme_game"
+  },
   "private_maps": [
     {
       "id": "acme",

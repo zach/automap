@@ -1,0 +1,26 @@
+{
+  "command": "find",
+  "cli_version": "1.0.0",
+  "ok": true,
+  "summary": "1 library fills physics-3d: jolt 5.6.0, known-good on linux-x64-clang.",
+  "failures": [],
+  "entries": [
+    {
+      "kind": "library",
+      "id": "jolt",
+      "version": "5.6.0",
+      "variants": [
+        "default",
+        "double-precision"
+      ],
+      "evidence": [
+        {
+          "subject": "jolt--jobs",
+          "platform": "linux-x64-clang",
+          "level": "probed",
+          "state": "current"
+        }
+      ]
+    }
+  ]
+}

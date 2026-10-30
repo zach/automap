@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Each contract validates and has the probed and guidance rules of ADR-0027's table.
+- [ ] Each contract validates and has the probed and guidance rules listed in SPEC §8.2, which meet ADR-0027's floor.
 - [ ] In probe builds, releasing a block the facade never allocated fails `allocation.hooks-before-first-allocation` for that library.
-- [ ] Applying each composition rule's seeded-violation patch to the fixture composition makes `verify` report that rule's failure code.
+- [ ] Every probed composition rule has a seeded violation (in its contract, or in the fixture's recipes where the mistake belongs in their files), and `verify --seed` catches each in the fixture composition.
 - [ ] Shared interfaces and the probe harness are MIT-0 (ADR-0055) and compile with the fixture composition on Linux.

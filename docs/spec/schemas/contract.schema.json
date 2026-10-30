@@ -177,7 +177,7 @@
         },
         "seeded_violation": {
           "$ref": "#/$defs/seeded_violation",
-          "description": "For a probed rule that applies to the composition: the violation CI seeds to show its probe fails. Library and pairing rules are seeded by recipes."
+          "description": "For a probed composition rule whose mistake belongs in a file the contract owns (a shared interface) or in the manifest. Other composition rules are seeded by the recipes whose files the mistake belongs in."
         }
       },
       "if": {
@@ -207,7 +207,8 @@
         },
         "patch": {
           "type": "string",
-          "description": "A patch, relative to the recipe's or contract version's directory, that CI applies to reference glue (or the manifest) to introduce the mistake."
+          "pattern": "\\.(patch|json-patch)$",
+          "description": "A unified diff (.patch) against reference glue, a build fragment, setup glue or a shared interface, or an RFC 6902 JSON Patch (.json-patch) against the manifest; paths are relative to the recipe's or contract version's directory. Never against a file the CLI generates."
         }
       }
     }

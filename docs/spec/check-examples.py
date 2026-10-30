@@ -105,8 +105,6 @@ for p in sorted(EX.glob("*/contracts/*/*.json")):
     for r in d["rules"]:
         if not r["id"].startswith(d["contract"] + "."):
             fail(p, f"rule {r['id']} must be prefixed with the contract id")
-        if r["kind"] == "probed" and r["applies_to"] == "composition" and "seeded_violation" not in r:
-            fail(p, f"probed composition rule {r['id']} needs a seeded violation (ADR-0071)")
 contract_rules = {r["id"]: r for c in contracts.values() for r in c["rules"]}
 
 
@@ -260,6 +258,28 @@ for p in sorted(EX.glob("*/recipes/*/*.json")):
             if step.split(":", 1)[0] not in owners:
                 fail(p, f"ordering step {step} isn't owned by {sorted(owners)}")
 
+# Every probed composition rule is seeded by its contract or by some recipe (ADR-0071).
+seeded = {pr["rule"] for rc in recipes.values() for pr in rc["probes"]}
+for c in contracts.values():
+    for r in c["rules"]:
+        if r["kind"] == "probed" and r["applies_to"] == "composition" and "seeded_violation" not in r and r["id"] not in seeded:
+            fail(EX / "map" / "contracts" / c["contract"], f"probed composition rule {r['id']} has no seeded violation in its contract or any recipe")
+        sv = r.get("seeded_violation")
+        if sv and sv["patch"].endswith(".json-patch") and r["applies_to"] != "composition":
+            fail(EX / "map" / "contracts" / c["contract"], f"{r['id']}: only manifest seeds are JSON Patches")
+# Entry points' steps are declared in their owner's lifecycle facts.
+for rid, rc in recipes.items():
+    for ep in rc.get("entry_points", []):
+        for step in ep.get("steps", []):
+            owner = step.split(":", 1)[0]
+            if owner in libraries:
+                facts = [st["step"] for v in libraries[owner][1]["versions"]
+                         for st in v["facts"].get("lifecycle", {}).get("init_steps" if ep["when"] == "init" else "shutdown_steps", [])]
+                if step not in facts:
+                    fail(EX / rid, f"{ep['call']} performs {step}, which {owner}'s lifecycle facts don't declare")
+            elif owner != rid and owner != "automap":
+                fail(EX / rid, f"step {step} is owned by neither a library nor this recipe")
+
 # ---- compositions ----
 locks = {}
 for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
@@ -296,7 +316,7 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
                 if prov is None:
                     fail(m_path, f"{ep['call']} reads {field}, which no entry point in the composition provides")
                 elif not (phase_ix[prov["phase"]] < phase_ix[ep["phase"]] or
-                          (prov["phase"] == ep["phase"] and prov["call"] in ep.get("after", []))):
+                          (prov["phase"] == ep["phase"] and set(prov.get("steps", [])) & set(ep.get("after", [])))):
                     fail(m_path, f"{ep['call']} reads {field} before {prov['call']} provides it")
     for pm in m.get("private_maps", []):
         if pm["id"] not in map_ids:

@@ -95,22 +95,14 @@
       "kind": "probed",
       "applies_to": "composition",
       "text": "Init steps run in non-decreasing phase order, each after every step it declares in 'after', and every pairing ordering constraint holds.",
-      "failure_code": "INIT_ORDER(<step> before <step>)",
-      "seeded_violation": {
-        "description": "Swap two init entry points so a jobs-phase step runs before a platform-phase step.",
-        "patch": "1.0.0/seeded/lifecycle.init-order.patch"
-      }
+      "failure_code": "INIT_ORDER(<step> before <step>)"
     },
     {
       "id": "lifecycle.shutdown-reverse",
       "kind": "probed",
       "applies_to": "composition",
       "text": "Shutdown steps run in non-increasing phase order, each after every step it declares in 'after', and every pairing ordering constraint holds.",
-      "failure_code": "SHUTDOWN_ORDER(<step> before <step>)",
-      "seeded_violation": {
-        "description": "Run a library's shutdown entry point before the steps it must follow.",
-        "patch": "1.0.0/seeded/lifecycle.shutdown-reverse.patch"
-      }
+      "failure_code": "SHUTDOWN_ORDER(<step> before <step>)"
     },
     {
       "id": "lifecycle.reload-boundary",

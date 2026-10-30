@@ -8,5 +8,5 @@
 
 - [ ] Every file under the product spec's examples loads, and each rule the spec's example checker enforces is enforced by the map model, reported as `MAP_INVALID(<file>)` with the reason.
 - [ ] Private maps layer in manifest order; an extension that changes anything other than adding versions, variants or (in an NDA platform's map) supported targets is rejected (ADR-0075).
-- [ ] `automap show <library|slot|contract|recipe> --json` and `automap find --slot <slot> --json` match golden outputs against the fixture map.
+- [ ] `automap show <library|slot|contract|recipe> --json` and `automap find --slot <slot> --json` return their results in `entries` and match golden outputs against the fixture map.
 - [ ] The fixture map's recipes carry probes and seeded-violation patches, so later tickets can test them.

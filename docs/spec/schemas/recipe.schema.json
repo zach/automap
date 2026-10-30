@@ -149,7 +149,7 @@
             "items": {
               "type": "string"
             },
-            "description": "Steps this one must follow within its phase."
+            "description": "Steps that must have run before this entry point, within its phase; the startup runs the entry points performing them first."
           },
           "provides": {
             "type": "array",
@@ -180,6 +180,13 @@
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]*\\.[a-z0-9_]+$"
             }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The lifecycle steps this entry point performs and records, in order. Another entry point's `after` names these steps; the startup orders entry points within a phase by them."
           }
         }
       }
@@ -250,7 +257,8 @@
               },
               "patch": {
                 "type": "string",
-                "description": "A patch, relative to the recipe's or contract version's directory, that CI applies to reference glue (or the manifest) to introduce the mistake."
+                "pattern": "\\.(patch|json-patch)$",
+                "description": "A unified diff (.patch) against reference glue, a build fragment, setup glue or a shared interface, or an RFC 6902 JSON Patch (.json-patch) against the manifest; paths are relative to the recipe's or contract version's directory. Never against a file the CLI generates."
               }
             }
           }

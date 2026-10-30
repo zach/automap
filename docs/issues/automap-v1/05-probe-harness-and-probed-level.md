@@ -7,7 +7,7 @@
 **Status:** ready-for-agent
 
 - [ ] The fixture composition's probes pass and `verify` reports probed.
-- [ ] For every seeded-violation patch in the fixture map, a test applies it and `verify` reports that rule's failure code and a level below probed (ADR-0071).
+- [ ] `automap verify --seed <rule>[:<library>]` applies a seeded violation in a scratch copy, writes no evidence, and reports whether the probe caught it; for every seed in the fixture map, the probe does (ADR-0071).
 - [ ] Not-applicable and unverifiable results carry reasons; an unverifiable applicable rule blocks probed (ADR-0072).
 - [ ] Lifecycle order and pairing ordering constraints are checked from the recorded steps; violations report `INIT_ORDER(...)` or `SHUTDOWN_ORDER(...)` (ADR-0026, ADR-0074).
 - [ ] A platform-limited rule is not-applicable on other platforms (ADR-0076).

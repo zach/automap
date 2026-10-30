@@ -4,7 +4,7 @@ The brief's definition of done (section 6), checked item by item, with the evide
 
 | # | Item | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | A fresh agent could begin slice 1 without asking anything foundational | Re-test under way: the four foundational questions from the first test are resolved | Fresh-agent test, 2026-10-30 (below) |
+| 1 | A fresh agent could begin slice 1 without asking anything foundational | Done | First test: four foundational questions, resolved by ADRs 0078–0081. Re-test: no foundational design questions; its remaining questions are the sign-off gate, a prerequisite for ticket 09, and minor defaults, resolved below | Fresh-agent test, 2026-10-30 (below) |
 | 2 | Every schema has a complete, valid example | Done | Nine schemas, 43 example files; `python3 docs/spec/check-examples.py` reports all valid, and fails on seeded mistakes |
 | 3 | Every known-good pairing names its verification method | Done | [SPEC §8.5](SPEC.md#85-pairings) |
 | 4 | Testbed, starter engine and custom integration each have a worked journey | Done | [SPEC §2.4–2.6](SPEC.md#24-journey-1-testbed-start-then-extend), with example files |
@@ -13,7 +13,7 @@ The brief's definition of done (section 6), checked item by item, with the evide
 | 7 | Every significant decision has an ADR; `OPEN_QUESTIONS.md` holds only items deferred past v1 | Done | ADRs 0001–0082; the product owner confirmed SPEC §12.3's details as spec defaults, with evidence lookup recorded as [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md); `OPEN_QUESTIONS.md` holds OQ-008 and OQ-011, both deferred past v1 |
 | 8 | Research claims are cited and dated | Done | Every note in `docs/research/` states its access date for all sources; SPEC cites the notes |
 
-## Fresh-agent test
+## Fresh-agent test (first run)
 
 A general-purpose agent with no conversation history was given only the repo and asked whether it could begin slice 1 (tickets 01–09) without asking the product owner anything foundational, and to list every question it would ask. It could start ticket 01, but not finish slice 1 without design answers.
 
@@ -44,3 +44,36 @@ A general-purpose agent with no conversation history was given only the repo and
 | Fixture overlay ports have no home in SPEC | The Automap registry's location is configurable; tests use a filesystem registry in the fixture map (SPEC §5.5) |
 | A not-applicable binding's reason had no source in the map | A binding recipe may ship no probes when every probed library rule of its contract is not-applicable, with reasons ([example](examples/map/recipes/binding/dear-imgui--diagnostics.json)) |
 | Choices header naming not mechanical (`"C++20"` → `20`) | One naming rule (SPEC §4.10); `cxx_standard` is an integer |
+
+## Fresh-agent re-test
+
+A second agent with no conversation history ran the same test after ADRs 0078–0082. It found nothing foundational in the design: it could carry slice 1 through on the spec's defaults. Procedurally, ticket 01 waits for this review's sign-off and the merge to `main` (ADR-0078).
+
+### Its questions
+
+| # | Question | Its rating | Resolution |
+| --- | --- | --- | --- |
+| 1 | Is the definition of done signed off, so `exploration` can merge to `main`? | Gate | The product owner's sign-off of this review |
+| 2 | Will the API key secret and monthly cap exist before ticket 09? | Minor | Ticket 09 lists them as a prerequisite the product owner provides (ADR-0081) |
+| 3 | Seeded violations for composition rules would patch generated files, and slice 1's testbed can't exercise some of them | Minor | Seeds are owned by whoever owns the file the mistake belongs in, never a generated file; manifest seeds are JSON Patches; `verify --seed` applies them; slice 1 proves composition seeds against the fixture composition (SPEC §6.1, §11.1) |
+| 4 | Where do the executable and top-level CMake file come from? | Minor | The manifest names the executable; `start` writes `main.cpp` and the top-level CMake file from the map's testbed template when the repo has none (SPEC §2.3, §4.7) |
+| 5 | Where do `find` and `show` put their results? | Minor | The CLI result's `entries` ([example](examples/composition/cli-results/find-physics-3d.json)) |
+| 6 | How does the startup order entry points within a phase? | Minor | Entry points declare the lifecycle steps they perform; an entry point runs after those performing the steps in its `after` list (SPEC §5.6) |
+| 7 | Which skill directories get the router skill? | Minor | `.claude/skills/automap/` and any other agent's skill directory already present (SPEC §5.7) |
+| 8 | Smaller defaults | Minor | All three platforms by default; 120 smoke frames; the probe results file; probe builds in their own directory; verifier id `local`; the vcpkg tool release and Automap registry location in `map.json`; system dependencies as platform facts (SPEC §5.4–§6.3) |
+
+### Contradictions and gaps it found
+
+| Finding | Resolution |
+| --- | --- |
+| SDL3's example data gave SDL_GPU no Vulkan backend on Linux: at vcpkg baseline `d186940`, the sdl3 port builds it only with its non-default `vulkan` feature | SDL3's default variant enables `vulkan`; ticket 08 checks it (verified against the port and SDL's CMake, 2026-10-30) |
+| Ticket 08 asked for headless build options the spec had removed | Ticket 08 asks for the `vulkan` feature, the headless environment and system dependencies |
+| Ticket 07 cited ADR-0027's table, which lists fewer rules than SPEC §8.2 | Ticket 07 cites SPEC §8.2 |
+| The fixture registry was described as overlay ports and as a filesystem registry, neither with a commit | Tests create a git registry from a directory in the fixture map, so pins keep a commit |
+| The `none` level appeared only in schemas | Defined in SPEC §6.2 and `CONTEXT.md` |
+| `not-applicable` contribution policy missing from `CONTEXT.md` | Added |
+| `platform.targets-supported` couldn't be checked as worded from one platform's evidence | Reworded per platform; the CLI also refuses to resolve unsupported platforms |
+| No CLI surface for applying seeds | `verify --seed` |
+| Slot descriptions differed between SPEC and examples | SPEC quotes the example files |
+| The newest handoff was stale | A new handoff closes this review |
+| This container can't download from GitHub archives or releases, so vcpkg can't bootstrap or fetch here | Environment, not design: real-build tickets run on GitHub-hosted runners or with the network allowed |

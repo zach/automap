@@ -35,6 +35,9 @@
       "phase": "jobs",
       "when": "init",
       "call": "am_bind_jolt_jobs",
+      "steps": [
+        "jolt:job-system-adapter"
+      ],
       "after": [
         "automap:scheduler"
       ],
@@ -48,7 +51,10 @@
     {
       "phase": "jobs",
       "when": "shutdown",
-      "call": "am_unbind_jolt_jobs"
+      "call": "am_unbind_jolt_jobs",
+      "steps": [
+        "jolt:job-system-adapter-destroyed"
+      ]
     }
   ],
   "probes": [

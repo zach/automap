@@ -67,7 +67,7 @@
       "failure_code": "PRECISION_MISMATCH(<library>)",
       "seeded_violation": {
         "description": "Choose double position precision while a library uses float.",
-        "patch": "1.0.0/seeded/math-types.precision-agrees.patch"
+        "patch": "1.0.0/seeded/math-types.precision-agrees.json-patch"
       }
     },
     {

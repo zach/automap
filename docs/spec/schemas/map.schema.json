@@ -44,7 +44,8 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "baseline"
+            "baseline",
+            "tool"
           ],
           "properties": {
             "baseline": {
@@ -53,9 +54,26 @@
               "description": "The curated registry commit this map's facts and evidence were verified against."
             },
             "automap_registry": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "commit"
+              ],
+              "description": "The Automap registry, once the map uses it; AUTOMAP_REGISTRY overrides the URL.",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "commit": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}$"
+                }
+              }
+            },
+            "tool": {
               "type": "string",
-              "pattern": "^[0-9a-f]{40}$",
-              "description": "The Automap registry commit, once the map uses it."
+              "description": "The vcpkg tool release the CLI bootstraps when VCPKG_ROOT isn't set."
             }
           }
         }

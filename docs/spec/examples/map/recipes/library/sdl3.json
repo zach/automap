@@ -32,6 +32,12 @@
       "phase": "platform",
       "when": "init",
       "call": "am_sdl3_setup_init",
+      "steps": [
+        "sdl3:SDL_Init",
+        "sdl3:SDL_CreateWindow",
+        "sdl3:SDL_CreateGPUDevice",
+        "sdl3:SDL_ClaimWindowForGPUDevice"
+      ],
       "provides": [
         {
           "name": "sdl3.window",
@@ -46,7 +52,14 @@
     {
       "phase": "platform",
       "when": "shutdown",
-      "call": "am_sdl3_setup_shutdown"
+      "call": "am_sdl3_setup_shutdown",
+      "steps": [
+        "sdl3:SDL_WaitForGPUIdle",
+        "sdl3:SDL_ReleaseWindowFromGPUDevice",
+        "sdl3:SDL_DestroyGPUDevice",
+        "sdl3:SDL_DestroyWindow",
+        "sdl3:SDL_Quit"
+      ]
     }
   ],
   "probes": [],

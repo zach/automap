@@ -43,6 +43,10 @@
       "phase": "systems",
       "when": "init",
       "call": "am_pair_imgui_sdl3_init",
+      "steps": [
+        "dear-imgui--sdl3:ImGui_ImplSDL3_InitForSDLGPU",
+        "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Init"
+      ],
       "after": [
         "dear-imgui:CreateContext"
       ],
@@ -55,6 +59,11 @@
       "phase": "systems",
       "when": "shutdown",
       "call": "am_pair_imgui_sdl3_shutdown",
+      "steps": [
+        "dear-imgui--sdl3:SDL_WaitForGPUIdle",
+        "dear-imgui--sdl3:ImGui_ImplSDL3_Shutdown",
+        "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown"
+      ],
       "reads": [
         "sdl3.gpu_device"
       ]

@@ -105,7 +105,7 @@ A body of code that can fill one or more slots, whether third-party, proprietary
 _Avoid_: package, port, dependency (those name a build backend's artifacts, not the thing being composed)
 
 **Contribution policy**:
-A library's upstream rule on AI-generated contributions (banned, restricted, allowed or unknown), recorded as a fact. The agent never opens an issue or pull request upstream where it is banned.
+A library's upstream rule on AI-generated contributions (banned, restricted, allowed or unknown; not-applicable for the developer's own code), recorded as a fact. The agent never opens an issue or pull request upstream where it is banned.
 _Avoid_: contributing guide, CoC
 
 **Seam**:
@@ -217,7 +217,7 @@ A sanitizer report whose every frame is in code the composition doesn't build, s
 _Avoid_: suppression, ignored report, false positive
 
 **Evidence level**:
-How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed. Probed requires every applicable probed rule to pass, with none unverifiable.
+How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed; a run that doesn't build reports none. Probed requires every applicable probed rule to pass, with none unverifiable.
 _Avoid_: tier, grade, rung
 
 **Evidence state**:

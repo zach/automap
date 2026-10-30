@@ -19,7 +19,7 @@ Success is measured by an eval suite in which fresh agent sessions carry out the
 
 Option 1.
 
-- **Runtime:** Claude Code in headless mode on GitHub-hosted runners. Each task runs in a fresh environment holding only the CLI and the task's starting repo.
+- **Runtime:** Claude Code in headless mode on GitHub-hosted runners. Each task runs in a fresh environment holding only the platform's build toolchain, the CLI and the task's starting repo.
 - **Model:** the newest Claude model at the time of the run, recorded in the eval report.
 - **Credentials:** an Anthropic API key stored as a repository secret, used only by the eval workflow.
 - **Cadence:** each task runs once per map release and on demand. The first-attempt success measure is computed over those single runs.

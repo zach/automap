@@ -10,6 +10,7 @@
     "map_release",
     "build_backend",
     "platforms",
+    "executable",
     "slots",
     "variants",
     "choices",
@@ -40,6 +41,25 @@
         "type": "string",
         "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
         "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+      }
+    },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "description": "The CMake target verify builds and runs, and (for a testbed) the sources start wrote for it.",
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "private_maps": {

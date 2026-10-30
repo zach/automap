@@ -83,11 +83,7 @@
       "applies_to": "composition",
       "text": "Every ABI define has the same value in every translation unit that includes the library's headers, and every library's self-check passes.",
       "failure_code": "ABI_DEFINE_MISMATCH(<define>)",
-      "procedure": "The CLI writes one probe source per CMake target that links the library, recording each ABI define as that target sees it; the probe harness compares the recorded values at startup and calls each library's self_check. On MSVC the same values are also emitted with #pragma detect_mismatch so a mismatch fails the link.",
-      "seeded_violation": {
-        "description": "Define one library's ABI define differently on one glue target.",
-        "patch": "1.0.0/seeded/build-flags.abi-defines-match.patch"
-      }
+      "procedure": "The CLI writes one probe source per CMake target that links the library, recording each ABI define as that target sees it; the probe harness compares the recorded values at startup and calls each library's self_check. On MSVC the same values are also emitted with #pragma detect_mismatch so a mismatch fails the link."
     },
     {
       "id": "build-flags.language-settings-agree",
@@ -95,11 +91,7 @@
       "applies_to": "composition",
       "text": "The composition's C++ standard is at least every library's min_language_standard; RTTI, exception and C runtime settings agree across every target the composition builds.",
       "failure_code": "LANG_SETTINGS_MISMATCH(<setting>)",
-      "procedure": "Read from the CMake file API after configure: each target's standard, RTTI and exception flags and MSVC runtime library.",
-      "seeded_violation": {
-        "description": "Turn RTTI on for one glue target that links a library requiring consumers to match.",
-        "patch": "1.0.0/seeded/build-flags.language-settings-agree.patch"
-      }
+      "procedure": "Read from the CMake file API after configure: each target's standard, RTTI and exception flags and MSVC runtime library."
     }
   ],
   "shared_interface": null

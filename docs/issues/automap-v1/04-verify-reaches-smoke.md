@@ -1,6 +1,6 @@
 # 04: Verify reaches smoke
 
-**What to build:** `automap verify` configures and builds the composition with CMake and vcpkg, runs its executable headless for a set number of frames, and writes evidence at the builds or smoke level, unsigned, beside the lock. The fixture's stub libraries are real C++ built through vcpkg overlay ports, so this runs in seconds.
+**What to build:** `automap verify` configures and builds the composition with CMake and vcpkg, runs its executable headless for a set number of frames, and writes evidence at the builds or smoke level, unsigned, beside the lock. The fixture's stub libraries are real C++ built through vcpkg, from a git registry the tests create from a directory in the fixture map, so this runs in seconds.
 
 **Blocked by:** [03: Start writes a composition](03-start-writes-a-composition.md)
 
