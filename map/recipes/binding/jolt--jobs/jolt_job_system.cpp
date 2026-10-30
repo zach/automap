@@ -41,6 +41,7 @@ public:
             std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
         Job* job = &jobs_.Get(index);
+        sync_.fetch_add(1, std::memory_order_release); // publishes the job to whichever thread queues it
         JobHandle handle(job); // keeps a reference: the job may finish as soon as it is queued
         if (dependencies == 0) QueueJob(job);
         return handle;
@@ -48,6 +49,7 @@ public:
 
 protected:
     void QueueJob(Job* job) override {
+        sync_.fetch_add(0, std::memory_order_acq_rel);
         job->AddRef();
         in_flight_.fetch_add(1, std::memory_order_acq_rel);
         am::jobs::submit("jolt", &Run, job, nullptr);
@@ -57,14 +59,8 @@ protected:
         for (JPH::uint i = 0; i < count; ++i) QueueJob(jobs[i]);
     }
 
-    // Jolt frees a job from whichever thread drops its last reference,
-    // ordering the free after the other threads' use of the job with an
-    // atomic fence, which ThreadSanitizer can't see when the release happens
-    // inside the Jolt library. An acq_rel operation on released_ makes the
-    // same ordering explicit: every worker releases to it before dropping
-    // its reference.
     void FreeJob(Job* job) override {
-        released_.fetch_add(0, std::memory_order_acq_rel);
+        sync_.fetch_add(0, std::memory_order_acq_rel);
         jobs_.DestructObject(job);
     }
 
@@ -75,14 +71,20 @@ private:
         Job* job = static_cast<Job*>(data);
         AutomapJobSystem* self = static_cast<AutomapJobSystem*>(job->GetJobSystem());
         job->Execute();
-        self->released_.fetch_add(1, std::memory_order_release);
+        self->sync_.fetch_add(1, std::memory_order_release);
         job->Release();
         self->in_flight_.fetch_sub(1, std::memory_order_acq_rel);
     }
 
     Jobs jobs_;
     std::atomic<int> in_flight_{0};
-    std::atomic<unsigned> released_{0};
+    // Jolt hands a job between threads inside the library: a dependency
+    // that completes there queues the job from another thread, and the
+    // last release, there too, frees it after an atomic fence. The library
+    // is built without ThreadSanitizer, which sees neither, so sync_ makes
+    // the same ordering explicit: CreateJob and each worker release to it,
+    // and QueueJob and FreeJob acquire from it.
+    std::atomic<unsigned> sync_{0};
 };
 
 } // namespace

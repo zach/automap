@@ -154,7 +154,11 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 			if msg == "" {
 				msg = texts[r.Rule]
 			}
-			out.Failures = append(out.Failures, Failure{Code: r.FailureCode, Rule: r.Rule, Library: r.Library, Message: msg, DetailsFile: paths.probeLog})
+			details := paths.probeLog
+			if r.Rule == TSanRule {
+				details = path.Join(logs, "tsan-"+platform+".log")
+			}
+			out.Failures = append(out.Failures, Failure{Code: r.FailureCode, Rule: r.Rule, Library: r.Library, Message: msg, DetailsFile: details})
 		}
 	}
 	if !opts.Evidence {
