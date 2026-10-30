@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/zach/automap/internal/composition"
@@ -245,8 +246,14 @@ func run(args []string) error {
 		json.Unmarshal(raw, &man)
 	}
 
-	// Every seed whose rule applies here must be caught (ADR-0071).
-	var uncaught []Uncaught
+	// Every seed whose rule applies here must be caught (ADR-0071). Each
+	// runs in its own scratch copy, so a few run at once.
+	var (
+		uncaught []Uncaught
+		mu       sync.Mutex
+		wg       sync.WaitGroup
+		slots    = make(chan struct{}, 4)
+	)
 	for _, s := range verify.Seeds(m, &man) {
 		if !applies(comp, s) {
 			continue
@@ -255,12 +262,21 @@ func run(args []string) error {
 		if name := cmp(s.Library, s.Subject); name != "" {
 			spec += ":" + name
 		}
-		result, err := cli("verify", "--seed", spec)
-		if err != nil || result["ok"] != true {
-			fmt.Printf("::error::the probe for %s didn't catch its seeded violation on %s\n", spec, job.Platform)
-			uncaught = append(uncaught, Uncaught{Rule: s.Rule, Library: s.Library})
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			slots <- struct{}{}
+			defer func() { <-slots }()
+			result, err := cli("verify", "--seed", spec)
+			if err != nil || result["ok"] != true {
+				fmt.Printf("::error::the probe for %s didn't catch its seeded violation on %s\n", spec, job.Platform)
+				mu.Lock()
+				uncaught = append(uncaught, Uncaught{Rule: s.Rule, Library: s.Library})
+				mu.Unlock()
+			}
+		}()
 	}
+	wg.Wait()
 
 	verifier := os.Getenv("GITHUB_SERVER_URL") + "/" + os.Getenv("GITHUB_WORKFLOW_REF")
 	if os.Getenv("GITHUB_WORKFLOW_REF") == "" {
