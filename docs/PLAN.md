@@ -60,7 +60,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 10 | Data and asset slots: first-class slots with contracts? | 3, 4 | Done | 0050 |
 | 11 | Freshness and governance: curation, contributions, staying current | 5 | Done | 0051–0053 |
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Done | 0054, 0055 |
-| 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | In progress | 0056–0059 |
+| 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | In progress | 0056–0060 |
 | 14 | Success measures | 1, 13 | Not started | |
 | 15 | Agent-driven build plan: how Automap itself is built by agents (spec section 10): repo conventions, instruction files, build-team skills, test strategy, human checkpoints | 13 | Not started | |
 
