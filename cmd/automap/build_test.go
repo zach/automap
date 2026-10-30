@@ -175,6 +175,7 @@ func TestStartEndsByVerifying(t *testing.T) {
 	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
 		t.Errorf("start reports level %q and evidence %q; want probed and evidence/linux-x64-clang.json", run.Result.Level, run.Result.EvidenceFile)
 	}
+	checkEvidence(t, run, "probed")
 	if !strings.Contains(run.Result.Summary, "probed on linux-x64-clang") {
 		t.Errorf("summary %q doesn't report the level", run.Result.Summary)
 	}

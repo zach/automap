@@ -109,7 +109,14 @@ func start(a *args, r *result) int {
 		r.Summary = started + "; it is not verified: it doesn't target this machine's platform, " + host + "."
 		return exitOK
 	}
-	status = runVerify(m, man, lock, host, r)
+	// Verify the lock as written, with its lock_hash.
+	checked, err := composition.CheckLock(files[composition.LockFile])
+	if err != nil {
+		r.Summary = "The lock just written doesn't check."
+		r.fail("INTERNAL", err.Error())
+		return exitFailed
+	}
+	status = runVerify(m, man, checked, host, r)
 	r.Summary = started + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
 	return status
 }
