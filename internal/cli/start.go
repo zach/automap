@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
 	"github.com/zach/automap/internal/verify"
@@ -74,8 +75,17 @@ func start(a *args, r *result) int {
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written.", exitFailed)
 	}
+	agents, err := agentfiles.Files(".", Version, agentfiles.SectionInput{Slots: man.Slots, Executable: man.Executable.Target})
+	if err != nil {
+		r.Summary = "Reading the repo's agent files failed."
+		r.fail("WRITE_FAILED", err.Error())
+		return exitFailed
+	}
+	for p, data := range agents {
+		files[p] = data
+	}
 	written, err := writeFiles(files)
-	r.FilesWritten = written
+	r.FilesWritten = append(r.FilesWritten, written...)
 	if err != nil {
 		r.Summary = "Writing the composition failed."
 		r.fail("WRITE_FAILED", err.Error())
