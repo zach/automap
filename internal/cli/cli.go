@@ -18,7 +18,8 @@ commands:
                                              create a composition in the current directory, then verify it
   show <library|slot|contract|recipe> <id>   show one map entry and its facts
   find [<query>] [--slot <slot>]             search the map's libraries
-  verify                                     build the composition, run its smoke test and probes, write evidence
+  verify [--seed <rule>[:<library>]]         build the composition, run its smoke test and probes, write evidence;
+                                             with --seed, check a probe catches its seeded violation
 
 flags:
   --map <dir>   read the public map from a directory (or set AUTOMAP_MAP)
@@ -34,7 +35,7 @@ type command struct {
 
 var commands = map[string]command{
 	"start":  {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
-	"verify": {bools: []string{"json"}, values: []string{"map", "platform"}, run: verifyCmd},
+	"verify": {bools: []string{"json"}, values: []string{"map", "platform", "seed"}, run: verifyCmd},
 	"show":   {bools: []string{"json"}, values: []string{"map"}, run: show},
 	"find":   {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
 }

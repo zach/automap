@@ -349,3 +349,15 @@ func sortedKeys[V any](m map[string]V) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// GlueEntryFor is the manifest's glue entry for a recipe.
+func GlueEntryFor(man *Manifest, r *mapmodel.Recipe) GlueEntry {
+	switch r.Kind {
+	case "binding":
+		return man.Glue.Bindings[r.Subject.Library+"/"+r.Subject.Contract]
+	case "pairing":
+		return man.Glue.Pairings[strings.Join(r.Subject.Libraries, "/")]
+	default:
+		return man.Glue.Setup[r.Subject.Library]
+	}
+}

@@ -18,6 +18,17 @@ std::vector<Result>& results() {
     return r;
 }
 
+struct Registered {
+    std::string recipe;
+    Probe probe;
+    When when;
+};
+
+std::vector<Registered>& registry() {
+    static std::vector<Registered> r;
+    return r;
+}
+
 std::string quote(const std::string& s) {
     std::string out = "\"";
     for (char c : s) {
@@ -40,6 +51,16 @@ void write_steps(std::FILE* f, const char* key, const std::vector<std::string>& 
 }
 
 } // namespace
+
+Registration::Registration(const char* recipe, Probe probe, When when) {
+    registry().push_back({recipe, probe, when});
+}
+
+void run(When when) {
+    for (const Registered& r : registry()) {
+        if (r.when == when) r.probe();
+    }
+}
 
 void check(const std::string& rule, const std::string& library, bool ok, const std::string& failure_code) {
     results().push_back({rule, library, failure_code, ok});

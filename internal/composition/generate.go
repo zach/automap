@@ -163,14 +163,15 @@ func StartupSource(plan *StartupPlan) string {
 
 // AutomapCMake is cmake/automap/automap.cmake: it defines the glue target
 // from every glue source and includes each library's build fragment. The
-// developer's CMakeLists.txt includes it once.
+// developer's CMakeLists.txt includes it once. The glue target is an object
+// library, so every probe's registration links into the executable.
 func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 	var b strings.Builder
 	b.WriteString("# " + generatedNote + "\n")
 	b.WriteString("# The developer's CMakeLists.txt includes this file once.\n\n")
 	b.WriteString("set(AUTOMAP_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)\n")
 	fmt.Fprintf(&b, "set(AUTOMAP_CXX_STANDARD %s)\n\n", cxxStandard)
-	b.WriteString("add_library(automap_glue STATIC\n")
+	b.WriteString("add_library(automap_glue OBJECT\n")
 	for _, s := range sources {
 		fmt.Fprintf(&b, "    ${AUTOMAP_ROOT}/%s\n", s)
 	}

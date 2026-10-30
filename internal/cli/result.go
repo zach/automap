@@ -47,6 +47,8 @@ type warning struct {
 
 type failure struct {
 	Code        string `json:"code"`
+	Rule        string `json:"rule,omitempty"`
+	Library     string `json:"library,omitempty"`
 	Message     string `json:"message"`
 	DetailsFile string `json:"details_file,omitempty"`
 }

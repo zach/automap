@@ -105,17 +105,17 @@ func buildableRepo(t *testing.T) *clitest.Repo {
 	return repo
 }
 
-func TestVerifyReachesSmoke(t *testing.T) {
+func TestVerifyReachesProbed(t *testing.T) {
 	repo := buildableRepo(t)
 	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
 
 	run := repo.Automap(t, "verify", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	if run.Result.Level != "smoke" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
-		t.Fatalf("level %q, evidence %q; want smoke, evidence/linux-x64-clang.json", run.Result.Level, run.Result.EvidenceFile)
+	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
+		t.Fatalf("level %q, evidence %q; want probed, evidence/linux-x64-clang.json\n%s", run.Result.Level, run.Result.EvidenceFile, run.Stdout)
 	}
-	evidence := checkEvidence(t, run, "smoke")
+	evidence := checkEvidence(t, run, "probed")
 	if env := evidence.Predicate.Conditions.Environment; env["STUB_WINDOW_HEADLESS"] != "1" {
 		t.Errorf("run conditions' environment %v, want STUB_WINDOW_HEADLESS=1 from stub-window's platform facts", env)
 	}
@@ -172,10 +172,10 @@ func TestStartEndsByVerifying(t *testing.T) {
 	run := repo.Automap(t, "start", "--with", "stub-window", "--with", "stub-ui", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	if run.Result.Level != "smoke" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
-		t.Errorf("start reports level %q and evidence %q; want smoke and evidence/linux-x64-clang.json", run.Result.Level, run.Result.EvidenceFile)
+	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
+		t.Errorf("start reports level %q and evidence %q; want probed and evidence/linux-x64-clang.json", run.Result.Level, run.Result.EvidenceFile)
 	}
-	if !strings.Contains(run.Result.Summary, "smoke on linux-x64-clang") {
+	if !strings.Contains(run.Result.Summary, "probed on linux-x64-clang") {
 		t.Errorf("summary %q doesn't report the level", run.Result.Summary)
 	}
 }
@@ -247,9 +247,17 @@ func checkEvidence(t *testing.T, run *clitest.Run, level string) evidenceDoc {
 	case p.MapRelease != "unreleased":
 		t.Errorf("map_release %q, want unreleased", p.MapRelease)
 	}
+	if len(p.Results) == 0 {
+		t.Error("evidence has no results")
+	}
 	for _, r := range p.Results {
-		if r.Status != "unverifiable" || r.Reason == "" {
+		switch {
+		case level == "probed" && r.Status != "pass" && r.Status != "not-applicable":
+			t.Errorf("result %+v at level probed, want pass or not-applicable", r)
+		case level != "probed" && level != "smoke" && (r.Status != "unverifiable" || r.Reason == ""):
 			t.Errorf("result %+v: with no probes run, every probed rule is unverifiable with a reason", r)
+		case (r.Status == "unverifiable" || r.Status == "not-applicable") && r.Reason == "":
+			t.Errorf("result %+v has no reason", r)
 		}
 	}
 	return e

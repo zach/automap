@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
@@ -32,6 +34,9 @@ func verifyCmd(a *args, r *result) int {
 		r.fail("USAGE", "Run verify on a "+platform+" machine to verify that platform.")
 		return exitUsage
 	}
+	if seed := a.value("seed"); seed != "" {
+		return runSeed(m, man, lock, platform, seed, r)
+	}
 	return runVerify(m, man, lock, platform, r)
 }
 
@@ -42,19 +47,132 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 		r.fail("PLATFORM_NOT_IN_COMPOSITION("+platform+")", "The manifest's platforms are "+fmt.Sprint(man.Platforms)+".")
 		return exitUsage
 	}
-	out := verify.Run(m, man, lock, platform)
+	out := verify.Run(m, man, lock, verify.Options{Root: ".", Platform: platform, Evidence: true})
 	r.Level = out.Level
 	r.EvidenceFile = out.EvidenceFile
 	for _, f := range out.Failures {
-		r.Failures = append(r.Failures, failure{Code: f.Code, Message: f.Message, DetailsFile: f.DetailsFile})
+		r.Failures = append(r.Failures, failure{Code: f.Code, Rule: f.Rule, Library: f.Library, Message: f.Message, DetailsFile: f.DetailsFile})
+	}
+	var unverifiable int
+	for _, res := range out.Results {
+		if res.Status == "unverifiable" && out.Level != "none" && out.Level != "builds" {
+			unverifiable++
+			code := "UNVERIFIABLE(" + res.Rule + ")"
+			if res.Library != "" {
+				code = "UNVERIFIABLE(" + res.Rule + "," + res.Library + ")"
+			}
+			r.Warnings = append(r.Warnings, warning{Code: code, Message: res.Reason})
+		}
 	}
 	r.OK = len(r.Failures) == 0
-	r.Summary = fmt.Sprintf("Composition is %s on %s.", out.Level, platform)
-	if !r.OK {
-		r.Summary = fmt.Sprintf("Composition is %s on %s: %s.", out.Level, platform, out.Failures[0].Code)
+	switch {
+	case !r.OK:
+		var rules int
+		for _, f := range out.Failures {
+			if f.Rule != "" {
+				rules++
+			}
+		}
+		detail := out.Failures[0].Code
+		if rules > 0 {
+			detail = fmt.Sprintf("%d probed %s failed", rules, plural(rules, "rule", "rules"))
+		}
+		r.Summary = fmt.Sprintf("Composition is %s on %s: %s.", out.Level, platform, detail)
 		return exitFailed
+	case unverifiable > 0:
+		r.Summary = fmt.Sprintf("Composition is %s on %s: %d probed %s unverifiable.", out.Level, platform, unverifiable, plural(unverifiable, "rule", "rules"))
+	default:
+		r.Summary = fmt.Sprintf("Composition is %s on %s.", out.Level, platform)
 	}
 	return exitOK
+}
+
+// runSeed applies one seeded violation in a scratch copy of the
+// composition, verifies there, and reports whether the rule's probe caught
+// it. It writes no evidence (SPEC §6.1).
+func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, platform, spec string, r *result) int {
+	rule, library, _ := strings.Cut(spec, ":")
+	var matches []verify.Seed
+	for _, s := range verify.Seeds(m, man) {
+		if s.Rule == rule && (library == "" || s.Library == library) {
+			matches = append(matches, s)
+		}
+	}
+	switch {
+	case len(matches) == 0:
+		r.Summary = "No seeded violation for " + spec + " applies to this composition."
+		r.fail("UNKNOWN_SEED("+spec+")", "No recipe or contract in the composition seeds "+spec+".")
+		return exitUsage
+	case len(matches) > 1:
+		var names []string
+		for _, s := range matches {
+			names = append(names, s.Rule+":"+s.Library)
+		}
+		r.Summary = "More than one seeded violation matches " + spec + "."
+		r.fail("USAGE", "Name the library: "+strings.Join(names, ", "))
+		return exitUsage
+	}
+	seed := matches[0]
+	scratch, err := os.MkdirTemp("", "automap-seed-")
+	if err != nil {
+		r.Summary = "Can't make a scratch copy."
+		r.fail("SEED_FAILED", err.Error())
+		return exitFailed
+	}
+	defer os.RemoveAll(scratch)
+	if err := copyComposition(".", scratch); err == nil {
+		err = verify.ApplySeed(scratch, seed)
+	}
+	if err != nil {
+		r.Summary = "The seeded violation can't be applied."
+		r.fail("SEED_FAILED", err.Error())
+		return exitFailed
+	}
+	seeded := *man
+	if raw, err := os.ReadFile(filepath.Join(scratch, composition.ManifestFile)); err == nil {
+		json.Unmarshal(raw, &seeded)
+	}
+	out := verify.Run(m, &seeded, lock, verify.Options{Root: scratch, Platform: platform})
+	r.Level = out.Level
+	for _, res := range out.Results {
+		if res.Rule == seed.Rule && res.Library == seed.Library && res.Status == "fail" {
+			r.OK = true
+			r.Summary = fmt.Sprintf("The probe caught the seeded violation of %s: %s.", spec, res.FailureCode)
+			return exitOK
+		}
+	}
+	got := "it reported no failure"
+	for _, f := range out.Failures {
+		if f.Rule == "" {
+			got = "the run failed with " + f.Code + " instead"
+		}
+	}
+	r.Summary = fmt.Sprintf("The probe didn't catch the seeded violation of %s.", spec)
+	r.fail("SEED_NOT_CAUGHT("+spec+")", seed.Description+" The probe for "+seed.Rule+" didn't fail: "+got+".")
+	return exitFailed
+}
+
+// copyComposition copies a composition's files to dst, leaving out build
+// output, evidence and version control.
+func copyComposition(src, dst string) error {
+	return filepath.WalkDir(src, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(src, p)
+		if d.IsDir() {
+			switch filepath.ToSlash(rel) {
+			case "build", "evidence", ".git":
+				return filepath.SkipDir
+			}
+			return os.MkdirAll(filepath.Join(dst, rel), 0o755)
+		}
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(filepath.Join(dst, rel), data, 0o644)
+	})
 }
 
 // loadComposition reads the manifest and lock in the current directory and
