@@ -11,7 +11,7 @@ import (
 func fixtureRepo(t *testing.T) *clitest.Repo {
 	t.Helper()
 	repo := clitest.NewRepo(t, "no-manifest")
-	repo.Copy(t, "testdata/map", "map")
+	repo.FixtureMap(t, "map")
 	return repo
 }
 

@@ -1,7 +1,9 @@
-// Automap probe harness (fixture map). Probe glue registers its probes;
-// the executable runs them with --probe and the harness writes every
-// result, with the recorded lifecycle steps, to the results file the CLI
-// reads. MIT-0.
+// Automap probe harness.
+// SPDX-License-Identifier: MIT-0
+//
+// Probe glue registers its probes; the executable runs them with --probe
+// and the harness writes every result, with the recorded lifecycle steps,
+// to the results file the CLI reads.
 #pragma once
 #include <string>
 

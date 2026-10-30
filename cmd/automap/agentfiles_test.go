@@ -11,7 +11,7 @@ import (
 func agentFilesRepo(t *testing.T) *clitest.Repo {
 	t.Helper()
 	repo := clitest.NewRepo(t, "agent-files")
-	repo.Copy(t, "testdata/map", "map")
+	repo.FixtureMap(t, "map")
 	return repo
 }
 

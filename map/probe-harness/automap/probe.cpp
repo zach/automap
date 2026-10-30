@@ -1,3 +1,5 @@
+// Automap probe harness.
+// SPDX-License-Identifier: MIT-0
 #include "automap/probe.h"
 
 #include <cstdio>

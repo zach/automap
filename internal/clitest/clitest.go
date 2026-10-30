@@ -112,6 +112,16 @@ func (r *Repo) Copy(t *testing.T, src, dst string) {
 	copyTree(t, filepath.Join(Root(t), filepath.FromSlash(src)), filepath.Join(r.Dir, filepath.FromSlash(dst)))
 }
 
+// FixtureMap assembles the fixture map at dst in the repo: the stub
+// libraries in testdata/map with the public map's contracts and probe
+// harness, so the CLI's tests exercise the real shared interfaces.
+func (r *Repo) FixtureMap(t *testing.T, dst string) {
+	t.Helper()
+	r.Copy(t, "testdata/map", dst)
+	r.Copy(t, "map/contracts", dst+"/contracts")
+	r.Copy(t, "map/probe-harness", dst+"/probe-harness")
+}
+
 // EditJSON decodes the JSON file at path in the repo, passes it to edit, and
 // writes back what edit returns.
 func (r *Repo) EditJSON(t *testing.T, path string, edit func(doc any) any) {

@@ -1,6 +1,8 @@
-// Automap probe harness: lifecycle step recording (fixture map). Glue
-// records each lifecycle step as it runs; the lifecycle probe compares the
-// recorded order with the declared one. MIT-0.
+// Automap probe harness: lifecycle step recording.
+// SPDX-License-Identifier: MIT-0
+//
+// Glue records each lifecycle step as it runs; verify compares the
+// recorded order with the declared one.
 #pragma once
 #include <string>
 #include <vector>
