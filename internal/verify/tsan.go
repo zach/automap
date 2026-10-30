@@ -20,7 +20,9 @@ type TSanReport struct {
 }
 
 var (
-	tsanFrame   = regexp.MustCompile(`^\s*#\d+ (\S+) (.*?) \(([^()+]+)\+0x[0-9a-f]+\)`)
+	tsanFrame   = regexp.MustCompile(`^\s*#\d+ (\S+)(?: (.*?))? \(([^()+]+)\+0x[0-9a-f]+\)`)
+	tsanBuildID = regexp.MustCompile(`\s*\(BuildId: [0-9a-f]+\)`)
+	sourceLine  = regexp.MustCompile(`:\d+(:\d+)?$`)
 	tsanSummary = regexp.MustCompile(`^SUMMARY: ThreadSanitizer: (.*)$`)
 	tsanSection = regexp.MustCompile(`^  \S`)
 	tsanAccess  = regexp.MustCompile(`^  (Previous )?(atomic )?(Atomic )?(write|read|Write|Read) of size`)
@@ -64,7 +66,7 @@ func ParseTSan(output, executable string) []TSanReport {
 			if !contains(cur.Modules, module) {
 				cur.Modules = append(cur.Modules, module)
 			}
-			if module == executable && !sanitizerRuntime.MatchString(file) && !sanitizerRuntime.MatchString(fn) {
+			if module == executable && sourceLine.MatchString(file) && !sanitizerRuntime.MatchString(file) && !sanitizerRuntime.MatchString(fn) {
 				cur.Counts = true
 			}
 		}
@@ -75,7 +77,7 @@ func ParseTSan(output, executable string) []TSanReport {
 // shortenSummary keeps a summary's file name without its directory, such as
 // "data race jobs.cpp:42 in run".
 func shortenSummary(s string) string {
-	fields := strings.Fields(s)
+	fields := strings.Fields(tsanBuildID.ReplaceAllString(s, ""))
 	for i, f := range fields {
 		if strings.Contains(f, "/") {
 			fields[i] = path.Base(f)

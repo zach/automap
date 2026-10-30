@@ -1,0 +1,19 @@
+==================
+WARNING: ThreadSanitizer: data race (pid=7123)
+  Write of size 8 at 0x7f0011223340 by thread T5:
+    #0 memset (testbed+0x638e1) (BuildId: 1d66db4e6502ab40ef5295d3e6de04e66da74367)
+    #1 touch /tmp/repo/noise/noise.c:4:65 (libnoise.so+0x1159) (BuildId: 0a1b2c3d4e5f60718293a4b5c6d7e8f901234567)
+
+  Previous write of size 8 at 0x7f0011223340 by thread T4:
+    #0 memset (testbed+0x638e1) (BuildId: 1d66db4e6502ab40ef5295d3e6de04e66da74367)
+    #1 touch /tmp/repo/noise/noise.c:4:65 (libnoise.so+0x1159) (BuildId: 0a1b2c3d4e5f60718293a4b5c6d7e8f901234567)
+
+  Location is global 'buf' of size 4096 at 0x7f0011223340 (libnoise.so+0x4040)
+
+  Thread T5 (tid=7130, running) created by main thread at:
+    #0 pthread_create (testbed+0x5f4ab) (BuildId: 1d66db4e6502ab40ef5295d3e6de04e66da74367)
+    #1 noise_race /tmp/repo/noise/noise.c:5:84 (libnoise.so+0x11b6) (BuildId: 0a1b2c3d4e5f60718293a4b5c6d7e8f901234567)
+    #2 main /tmp/repo/main.cpp:40:5 (testbed+0xe7a21) (BuildId: 1d66db4e6502ab40ef5295d3e6de04e66da74367)
+
+SUMMARY: ThreadSanitizer: data race (testbed+0x638e1) (BuildId: 1d66db4e6502ab40ef5295d3e6de04e66da74367) in memset
+==================

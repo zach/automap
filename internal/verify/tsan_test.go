@@ -56,3 +56,22 @@ func TestOutputWithoutReports(t *testing.T) {
 		t.Errorf("%d reports in clean output", len(got))
 	}
 }
+
+// Clang links its ThreadSanitizer runtime into the executable without
+// debug information, so an interceptor's frame is in the executable but has
+// no source location; the thread that created the racing thread was main,
+// in the executable, but creation stacks don't count. The sample has the
+// frame layout of clang 21's output in Automap's CI.
+func TestClangsRuntimeFramesAndThreadCreationDontCount(t *testing.T) {
+	reports := verify.ParseTSan(sample(t, "tsan-clang-runtime-frames.txt"), "testbed")
+
+	if len(reports) != 1 {
+		t.Fatalf("%d reports, want 1", len(reports))
+	}
+	if reports[0].Counts {
+		t.Errorf("report %+v counts, but its only executable frames are the sanitizer's and the thread creation's", reports[0])
+	}
+	if reports[0].Summary != "data race (testbed+0x638e1) in memset" {
+		t.Errorf("summary %q", reports[0].Summary)
+	}
+}
