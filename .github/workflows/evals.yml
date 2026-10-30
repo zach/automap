@@ -47,10 +47,12 @@ jobs:
           git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
           "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/vcpkg-archives"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-archives" >> "$GITHUB_ENV"
       - name: Restore the vcpkg binary cache
         uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/vcpkg/archives
+          path: ${{ runner.temp }}/vcpkg-archives
           key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}
           restore-keys: public-map-${{ runner.os }}-
       - name: The CLI and Claude Code

@@ -212,9 +212,9 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 // registry's baseline.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
-		Name            string   `json:"name"`
-		DefaultFeatures *bool    `json:"default-features,omitempty"`
-		Features        []string `json:"features,omitempty"`
+		Name            string `json:"name"`
+		DefaultFeatures *bool  `json:"default-features,omitempty"`
+		Features        []any  `json:"features,omitempty"`
 	}
 	type override struct {
 		Name    string `json:"name"`
@@ -237,8 +237,16 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		port := v.BuildBackend.Vcpkg.Port
 		dep := dependency{Name: port}
 		if variant := v.Variant(lock.Pins[lib].Variant); variant != nil {
+			// A feature may name its platforms as a vcpkg platform
+			// expression in brackets, such as "x11[linux]".
 			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
-				if f = strings.TrimSpace(f); f != "" {
+				f = strings.TrimSpace(f)
+				name, platform, limited := strings.Cut(strings.TrimSuffix(f, "]"), "[")
+				switch {
+				case f == "":
+				case limited:
+					dep.Features = append(dep.Features, map[string]string{"name": name, "platform": platform})
+				default:
 					dep.Features = append(dep.Features, f)
 				}
 			}

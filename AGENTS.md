@@ -34,8 +34,10 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `internal/agentfiles/` | The `AGENTS.md` section, the `CLAUDE.md` import, the router skill and the four nevers. |
 | `internal/clitest/` | The test harness that runs the CLI as a process. |
 | `map/` | The public map (SPEC §5.3). Everything in it is MIT-0. |
+| `ci/` | Automap's CI for the public map: `cmd/verifymap` plans which declared edges need verifying, verifies them and writes their evidence; `compositions.json` lists the reference compositions. The `Verify map` workflow signs the evidence and commits it into `map/evidence/`. |
+| `evals/` | The eval suite: tasks and the runner, run on demand by the `Evals` workflow. |
 | `schemas/` | The published JSON Schemas, embedded in the binary. |
-| `testdata/map/` | The fixture map's own part: two stub libraries with recipes, probes and seeded violations. Tests add the public map's contracts and probe harness (`clitest.Repo.FixtureMap`). |
+| `testdata/map/` | The fixture map's own part: three stub libraries with recipes, probes and seeded violations. Tests add the public map's contracts and probe harness (`clitest.Repo.FixtureMap`). |
 | `testdata/repos/` | Fixture repos the CLI runs in. |
 | `testdata/golden/` | Golden CLI results and written files, one directory per case. |
 | `docs/spec/` | `SPEC.md`, its examples and `check-examples.py`. |
@@ -46,7 +48,7 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `docs/OPEN_QUESTIONS.md` | Questions deferred past v1. |
 | `docs/EXPLORATION_BRIEF.md`, `docs/PLAN.md` | The product exploration's brief and plan. |
 
-SPEC §10.1 gives the layout later tickets add: `evals/` and the `registry` branch.
+SPEC §10.1 gives the layout later tickets add: the `registry` branch.
 
 ## Working on a ticket
 

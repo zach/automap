@@ -102,15 +102,29 @@ jobs:
       - run: python3 docs/spec/check-examples.py
 
   public-map:
-    name: Public map (Linux)
-    runs-on: ubuntu-latest
+    name: Public map (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+          - name: Windows
+            os: windows-latest
+          - name: macOS
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: System packages
+      - name: System packages (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build clang pkg-config jq autoconf autoconf-archive automake libtool libltdl-dev \
@@ -118,19 +132,35 @@ jobs:
             libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
             mesa-vulkan-drivers libvulkan1
           sudo apt-get install -y "libclang-rt-$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p')-dev"
+      - name: MSVC developer environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Ninja
+        if: runner.os != 'Linux'
+        run: if [ "$RUNNER_OS" = Windows ]; then choco install -y ninja; else brew install ninja; fi
       - name: vcpkg at the map's baseline
         run: |
           baseline=$(jq -r .build_backend.vcpkg.baseline map/map.json)
           # Versioned ports, such as a curated library's pinned port
           # version, are read from vcpkg's history: clone it without blobs.
-          git clone -q --filter=blob:none https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          # On Windows, vcpkg's git can't fetch a blobless clone's objects
+          # lazily, so the clone is complete there.
+          filter=--filter=blob:none
+          [ "$RUNNER_OS" = Windows ] && filter=
+          git clone -q $filter https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
           git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
-          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          if [ "$RUNNER_OS" = Windows ]; then
+            cmd //c "$(cygpath -w "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat")" -disableMetrics
+          else
+            "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          fi
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/vcpkg-archives"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-archives" >> "$GITHUB_ENV"
       - name: Restore the vcpkg binary cache
         uses: actions/cache/restore@v4
         with:
-          path: ~/.cache/vcpkg/archives
+          path: ${{ runner.temp }}/vcpkg-archives
           key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
           restore-keys: public-map-${{ runner.os }}-
       - name: The testbed starts probed, extends with Jolt probed, and every seed is caught
@@ -142,5 +172,5 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: ~/.cache/vcpkg/archives
+          path: ${{ runner.temp }}/vcpkg-archives
           key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
