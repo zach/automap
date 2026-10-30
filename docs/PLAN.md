@@ -8,7 +8,7 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | --- | --- | --- | --- |
 | 0. Orientation | Install skills, seed glossary, plan, start research | `CLAUDE.md`, `CONTEXT.md`, `docs/agents/`, this file | Done 2026-10-29 |
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
-| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | In progress: branch 15 |
+| 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | Done 2026-10-30 (ADRs 0001–0069) |
 | 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Not started |
 | 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Not started |
 
@@ -62,7 +62,7 @@ Arrows point from a branch to the branches that depend on it. Work in dependency
 | 12 | Product and distribution: open source, commercial, hybrid; earning trust | 1, 2, 11 | Done | 0054, 0055 |
 | 13 | Scope of v1: slots, libraries, platforms, worked example journeys; first vertical slice | all | Done | 0056–0061 |
 | 14 | Success measures | 1, 13 | Done | 0062, 0063 |
-| 15 | Agent-driven build plan: how Automap itself is built by agents (spec section 10): repo conventions, instruction files, build-team skills, test strategy, human checkpoints | 13 | In progress | 0064–0068 |
+| 15 | Agent-driven build plan: how Automap itself is built by agents (spec section 10): repo conventions, instruction files, build-team skills, test strategy, human checkpoints | 13 | Done | 0064–0069 |
 
 ## Planned spike
 
