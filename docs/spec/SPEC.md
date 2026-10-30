@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0079](../adr/0079-map-from-a-directory-before-releases.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0080](../adr/0080-the-cli-generates-startup.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -91,11 +91,11 @@ vcpkg.json                 written by the CLI, committed
 vcpkg-configuration.json   registries: vcpkg's curated one, the Automap registry, private ones
 CMakeLists.txt             the developer's; includes cmake/automap/automap.cmake
 cmake/automap/             one build fragment per library, plus automap.cmake
-glue/automap/              shared interfaces, the probe harness, choices.h
+glue/automap/              shared interfaces, the probe harness, choices.h, the startup
 glue/<library>/            bindings and setup glue for one library
 glue/<a>--<b>/             glue for one pairing
 evidence/<platform>.json   composition evidence, one record per platform
-main.cpp                   the testbed's executable source (testbeds only)
+main.cpp                   the testbed's executable source; calls startup and shutdown (testbeds only)
 AGENTS.md                  with one Automap section between markers
 .claude/skills/automap/    the router skill (and each other agent's skill directory)
 ```
@@ -112,7 +112,7 @@ The day-one composition [ADR-0057](../adr/0057-day-one-composition.md): SDL3 for
 $ automap start --with sdl3 --with dear-imgui:docking --json
 ```
 
-The CLI resolves the libraries against the newest map release, assigns SDL3 to every slot it fills (windowing, input, gpu) and Dear ImGui to tools-ui, and writes the files in §2.3: the manifest and lock, the vcpkg files, the build fragments, the shared interfaces and probe harness, SDL3's and Dear ImGui's bindings and setup glue, the `dear-imgui--sdl3` pairing glue, the choices header, a testbed `main.cpp`, the `AGENTS.md` section and the router skill. It then runs `automap verify` for the host platform. The JSON result is:
+The CLI resolves the libraries against the newest map release, assigns SDL3 to every slot it fills (windowing, input, gpu) and Dear ImGui to tools-ui, and writes the files in §2.3: the manifest and lock, the vcpkg files, the build fragments, the shared interfaces and probe harness, SDL3's and Dear ImGui's bindings and setup glue, the `dear-imgui--sdl3` pairing glue, the choices header, the startup, a testbed `main.cpp`, the `AGENTS.md` section and the router skill. It then runs `automap verify` for the host platform. The JSON result is:
 
 ```json
 { "command": "start", "cli_version": "1.0.0", "ok": true, "level": "probed",
@@ -168,7 +168,7 @@ The CLI moves the lock to the newest map release [ADR-0053](../adr/0053-map-rele
 
 A hypothetical studio, Acme Games, has a hand-built engine: SDL3, Jolt, an in-house scheduler (`engine/acme-jobs`) and an in-house renderer (`engine/acme-renderer`). It ships on Windows, Linux and a hypothetical NDA console, Nebula. The files are in [`examples/private-map/`](examples/private-map/), [`examples/private-map-nebula/`](examples/private-map-nebula/) and [`examples/composition/acme-engine/`](examples/composition/acme-engine/).
 
-**1. Adopt.** The agent runs `automap adopt --json` at the repo root. The CLI reads the CMake project and `vcpkg.json`, matches `SDL3::SDL3` and `Jolt::Jolt` to map libraries, and reports `Acme::Jobs` and `Acme::Renderer` as targets no map describes. The developer's own code is a library like any other [ADR-0013](../adr/0013-developer-code-is-a-library.md), so the agent creates a private map in `automap-private/` and writes [`acme-jobs.json`](examples/private-map/libraries/acme-jobs.json) and [`acme-renderer.json`](examples/private-map/libraries/acme-renderer.json) from their headers, with `source.kind` `path`. It writes recipes for their bindings and for the `acme-renderer--sdl3` pairing, pointing at glue that already exists, such as `engine/platform/window.cpp`. Re-running `automap adopt` writes the manifest with those glue paths and runs verification. Probes fail where the existing glue misses a rule; the agent adapts the glue until they pass. Success is judged by probes, not by resemblance to reference glue [ADR-0016](../adr/0016-recipes-are-reference-glue-plus-probes.md).
+**1. Adopt.** The agent runs `automap adopt --json` at the repo root. The CLI reads the CMake project and `vcpkg.json`, matches `SDL3::SDL3` and `Jolt::Jolt` to map libraries, and reports `Acme::Jobs` and `Acme::Renderer` as targets no map describes. The developer's own code is a library like any other [ADR-0013](../adr/0013-developer-code-is-a-library.md), so the agent creates a private map in `automap-private/` and writes [`acme-jobs.json`](examples/private-map/libraries/acme-jobs.json) and [`acme-renderer.json`](examples/private-map/libraries/acme-renderer.json) from their headers, with `source.kind` `path`. It writes recipes for their bindings and for the `acme-renderer--sdl3` pairing, pointing at glue that already exists, such as `engine/platform/window.cpp`. Re-running `automap adopt` writes the manifest with those glue paths, marks Acme's own startup code as developer-owned so the CLI doesn't generate one, and runs verification; the lifecycle probe judges Acme's startup order like any other [ADR-0080](../adr/0080-the-cli-generates-startup.md). Probes fail where the existing glue misses a rule; the agent adapts the glue until they pass. Success is judged by probes, not by resemblance to reference glue [ADR-0016](../adr/0016-recipes-are-reference-glue-plus-probes.md).
 
 **2. A patched library.** Acme carries a fix to SDL3 that SDL's policy bars from going upstream as AI-written work [ADR-0046](../adr/0046-four-agent-nevers.md). The agent adds a private variant, `acme-patched`, with its own pin and an overlay port in the private map ([`private-map/libraries/sdl3.json`](examples/private-map/libraries/sdl3.json)), and sets the manifest's SDL3 variant. There is no separate patch concept [ADR-0047](../adr/0047-private-maps.md).
 
@@ -242,7 +242,7 @@ erDiagram
 
 ### 3.3 Lifecycle
 
-Init runs through six fixed **phases**: memory, diagnostics, platform, jobs, systems, game. Shutdown runs in exact reverse [ADR-0026](../adr/0026-lifecycle-has-six-fixed-phases.md). Each library declares its init and shutdown steps, each with a phase and the steps it must follow. Pairing recipes add cross-library ordering constraints. Glue records each step it runs through the probe harness, and the lifecycle probe checks the recorded order [ADR-0074](../adr/0074-spike-format-fixes.md).
+Init runs through six fixed **phases**: memory, diagnostics, platform, jobs, systems, game. Shutdown runs in exact reverse [ADR-0026](../adr/0026-lifecycle-has-six-fixed-phases.md). Each library declares its init and shutdown steps, each with a phase and the steps it must follow. Pairing recipes add cross-library ordering constraints. Glue records each step it runs through the probe harness, and the lifecycle probe checks the recorded order [ADR-0074](../adr/0074-spike-format-fixes.md). The **startup** the CLI writes calls every recipe's entry points in that order, passing one **context** that holds the objects setup glue creates [ADR-0080](../adr/0080-the-cli-generates-startup.md).
 
 ---
 
@@ -346,11 +346,11 @@ It uses the same schema, the same contracts and the same checks as Jolt; nothing
 
 ### 4.6 Recipes
 
-A recipe names its subject, the library versions and variants it applies to, its reference glue (each file with a role: glue, build fragment, setup glue or probe), its entry points (each with a phase and whether it runs at init or shutdown [ADR-0074](../adr/0074-spike-format-fixes.md)), its probes (each naming its rule, its check, and its seeded violation as a description and a patch CI applies [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md)), rules it marks not-applicable with reasons, and adaptation notes. A pairing recipe also states the pairing's own rules and its cross-library ordering constraints: each names a step that must run `before` another, at init or shutdown.
+A recipe names its subject, the library versions and variants it applies to, its reference glue (each file with a role: glue, build fragment, setup glue or probe), its entry points (each a function taking the context, with a phase, whether it runs at init or shutdown [ADR-0074](../adr/0074-spike-format-fixes.md), and the context fields it provides and reads [ADR-0080](../adr/0080-the-cli-generates-startup.md)), its probes (each naming its rule, its check, and its seeded violation as a description and a patch CI applies [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md)), rules it marks not-applicable with reasons, and adaptation notes. A pairing recipe also states the pairing's own rules and its cross-library ordering constraints: each names a step that must run `before` another, at init or shutdown.
 
 ### 4.7 Manifest
 
-The manifest names the map release, the build backend (`vcpkg`), the platforms, any private maps, the library in each slot, each library's variant (once, or per platform with a default [ADR-0075](../adr/0075-variants-per-platform.md)), the composition's choices keyed by contract, and where glue lives: the shared interfaces directory, the choices header, and each binding's, pairing's and library's setup glue as a list of files or `not_applicable` with a reason [ADR-0074](../adr/0074-spike-format-fixes.md).
+The manifest names the map release, the build backend (`vcpkg`), the platforms, any private maps, the library in each slot, each library's variant (once, or per platform with a default [ADR-0075](../adr/0075-variants-per-platform.md)), the composition's choices keyed by contract, and where glue lives: the shared interfaces directory, the choices header, the startup (files the CLI writes, or the developer's own startup code [ADR-0080](../adr/0080-the-cli-generates-startup.md)), and each binding's, pairing's and library's setup glue as a list of files or `not_applicable` with a reason [ADR-0074](../adr/0074-spike-format-fixes.md).
 
 ### 4.8 Lock
 
@@ -476,7 +476,11 @@ Every command takes `--json` and then prints one object conforming to [`cli-resu
 
 ### 5.6 Glue at runtime
 
-The composition's executable runs the lifecycle phases in order, calling each recipe's init entry points for that phase, then the game; at exit it calls shutdown entry points in reverse. With `--probe`, the executable also runs every probe after init and a set number of headless frames, records results and lifecycle steps through the probe harness, and writes them to a results file the CLI reads. Probe code is compiled only into probe builds.
+The CLI writes the composition's **startup**, committed like the choices header and rewritten whenever the composition changes. It provides a startup function and a shutdown function. Startup calls every recipe's init entry points in phase order, respecting each step's `after` list and the pairings' ordering constraints; shutdown calls the shutdown entry points in reverse. Every entry point takes one **context**: a struct the CLI generates from the fields recipes declare, such as SDL3's window and GPU device. The CLI checks that every field an entry point reads is provided by one that runs earlier. An init entry point that fails stops startup with `INIT_FAILED(<call>)` [ADR-0080](../adr/0080-the-cli-generates-startup.md).
+
+The developer's `main` calls startup once and shutdown once: the testbed `main` that `start` writes, or an adopted engine's own. An adopted engine may keep its own startup code instead, marked as developer-owned in the manifest; the lifecycle probe judges its order the same way.
+
+With `--probe`, the composition's executable also runs every probe after startup and a set number of headless frames, records results and lifecycle steps through the probe harness, and writes them to a results file the CLI reads. Probe code is compiled only into probe builds.
 
 ### 5.7 Agent interface
 
@@ -857,7 +861,7 @@ These details are needed to build v1 but no ADR records them. They follow from t
 4. Fact, choice and failure-code names in the example contracts, including the `allocator-slot`, `logging-slot` and `profiling-slot` choices and the C++20 default.
 5. Fetching evidence for a lock's pins from the main branch rather than from the lock's map release (§5.3).
 6. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
-7. The `--probe` mode and probe results file (§5.6), the choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
+7. The probe results file (§5.6), the choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
 8. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
 9. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
 10. Map metadata files and the vcpkg baseline they carry (§4.2), the default variant (§4.5), how the CLI obtains vcpkg and the configurable registry location (§5.5), and one build for windowed and headless runs (§5.5).
@@ -945,3 +949,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0077](../adr/0077-tests-attach-at-the-cli-process.md) | The build's tests attach at the CLI, run as a process |
 | [0078](../adr/0078-exploration-merges-to-main-after-review.md) | The exploration merges to main when the definition of done is signed off |
 | [0079](../adr/0079-map-from-a-directory-before-releases.md) | The CLI can read the map from a directory, recorded as a commit or as unreleased |
+| [0080](../adr/0080-the-cli-generates-startup.md) | The CLI generates the composition's startup from its recipes |

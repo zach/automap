@@ -9,5 +9,6 @@
 - [ ] `automap start --with sdl3 --with dear-imgui:docking` on a clean Linux runner ends probed.
 - [ ] Every probe in these recipes fails its seeded violation in CI.
 - [ ] Facts validate against the contracts; pins match upstream tags and vcpkg's source hashes; SDL's headless Linux build options are in its platform facts.
+- [ ] SDL3's library recipe provides the window and GPU device in the context; the pairing's entry points read them (ADR-0080).
 - [ ] Probe mode writes no `imgui.ini`; the testbed's normal mode runs a frame loop with one Dear ImGui window until closed.
 - [ ] Dear ImGui's diagnostics binding is not-applicable, with the reason, in evidence.

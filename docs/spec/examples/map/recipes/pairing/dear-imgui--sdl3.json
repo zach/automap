@@ -42,15 +42,22 @@
     {
       "phase": "systems",
       "when": "init",
-      "call": "am_pair_imgui_sdl3_init(window, gpu_device)",
+      "call": "am_pair_imgui_sdl3_init",
       "after": [
         "dear-imgui:CreateContext"
+      ],
+      "reads": [
+        "sdl3.window",
+        "sdl3.gpu_device"
       ]
     },
     {
       "phase": "systems",
       "when": "shutdown",
-      "call": "am_pair_imgui_sdl3_shutdown(gpu_device)"
+      "call": "am_pair_imgui_sdl3_shutdown",
+      "reads": [
+        "sdl3.gpu_device"
+      ]
     }
   ],
   "rules": [

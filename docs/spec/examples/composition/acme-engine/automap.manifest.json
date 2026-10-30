@@ -59,6 +59,11 @@
   "glue": {
     "interfaces": "engine/glue/automap",
     "choices_header": "engine/glue/automap/choices.h",
+    "startup": {
+      "developer_owned": [
+        "engine/core/engine_main.cpp"
+      ]
+    },
     "bindings": {
       "sdl3/allocation": [
         "engine/glue/sdl3/sdl3_allocation.h",

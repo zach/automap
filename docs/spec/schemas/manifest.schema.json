@@ -141,6 +141,7 @@
       "required": [
         "interfaces",
         "choices_header",
+        "startup",
         "bindings",
         "pairings",
         "setup"
@@ -239,6 +240,34 @@
               }
             ]
           }
+        },
+        "startup": {
+          "description": "The startup the CLI writes (a list of files), or the developer's own startup code that the lifecycle probe judges instead (ADR-0080).",
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "developer_owned"
+              ],
+              "properties": {
+                "developer_owned": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
         }
       }
     }

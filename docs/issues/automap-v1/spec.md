@@ -23,84 +23,85 @@ Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI 
 5. As a developer's agent, I want to name a variant when I add a library, so that I get Dear ImGui's docking branch or Jolt's double precision deliberately.
 6. As a framework-first indie, I want to add 3D physics to my testbed with one request, so that extending feels as easy as starting.
 7. As a developer's agent, I want extending to write the new library's build fragment, bindings and setup glue and update the choices header, so that the library is wired into every seam it touches.
-8. As a developer's agent, I want extending to add any shared interface the new library needs, such as the jobs interface with its reference thread pool, so that one extend step adds exactly one library.
-9. As a developer's agent, I want to search the map for libraries that fill a slot, with their evidence state on my platforms, so that I pick a known-good option.
-10. As a developer's agent, I want to inspect any map entry with its facts and evidence, so that I understand a library's hooks before adapting glue.
-11. As a framework-first indie, I want a warning before a copyleft or proprietary library enters my engine, with the reason, so that I don't ship something I can't license.
-12. As a developer's agent, I want every command to have a JSON output mode with a published schema, so that I parse results instead of scraping text.
-13. As a developer's agent, I want each failure as a stable, named failure code with a one-line verdict and a details file, so that I can act on it without reading logs first.
-14. As a developer's agent, I want the CLI to update the build files through each library's build fragment, so that the build stays correct as libraries are added.
-15. As a framework-first indie, I want every build file the CLI writes to be an ordinary committed file, so that I can read, edit and keep them.
+8. As a developer's agent, I want the CLI to generate the startup that calls every recipe's entry points in order, so that I never work out init order by hand.
+9. As a developer's agent, I want extending to add any shared interface the new library needs, such as the jobs interface with its reference thread pool, so that one extend step adds exactly one library.
+10. As a developer's agent, I want to search the map for libraries that fill a slot, with their evidence state on my platforms, so that I pick a known-good option.
+11. As a developer's agent, I want to inspect any map entry with its facts and evidence, so that I understand a library's hooks before adapting glue.
+12. As a framework-first indie, I want a warning before a copyleft or proprietary library enters my engine, with the reason, so that I don't ship something I can't license.
+13. As a developer's agent, I want every command to have a JSON output mode with a published schema, so that I parse results instead of scraping text.
+14. As a developer's agent, I want each failure as a stable, named failure code with a one-line verdict and a details file, so that I can act on it without reading logs first.
+15. As a developer's agent, I want the CLI to update the build files through each library's build fragment, so that the build stays correct as libraries are added.
+16. As a framework-first indie, I want every build file the CLI writes to be an ordinary committed file, so that I can read, edit and keep them.
 
 ### Verifying
 
-16. As a developer's agent, I want one command that builds the composition, runs it headless for a set number of frames, runs every probe and writes evidence, so that I know whether my changes broke anything.
-17. As a developer's agent, I want verification to say the highest level reached (builds, smoke, probed), so that I know how far the composition got.
-18. As a developer's agent, I want each rule's result marked pass, fail, not-applicable or unverifiable, with reasons, so that I know exactly what was checked.
-19. As a developer's agent, I want a ThreadSanitizer run on platforms where it exists, ignoring reports wholly inside uninstrumented drivers but recording them, so that real races in glue fail and driver noise doesn't.
-20. As a developer's agent, I want the lifecycle probe to check init and shutdown order across all six phases and every pairing's ordering constraints, so that order mistakes fail at startup instead of crashing at exit.
-21. As a developer's agent, I want the build-flags probes to catch mismatched ABI defines and disagreeing C++ standard, RTTI, exceptions or C runtime, so that ODR and ABI bugs fail loudly.
-22. As a developer's agent, I want evidence recorded with its run conditions (build type, compiler, environment, sanitizers), so that it can be reproduced.
-23. As a framework-first indie, I want evidence produced in my CI signed with my CI's identity, and local evidence marked unsigned, so that I know which records to trust.
-24. As a framework-first indie, I want my CI to verify my engine on Windows, Linux and macOS, so that I find platform-specific breakage early.
-25. As a developer's agent, I want the router skill to carry a reference CI workflow for multi-platform verification, so that I can set it up without inventing one.
+17. As a developer's agent, I want one command that builds the composition, runs it headless for a set number of frames, runs every probe and writes evidence, so that I know whether my changes broke anything.
+18. As a developer's agent, I want verification to say the highest level reached (builds, smoke, probed), so that I know how far the composition got.
+19. As a developer's agent, I want each rule's result marked pass, fail, not-applicable or unverifiable, with reasons, so that I know exactly what was checked.
+20. As a developer's agent, I want a ThreadSanitizer run on platforms where it exists, ignoring reports wholly inside uninstrumented drivers but recording them, so that real races in glue fail and driver noise doesn't.
+21. As a developer's agent, I want the lifecycle probe to check init and shutdown order across all six phases and every pairing's ordering constraints, so that order mistakes fail at startup instead of crashing at exit.
+22. As a developer's agent, I want the build-flags probes to catch mismatched ABI defines and disagreeing C++ standard, RTTI, exceptions or C runtime, so that ODR and ABI bugs fail loudly.
+23. As a developer's agent, I want evidence recorded with its run conditions (build type, compiler, environment, sanitizers), so that it can be reproduced.
+24. As a framework-first indie, I want evidence produced in my CI signed with my CI's identity, and local evidence marked unsigned, so that I know which records to trust.
+25. As a framework-first indie, I want my CI to verify my engine on Windows, Linux and macOS, so that I find platform-specific breakage early.
+26. As a developer's agent, I want the router skill to carry a reference CI workflow for multi-platform verification, so that I can set it up without inventing one.
 
 ### Trust in the map
 
-26. As a developer's agent, I want every binding and pairing in the map to carry signed evidence from Automap's CI per platform, so that I can tell known-good from untested.
-27. As a developer's agent, I want evidence marked current, stale or broken, so that I don't rely on claims older than 30 days or on runs that failed.
-28. As a framework-first indie, I want a new library release to enter the map only after 7 days and known-good evidence, so that my engine doesn't pick up a broken release on day one.
-29. As a framework-first indie, I want security releases to skip the waiting period but never the evidence, so that urgent fixes arrive fast and still checked.
-30. As a framework-first indie, I want every probe to have been shown to fail on a seeded violation, so that "probed" means a check that can catch the mistake actually ran.
-31. As a developer's agent, I want the map released as immutable, dated map releases recorded in my lock, so that my composition resolves the same way months later.
+27. As a developer's agent, I want every binding and pairing in the map to carry signed evidence from Automap's CI per platform, so that I can tell known-good from untested.
+28. As a developer's agent, I want evidence marked current, stale or broken, so that I don't rely on claims older than 30 days or on runs that failed.
+29. As a framework-first indie, I want a new library release to enter the map only after 7 days and known-good evidence, so that my engine doesn't pick up a broken release on day one.
+30. As a framework-first indie, I want security releases to skip the waiting period but never the evidence, so that urgent fixes arrive fast and still checked.
+31. As a framework-first indie, I want every probe to have been shown to fail on a seeded violation, so that "probed" means a check that can catch the mistake actually ran.
+32. As a developer's agent, I want the map released as immutable, dated map releases recorded in my lock, so that my composition resolves the same way months later.
 
 ### Upgrading
 
-32. As a framework-first indie, I want my agent to upgrade one library, or everything, to the newest map release with one command, so that staying current is cheap.
-33. As a developer's agent, I want upgrade to apply changed reference glue where my glue still matches the old reference, and report where it doesn't, so that I adapt only what needs it.
-34. As a developer's agent, I want upgrade to end with verification and name the failing rules, so that I fix glue against concrete failure codes.
-35. As a framework-first indie, I want nothing to change in my engine until my own agent runs an upgrade, so that I control when change happens.
+33. As a framework-first indie, I want my agent to upgrade one library, or everything, to the newest map release with one command, so that staying current is cheap.
+34. As a developer's agent, I want upgrade to apply changed reference glue where my glue still matches the old reference, and report where it doesn't, so that I adapt only what needs it.
+35. As a developer's agent, I want upgrade to end with verification and name the failing rules, so that I fix glue against concrete failure codes.
+36. As a framework-first indie, I want nothing to change in my engine until my own agent runs an upgrade, so that I control when change happens.
 
 ### Adopting an existing engine
 
-36. As a studio with a hand-built engine, I want my agent to adopt it into Automap, so that my existing engine gets contracts, probes and evidence without being rewritten.
-37. As a developer's agent, I want adopt to match my CMake targets to map libraries and report the ones no map describes, so that I know what to describe in a private map.
-38. As a studio, I want my in-house scheduler and renderer described as ordinary libraries in a private map, so that they are checked by the same probes as Jolt and SDL3.
-39. As a developer's agent, I want adopt to write a manifest that points at the glue that already exists, so that I adapt it in place rather than replacing it.
-40. As a studio, I want success judged by probes passing, not by resemblance to reference glue, so that my existing architecture is respected.
-41. As a studio, I want an in-house library joined to the build as ordinary CMake targets and pinned by its path and content hash, so that nothing about it needs a package registry.
+37. As a studio with a hand-built engine, I want my agent to adopt it into Automap, so that my existing engine gets contracts, probes and evidence without being rewritten.
+38. As a developer's agent, I want adopt to match my CMake targets to map libraries and report the ones no map describes, so that I know what to describe in a private map.
+39. As a studio, I want my in-house scheduler and renderer described as ordinary libraries in a private map, so that they are checked by the same probes as Jolt and SDL3.
+40. As a developer's agent, I want adopt to write a manifest that points at the glue that already exists, so that I adapt it in place rather than replacing it.
+41. As a studio, I want success judged by probes passing, not by resemblance to reference glue, so that my existing architecture is respected.
+42. As a studio, I want an in-house library joined to the build as ordinary CMake targets and pinned by its path and content hash, so that nothing about it needs a package registry.
 
 ### Private and NDA content
 
-42. As a studio, I want a private map with the public map's schema, in a repo I control, that the CLI never uploads, so that proprietary content stays private.
-43. As a studio, I want to carry a patched library as a private variant with its own pin and evidence, so that a fix I can't send upstream is still tracked and checked.
-44. As a developer's agent, I want a private map to extend a public library only by adding versions, variants and (for NDA platforms) supported targets, so that private content can't silently change public facts.
-45. As a studio shipping on a console, I want that console's content in a private map of its own, so that staff without that NDA see nothing of it.
-46. As a studio, I want to choose a library's variant per platform, such as SDL's console port on the console and the public source elsewhere, so that one composition covers every platform I ship on.
-47. As a studio, I want evidence for the console produced on my devkits, signed with my own key and never written to a public transparency log, so that NDA platform names never leak.
+43. As a studio, I want a private map with the public map's schema, in a repo I control, that the CLI never uploads, so that proprietary content stays private.
+44. As a studio, I want to carry a patched library as a private variant with its own pin and evidence, so that a fix I can't send upstream is still tracked and checked.
+45. As a developer's agent, I want a private map to extend a public library only by adding versions, variants and (for NDA platforms) supported targets, so that private content can't silently change public facts.
+46. As a studio shipping on a console, I want that console's content in a private map of its own, so that staff without that NDA see nothing of it.
+47. As a studio, I want to choose a library's variant per platform, such as SDL's console port on the console and the public source elsewhere, so that one composition covers every platform I ship on.
+48. As a studio, I want evidence for the console produced on my devkits, signed with my own key and never written to a public transparency log, so that NDA platform names never leak.
 
 ### Ejecting and working offline
 
-48. As a framework-first indie, I want to eject in one step and be left with a plain CMake and vcpkg project that builds and passes its smoke test, so that I'm never locked in.
-49. As a framework-first indie, I want composing, building and verifying to work offline once caches are filled, so that I can work on a plane.
-50. As a framework-first indie, I want to vendor everything my composition needs into my repo, so that builds are fully reproducible without the network.
+49. As a framework-first indie, I want to eject in one step and be left with a plain CMake and vcpkg project that builds and passes its smoke test, so that I'm never locked in.
+50. As a framework-first indie, I want composing, building and verifying to work offline once caches are filled, so that I can work on a plane.
+51. As a framework-first indie, I want to vendor everything my composition needs into my repo, so that builds are fully reproducible without the network.
 
 ### The agent's instructions
 
-51. As a developer's agent, I want an Automap section in the repo's `AGENTS.md`, between markers, holding the build, test and run commands, the manifest and lock locations, the slots in use, and the instruction to go through the router skill and CLI, so that every session starts oriented.
-52. As a framework-first indie, I want the rest of my `AGENTS.md` left untouched, and a `CLAUDE.md` import line added only if I have a `CLAUDE.md`, so that my own instructions stay mine.
-53. As a developer's agent, I want the router skill written into every place my agents read skills from, at the CLI's version, so that its guidance always matches the CLI.
-54. As a framework-first indie, I want my agent held to four nevers (no hand-edited lock, no fabricated evidence, no weakened probes, no upstream contributions to projects that ban them), with the CLI refusing where it can detect a violation, so that the evidence stays honest.
-55. As a developer's agent, I want the CLI to refuse to act on a lock whose canonical hash doesn't match, so that a hand edit is caught immediately.
+52. As a developer's agent, I want an Automap section in the repo's `AGENTS.md`, between markers, holding the build, test and run commands, the manifest and lock locations, the slots in use, and the instruction to go through the router skill and CLI, so that every session starts oriented.
+53. As a framework-first indie, I want the rest of my `AGENTS.md` left untouched, and a `CLAUDE.md` import line added only if I have a `CLAUDE.md`, so that my own instructions stay mine.
+54. As a developer's agent, I want the router skill written into every place my agents read skills from, at the CLI's version, so that its guidance always matches the CLI.
+55. As a framework-first indie, I want my agent held to four nevers (no hand-edited lock, no fabricated evidence, no weakened probes, no upstream contributions to projects that ban them), with the CLI refusing where it can detect a violation, so that the evidence stays honest.
+56. As a developer's agent, I want the CLI to refuse to act on a lock whose canonical hash doesn't match, so that a hand edit is caught immediately.
 
 ### Automap's own operation
 
-56. As Automap's maintainer, I want a watcher to notice upstream releases and curation agents to update facts, recipes and probes, so that the map stays fresh without human toil.
-57. As Automap's maintainer, I want Automap's CI to verify every binding, every pairing with a recipe, and the reference compositions, for each library's latest and previous version and each variant, on every input change and at least every 30 days, so that evidence is always current.
-58. As a contributor, I want to propose facts, recipes, probes or new versions as pull requests that pass the same gates as curation agents, so that anyone can improve the map.
-59. As Automap's maintainer, I want humans to decide only what the map covers and contract major versions, so that agents do the rest.
-60. As Automap's maintainer, I want an eval suite of fresh agent sessions doing the five jobs along the three journeys on every map release, so that success is measured without telemetry.
-61. As Automap's maintainer, I want the four v1 measures (testbed in 15 minutes warm, 90% first-attempt success, freshness, 100% eject) computed from the evals and the map, so that the v1 release decision rests on evidence.
+57. As Automap's maintainer, I want a watcher to notice upstream releases and curation agents to update facts, recipes and probes, so that the map stays fresh without human toil.
+58. As Automap's maintainer, I want Automap's CI to verify every binding, every pairing with a recipe, and the reference compositions, for each library's latest and previous version and each variant, on every input change and at least every 30 days, so that evidence is always current.
+59. As a contributor, I want to propose facts, recipes, probes or new versions as pull requests that pass the same gates as curation agents, so that anyone can improve the map.
+60. As Automap's maintainer, I want humans to decide only what the map covers and contract major versions, so that agents do the rest.
+61. As Automap's maintainer, I want an eval suite of fresh agent sessions doing the five jobs along the three journeys on every map release, so that success is measured without telemetry.
+62. As Automap's maintainer, I want the four v1 measures (testbed in 15 minutes warm, 90% first-attempt success, freshness, 100% eject) computed from the evals and the map, so that the v1 release decision rests on evidence.
 
 ## Implementation Decisions
 
@@ -109,7 +110,7 @@ Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI 
 - **Map model.** Loads a map directory and its metadata (public, then private maps in manifest order), validates every file against the published JSON Schemas, and applies the layering rules: a private file with an existing library id may add versions, variants and (for an NDA platform's map) supported targets, nothing else. Interface: load a set of maps; query slots, libraries, versions, variants with merged facts, contracts, recipes and evidence by id.
 - **Resolver.** A pure function from a manifest and a loaded map to a lock: chooses each library's version (the newest in the map release; `upgrade` names the libraries it moves), per-platform variants, pins with content hashes and licenses, contract versions, private-map commits. Reports resolution failures as failure codes.
 - **Lock codec.** Pure: RFC 8785 canonical encoding and `lock_hash`; detects hand edits.
-- **Composition writer.** Writes and updates the manifest, the vcpkg manifest and configuration (curated registry at a baseline, the Automap registry, private overlay ports), the per-library build fragments and the include file the developer's CMake project includes once, the shared interfaces and probe harness, each recipe's reference glue and setup glue, the choices header, and (for testbeds) the testbed's executable source. It never overwrites glue the manifest says the developer owns without the recipe's reference matching what is there.
+- **Composition writer.** Writes and updates the manifest, the vcpkg manifest and configuration (curated registry at a baseline, the Automap registry, private overlay ports), the per-library build fragments and the include file the developer's CMake project includes once, the shared interfaces and probe harness, each recipe's reference glue and setup glue, the choices header, the startup (which calls every recipe's entry points in phase order with one context, checking that every context field read is provided earlier), and (for testbeds) the testbed's executable source. It never overwrites glue the manifest says the developer owns without the recipe's reference matching what is there.
 - **Agent files writer.** Maintains the `AGENTS.md` section between markers, the `CLAUDE.md` import line, and the router skill in each agent's skill directory.
 - **Verifier.** Configures and builds through CMake with vcpkg's toolchain, runs the composition's executable headless with `--probe`, reads the probe harness's results file (rule results and recorded lifecycle steps), checks lifecycle order and pairing ordering constraints, runs the separate ThreadSanitizer build where the rule's platforms include the host and applies the frame rule, computes the level, and writes evidence.
 - **Evidence.** Builds in-toto v1 Statements with the Automap predicate, signs them through the CI's identity when available (GitHub artifact attestations), marks local runs unsigned, computes states (current, stale, broken) and fetches published evidence for a lock's pins.

@@ -140,7 +140,9 @@
             ]
           },
           "call": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "A function in the recipe's glue taking the context; init calls return whether they succeeded (ADR-0080)."
           },
           "after": {
             "type": "array",
@@ -148,6 +150,36 @@
               "type": "string"
             },
             "description": "Steps this one must follow within its phase."
+          },
+          "provides": {
+            "type": "array",
+            "description": "Context fields this entry point sets.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9-]*\\.[a-z0-9_]+$"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The C++ type of the field."
+                }
+              }
+            }
+          },
+          "reads": {
+            "type": "array",
+            "description": "Context fields this entry point reads; each must be provided by an entry point that runs earlier.",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*\\.[a-z0-9_]+$"
+            }
           }
         }
       }

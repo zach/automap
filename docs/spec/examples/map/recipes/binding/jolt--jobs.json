@@ -34,15 +34,21 @@
     {
       "phase": "jobs",
       "when": "init",
-      "call": "am_bind_jolt_jobs()",
+      "call": "am_bind_jolt_jobs",
       "after": [
         "automap:scheduler"
+      ],
+      "provides": [
+        {
+          "name": "jolt.job_system",
+          "type": "JPH::JobSystem*"
+        }
       ]
     },
     {
       "phase": "jobs",
       "when": "shutdown",
-      "call": "am_unbind_jolt_jobs()"
+      "call": "am_unbind_jolt_jobs"
     }
   ],
   "probes": [

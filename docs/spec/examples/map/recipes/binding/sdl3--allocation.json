@@ -33,7 +33,7 @@
     {
       "phase": "memory",
       "when": "init",
-      "call": "am_bind_sdl3_allocation()"
+      "call": "am_bind_sdl3_allocation"
     }
   ],
   "probes": [

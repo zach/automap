@@ -32,12 +32,21 @@
     {
       "phase": "systems",
       "when": "init",
-      "call": "am_jolt_setup_init()"
+      "call": "am_jolt_setup_init",
+      "reads": [
+        "jolt.job_system"
+      ],
+      "provides": [
+        {
+          "name": "jolt.physics_system",
+          "type": "JPH::PhysicsSystem*"
+        }
+      ]
     },
     {
       "phase": "systems",
       "when": "shutdown",
-      "call": "am_jolt_setup_shutdown()"
+      "call": "am_jolt_setup_shutdown"
     }
   ],
   "probes": [],

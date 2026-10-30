@@ -29,7 +29,7 @@
     {
       "phase": "memory",
       "when": "init",
-      "call": "am_bind_acme_allocation()"
+      "call": "am_bind_acme_allocation"
     }
   ],
   "probes": [

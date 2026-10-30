@@ -38,6 +38,10 @@
   "glue": {
     "interfaces": "glue/automap",
     "choices_header": "glue/automap/choices.h",
+    "startup": [
+      "glue/automap/startup.h",
+      "glue/automap/startup.cpp"
+    ],
     "bindings": {
       "sdl3/allocation": [
         "glue/sdl3/sdl3_allocation.h",

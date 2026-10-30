@@ -33,7 +33,7 @@
     {
       "phase": "jobs",
       "when": "init",
-      "call": "am_bind_acme_jobs()",
+      "call": "am_bind_acme_jobs",
       "after": [
         "acme-jobs:Scheduler::start"
       ]
@@ -41,7 +41,7 @@
     {
       "phase": "jobs",
       "when": "shutdown",
-      "call": "am_unbind_acme_jobs()"
+      "call": "am_unbind_acme_jobs"
     }
   ],
   "probes": [

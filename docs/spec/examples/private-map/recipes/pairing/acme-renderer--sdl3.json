@@ -38,7 +38,10 @@
     {
       "phase": "platform",
       "when": "init",
-      "call": "am_pair_acme_renderer_sdl3_init(window)"
+      "call": "am_pair_acme_renderer_sdl3_init",
+      "reads": [
+        "sdl3.window"
+      ]
     }
   ],
   "rules": [

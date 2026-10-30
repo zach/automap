@@ -284,6 +284,20 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
             if part not in used and part not in contracts:
                 fail(m_path, f"glue entry {key} names {part}, which isn't in this composition")
     private = {pm["id"] for pm in m.get("private_maps", [])}
+    if isinstance(m["glue"]["startup"], list):
+        # ADR-0080: every context field an entry point reads is provided by one that runs earlier.
+        phase_ix = {ph: i for i, ph in enumerate(contracts["lifecycle"]["phases"])}
+        keys = [k.replace("/", "--") for k in list(m["glue"]["bindings"]) + list(m["glue"]["pairings"])] + list(used)
+        eps = [ep for k in keys if k in recipes for ep in recipes[k].get("entry_points", []) if ep["when"] == "init"]
+        providers = {f["name"]: ep for ep in eps for f in ep.get("provides", [])}
+        for ep in eps:
+            for field in ep.get("reads", []):
+                prov = providers.get(field)
+                if prov is None:
+                    fail(m_path, f"{ep['call']} reads {field}, which no entry point in the composition provides")
+                elif not (phase_ix[prov["phase"]] < phase_ix[ep["phase"]] or
+                          (prov["phase"] == ep["phase"] and prov["call"] in ep.get("after", []))):
+                    fail(m_path, f"{ep['call']} reads {field} before {prov['call']} provides it")
     for pm in m.get("private_maps", []):
         if pm["id"] not in map_ids:
             fail(m_path, f"private map {pm['id']} has no example map.json")

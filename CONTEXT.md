@@ -177,8 +177,16 @@ Reference glue that creates the minimal objects the engine needs to use a librar
 _Avoid_: boilerplate, scaffolding, sample code
 
 **Entry point**:
-A call in a recipe's glue that the composition's startup makes in one phase, at init or at shutdown.
+A call in a recipe's glue that the startup makes in one phase, at init or at shutdown, passing the context.
 _Avoid_: hook (a library's own), callback, init function
+
+**Startup**:
+The source the CLI writes from a composition's recipes that runs every entry point in phase order at init, and in reverse at shutdown, with the probes in `--probe` mode. An adopted engine may keep its own startup instead.
+_Avoid_: bootstrap, main loop, init sequence
+
+**Context**:
+The one argument the startup passes to every entry point, holding the objects setup glue creates, such as SDL3's window. Recipes declare the fields their entry points provide and read.
+_Avoid_: globals, service locator, registry
 
 **Probe harness**:
 The shared interface every composition includes, through which probes record their results for the CLI and glue records each lifecycle step it runs.
