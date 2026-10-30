@@ -1,0 +1,13 @@
+{
+  "command": "verify",
+  "cli_version": "0.0.0-dev",
+  "ok": false,
+  "summary": "Nothing to verify: no automap.manifest.json in the current directory.",
+  "warnings": [],
+  "failures": [
+    {
+      "code": "NO_MANIFEST",
+      "message": "No composition here. Run automap start to create one, or automap adopt to adopt an existing engine."
+    }
+  ]
+}

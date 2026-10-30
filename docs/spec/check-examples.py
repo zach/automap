@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate every example under docs/spec/examples against docs/spec/schemas.
+"""Validate every example under docs/spec/examples against schemas/ at the repo root.
 
 Beyond schema validation it checks what the schemas can't express:
 library facts against their contract's fact schemas, manifest choices
@@ -17,7 +17,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 ROOT = pathlib.Path(__file__).resolve().parent
-SCHEMAS = ROOT / "schemas"
+SCHEMAS = ROOT.parent.parent / "schemas"
 EX = ROOT / "examples"
 errors = []
 checked = 0
