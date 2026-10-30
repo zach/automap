@@ -174,8 +174,16 @@ _Avoid_: mutation (too general), negative test
 A record that one binding, pairing or composition passed verification at a stated evidence level on one platform. Automap's published evidence is signed and stored in the map; evidence for a developer's own composition lives in their repo beside the lock.
 _Avoid_: proof, certification, badge, test result
 
+**Result status**:
+How one rule fared in a piece of evidence: pass, fail, not-applicable (with a reason) or unverifiable (with a reason).
+_Avoid_: outcome, verdict
+
+**Run conditions**:
+What a piece of evidence was produced under: build type, compiler version, environment variables and sanitizer options.
+_Avoid_: environment, settings, config
+
 **Evidence level**:
-How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed.
+How much a piece of evidence shows, from least to most: builds, smoke, probed, behavioral, hardware. Every claim states the highest level it passed. Probed requires every applicable probed rule to pass, with none unverifiable.
 _Avoid_: tier, grade, rung
 
 **Evidence state**:
