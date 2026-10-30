@@ -9,8 +9,8 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | 0. Orientation | Install skills, seed glossary, plan, start research | `CLAUDE.md`, `CONTEXT.md`, `docs/agents/`, this file | Done 2026-10-29 |
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
 | 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | Done 2026-10-30 (ADRs 0001–0069) |
-| 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Spike run 2026-10-30 ([07](research/07-spike-testbed-agent.md)); decisions pending |
-| 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Not started |
+| 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Done 2026-10-30 ([07](research/07-spike-testbed-agent.md); ADRs 0070–0074) |
+| 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | In progress |
 
 ## Phase 1 research topics
 

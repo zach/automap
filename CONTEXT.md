@@ -122,6 +122,10 @@ _Avoid_: setting, option, config
 One of the six fixed stages of an engine's startup, in order: memory, diagnostics, platform, jobs, systems, game. Each library's init steps belong to a phase; shutdown runs in exact reverse.
 _Avoid_: stage, level, loading phase, init order
 
+**Choices header**:
+The header the CLI writes from the manifest, committed with the build files, through which glue reads the composition's choices instead of hard-coding them.
+_Avoid_: config header, generated config
+
 **Shared interface**:
 An interface Automap delivers as glue source, such as a neutral job-system interface. Contracts define all of them except the probe harness. Never an Automap library the engine links.
 _Avoid_: adapter, abstraction layer, API
