@@ -93,8 +93,14 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	env := headlessEnv(m, man)
 	var built, smoked, probesRan, tsanRan bool
 	var setAside []TSanReport
+	var linked []Result // results the linker decided, such as MSVC's ABI define check
 	if err := build(opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error(), DetailsFile: paths.buildLog})
+		if log, err := os.ReadFile(in(paths.buildLog)); err == nil {
+			if r := LinkMismatch(string(log)); r != nil {
+				linked = append(linked, *r)
+			}
+		}
 	} else {
 		built = true
 	}
@@ -106,7 +112,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 		}
 	}
 	reached := Level(built, smoked, false, nil)
-	obs := Observed{Level: reached}
+	obs := Observed{Level: reached, Computed: linked}
 	// The probes run even when the smoke run failed: a probe that records
 	// its failure before startup stops, such as a library's ABI check,
 	// says why.
@@ -125,7 +131,8 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 				probesRan = true
 				obs.Ran = true
 				obs.Reported = harness.Results
-				obs.Computed = append(CheckLifecycle(DeclaredLifecycle(m, man), harness.InitSteps, harness.ShutdownSteps), CheckTargets(m, man))
+				obs.Computed = append(obs.Computed, CheckLifecycle(DeclaredLifecycle(m, man), harness.InitSteps, harness.ShutdownSteps)...)
+				obs.Computed = append(obs.Computed, CheckTargets(m, man))
 				precision := "float"
 				if p, ok := man.Choices["math-types"]["position_precision"].(string); ok {
 					precision = p
@@ -155,6 +162,9 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 				msg = texts[r.Rule]
 			}
 			details := paths.probeLog
+			if !built {
+				details = paths.buildLog
+			}
 			if r.Rule == TSanRule {
 				details = path.Join(logs, "tsan-"+platform+".log")
 			}
@@ -285,9 +295,14 @@ func build(root, buildDir, logFile, platform, target string, extra ...string) er
 		"-DCMAKE_TOOLCHAIN_FILE=" + filepath.Join(vcpkg, "scripts", "buildsystems", "vcpkg.cmake")}
 	configure = append(configure, extra...)
 	cmdEnv := os.Environ()
-	if strings.HasSuffix(platform, "-clang") {
+	switch {
+	case strings.HasSuffix(platform, "-clang"):
 		configure = append(configure, "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++")
 		cmdEnv = append(cmdEnv, "CC=clang", "CXX=clang++")
+	case strings.HasSuffix(platform, "-msvc"):
+		// MSVC comes from the Visual Studio developer environment the
+		// command runs in.
+		configure = append(configure, "-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl")
 	}
 	for _, step := range [][]string{configure, {"--build", filepath.Join(root, filepath.FromSlash(buildDir)), "--target", target}} {
 		fmt.Fprintf(log, "$ cmake %s\n", strings.Join(step, " "))
@@ -375,20 +390,22 @@ func headlessEnv(m *mapmodel.Map, man *composition.Manifest) []string {
 
 // compilerVersion names the C++ compiler the platform builds with.
 func compilerVersion(platform string) string {
-	name := "c++"
+	name, args := "c++", []string{"--version"}
 	switch {
-	case strings.HasSuffix(platform, "-clang"):
+	case strings.HasSuffix(platform, "clang"):
 		name = "clang++"
 	case strings.HasSuffix(platform, "-gcc"):
 		name = "g++"
 	case strings.HasSuffix(platform, "-msvc"):
-		return "msvc"
+		// cl prints its version banner, to stderr, when run without
+		// arguments.
+		name, args = "cl", nil
 	}
-	out, err := exec.Command(name, "--version").Output()
-	if err != nil {
+	out, _ := exec.Command(name, args...).CombinedOutput()
+	first, _, _ := strings.Cut(strings.TrimSpace(string(out)), "\n")
+	if first == "" {
 		return name
 	}
-	first, _, _ := strings.Cut(string(out), "\n")
 	return strings.TrimSpace(first)
 }
 

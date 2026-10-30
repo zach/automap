@@ -92,7 +92,11 @@ func TestALifecycleViolationFailsVerify(t *testing.T) {
 
 func TestAPlatformLimitedRuleIsNotApplicableElsewhere(t *testing.T) {
 	repo := buildableRepo(t)
-	repo.EditJSON(t, "map/recipes/pairing/stub-ui--stub-window.json", set("rules/0/platforms", []any{"macos-arm64-appleclang"}))
+	elsewhere := "macos-arm64-appleclang"
+	if hostPlatform == elsewhere {
+		elsewhere = "linux-x64-clang"
+	}
+	repo.EditJSON(t, "map/recipes/pairing/stub-ui--stub-window.json", set("rules/0/platforms", []any{elsewhere}))
 	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
 
 	run := repo.Automap(t, "verify", "--map", "map", "--json")
@@ -103,8 +107,8 @@ func TestAPlatformLimitedRuleIsNotApplicableElsewhere(t *testing.T) {
 	}
 	e := checkEvidence(t, run, "probed")
 	for _, r := range e.Predicate.Results {
-		if r.Rule == "stub-ui--stub-window.input-forwarded" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, "macos-arm64-appleclang")) {
-			t.Errorf("result %+v, want not-applicable on linux, naming the platform it runs on", r)
+		if r.Rule == "stub-ui--stub-window.input-forwarded" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, elsewhere)) {
+			t.Errorf("result %+v, want not-applicable on %s, naming the platform it runs on", r, hostPlatform)
 		}
 	}
 }
@@ -137,4 +141,20 @@ func readRepo(t *testing.T, dir, path string) string {
 		t.Fatal(err)
 	}
 	return string(data)
+}
+
+// MSVC's linker catches an ABI define mismatch the library's header
+// declares with #pragma detect_mismatch, before anything runs; elsewhere
+// the build-flags probe catches it.
+func TestAnABIDefineMismatchFailsAtLinkTimeOnMSVC(t *testing.T) {
+	repo := buildableRepo(t)
+	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
+
+	run := repo.Automap(t, "verify", "--seed", "build-flags.abi-defines-match", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	atLinkTime := run.Result.Level == "none"
+	if want := hostPlatform == "windows-x64-msvc"; atLinkTime != want {
+		t.Errorf("level %q: caught at link time %v, want %v on %s\n%s", run.Result.Level, atLinkTime, want, hostPlatform, run.Stdout)
+	}
 }

@@ -1,6 +1,7 @@
 package verify_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/zach/automap/internal/mapmodel"
@@ -140,5 +141,31 @@ func TestCheckPrecision(t *testing.T) {
 				t.Errorf("got %+v, want %+v", got, c.want)
 			}
 		})
+	}
+}
+
+func TestLinkMismatch(t *testing.T) {
+	log := `[12/14] Linking CXX executable testbed.exe
+FAILED: testbed.exe
+stub_ui.lib(stub_ui.c.obj) : error LNK2038: mismatch detected for 'STUB_UI_WIDE_IDS': value '1' doesn't match value '0' in stub_ui_setup.cpp.obj
+LINK : fatal error LNK1319: 1 mismatches detected`
+	r := verify.LinkMismatch(log)
+	if r == nil || r.Rule != "build-flags.abi-defines-match" || r.Status != "fail" || r.FailureCode != "ABI_DEFINE_MISMATCH(STUB_UI_WIDE_IDS)" {
+		t.Fatalf("got %+v, want the ABI rule failed with ABI_DEFINE_MISMATCH(STUB_UI_WIDE_IDS)", r)
+	}
+	if !strings.Contains(r.Reason, "value '1' doesn't match value '0'") {
+		t.Errorf("reason %q doesn't quote the linker", r.Reason)
+	}
+	if verify.LinkMismatch("error: undefined reference to `foo'") != nil {
+		t.Error("an unrelated link error is reported as an ABI mismatch")
+	}
+}
+
+func TestAComputedResultCountsWhenNoProbeRan(t *testing.T) {
+	expected := []verify.Expected{{Rule: mapmodel.Rule{ID: "build-flags.abi-defines-match"}}, {Rule: mapmodel.Rule{ID: "lifecycle.init-order"}}}
+	link := verify.Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(X)"}
+	got := verify.Results(expected, "windows-x64-msvc", verify.Observed{Level: "none", Computed: []verify.Result{link}})
+	if got[0] != link || got[1].Status != "unverifiable" {
+		t.Errorf("results %+v, want the link-time failure and the other rule unverifiable", got)
 	}
 }

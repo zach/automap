@@ -13,6 +13,15 @@
 #define STUB_UI_ID_BITS 32
 #endif
 
+/* MSVC's linker refuses to link translation units that disagree. */
+#ifdef _MSC_VER
+#if STUB_UI_ID_BITS == 64
+#pragma detect_mismatch("STUB_UI_WIDE_IDS", "1")
+#else
+#pragma detect_mismatch("STUB_UI_WIDE_IDS", "0")
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -41,6 +41,55 @@ jobs:
           AUTOMAP_TEST_BUILDS: "1"
         run: go test ./...
 
+  builds:
+    name: Fixture builds (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+          - name: macOS
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: MSVC developer environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Ninja
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then choco install -y ninja; else brew install ninja; fi
+          ninja --version
+      - name: vcpkg
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          if [ "$RUNNER_OS" = Windows ]; then
+            cmd //c "$(cygpath -w "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat")" -disableMetrics
+          else
+            "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/vcpkg-archives"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-archives" >> "$GITHUB_ENV"
+      - name: vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-archives
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('testdata/map/registry/**') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+      - name: go test
+        env:
+          AUTOMAP_TEST_BUILDS: "1"
+        run: go test ./... -timeout 80m
+
   spec-examples:
     name: Spec examples
     runs-on: ubuntu-latest

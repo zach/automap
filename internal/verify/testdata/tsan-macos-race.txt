@@ -1,0 +1,20 @@
+==================
+WARNING: ThreadSanitizer: data race (pid=23236)
+  Write of size 4 at 0x000104638030 by main thread:
+    #0 am::jobs::submit(char const*, void (*)(void*), void*, am::jobs::Counter*) jobs.cpp:86 (testbed:arm64+0x10000bdfc)
+    #1 (anonymous namespace)::submit(void (*)(void*), void*, void*) stub_physics_jobs.cpp:10 (testbed:arm64+0x100021304)
+    #2 stub_physics_step stub_physics.c:42 (testbed:arm64+0x100022a14)
+    #3 main main.cpp:35 (testbed:arm64+0x100022484)
+
+  Previous write of size 4 at 0x000104638030 by thread T3:
+    #0 am::jobs::(anonymous namespace)::worker_loop() jobs.cpp:68 (testbed:arm64+0x10000c8e4)
+    #1 std::__1::__invoke_result_impl<void, void (*)()>::type std::__1::__invoke[abi:nqe210106]<void (*)()>(void (*&&)()) invoke.h:87 (testbed:arm64+0x10000f1fc)
+
+  Location is global 'am::jobs::(anonymous namespace)::jobs_seen' at 0x000104638030 (testbed+0x10003c030)
+
+  Thread T3 (tid=42959, running) created by main thread at:
+    #0 pthread_create <null> (libclang_rt.tsan_osx_dynamic.dylib:arm64e+0x33834)
+    #9 am_jobs_setup_init(am::Context&) jobs.cpp:138 (testbed:arm64+0x10000c740)
+
+SUMMARY: ThreadSanitizer: data race jobs.cpp:86 in am::jobs::submit(char const*, void (*)(void*), void*, am::jobs::Counter*)
+==================

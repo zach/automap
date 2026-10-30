@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -370,6 +371,9 @@ func binary(t *testing.T) string {
 			return
 		}
 		binPath = filepath.Join(dir, "automap")
+		if runtime.GOOS == "windows" {
+			binPath += ".exe"
+		}
 		cmd := exec.Command("go", "build", "-o", binPath, "./cmd/automap")
 		cmd.Dir = Root(t)
 		if out, err := cmd.CombinedOutput(); err != nil {

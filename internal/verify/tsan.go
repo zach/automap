@@ -62,7 +62,8 @@ func ParseTSan(output, executable string) []TSanReport {
 			if m == nil {
 				continue
 			}
-			fn, file, module := m[1], m[2], m[3]
+			// macOS names the module with its architecture: testbed:arm64.
+			fn, file, module := m[1], m[2], strings.SplitN(m[3], ":", 2)[0]
 			if !contains(cur.Modules, module) {
 				cur.Modules = append(cur.Modules, module)
 			}
