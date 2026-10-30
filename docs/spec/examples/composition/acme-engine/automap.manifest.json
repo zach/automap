@@ -1,6 +1,6 @@
 {
   "$schema": "https://github.com/zach/automap/schemas/manifest.schema.json",
-  "$comment": "Acme Games is hypothetical. Its engine keeps its in-house scheduler in engine/acme-jobs and its private map in automap-private/.",
+  "$comment": "Acme Games is hypothetical. Its in-house scheduler and renderer live in engine/, its private map in automap-private/.",
   "format": "automap-manifest/1",
   "map_release": "map-2026.10.29",
   "build_backend": "vcpkg",
@@ -17,14 +17,15 @@
   "slots": {
     "windowing": "sdl3",
     "input": "sdl3",
-    "gpu": "sdl3",
+    "gpu": "acme-renderer",
     "physics-3d": "jolt",
     "jobs": "acme-jobs"
   },
   "variants": {
-    "sdl3": "default",
+    "sdl3": "acme-patched",
     "jolt": "default",
-    "acme-jobs": "default"
+    "acme-jobs": "default",
+    "acme-renderer": "default"
   },
   "choices": {
     "allocation": {
@@ -79,9 +80,22 @@
         "engine/glue/acme/acme_scheduler.h",
         "engine/glue/acme/acme_scheduler.cpp",
         "engine/glue/acme/acme_jobs_probe.cpp"
+      ],
+      "acme-renderer/allocation": [
+        "engine/glue/acme/renderer_allocation.cpp",
+        "engine/glue/acme/renderer_allocation_probe.cpp"
+      ],
+      "acme-renderer/diagnostics": [
+        "engine/glue/acme/renderer_diagnostics.cpp",
+        "engine/glue/acme/renderer_diagnostics_probe.cpp"
       ]
     },
-    "pairings": {},
+    "pairings": {
+      "acme-renderer/sdl3": [
+        "engine/platform/window.cpp",
+        "engine/glue/acme/acme_sdl3_surface_probe.cpp"
+      ]
+    },
     "setup": {
       "sdl3": [
         "engine/glue/sdl3/sdl3_setup.h",
@@ -93,6 +107,9 @@
       ],
       "acme-jobs": {
         "not_applicable": "Acme's engine constructs its scheduler itself; am_bind_acme_jobs() adopts the running instance."
+      },
+      "acme-renderer": {
+        "not_applicable": "Acme's engine creates its renderer device itself in engine/platform/window.cpp."
       }
     }
   }

@@ -1,0 +1,75 @@
+{
+  "kind": "pairing",
+  "subject": {
+    "libraries": [
+      "acme-renderer",
+      "sdl3"
+    ]
+  },
+  "applies_to": {
+    "acme-renderer": {
+      "versions": [
+        "0.9.4"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "acme-patched"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-renderer--sdl3/acme_sdl3_surface.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "acme-renderer--sdl3/acme_sdl3_surface_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "platform",
+      "when": "init",
+      "call": "am_pair_acme_renderer_sdl3_init(window)"
+    }
+  ],
+  "rules": [
+    {
+      "id": "acme-renderer--sdl3.surface-tracks-window",
+      "kind": "probed",
+      "applies_to": "pairing",
+      "text": "The renderer's swapchain is created from the SDL window and is recreated after SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED before the next frame is presented.",
+      "failure_code": "SURFACE_STALE(acme-renderer--sdl3)"
+    }
+  ],
+  "ordering": [
+    {
+      "before": "sdl3:SDL_CreateWindow",
+      "after": "acme-renderer:Device::create",
+      "when": "init"
+    },
+    {
+      "before": "acme-renderer:Device::destroy",
+      "after": "sdl3:SDL_DestroyWindow",
+      "when": "shutdown"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "acme-renderer--sdl3.surface-tracks-window",
+      "check": "am_probe_acme_sdl3_surface(): resizes the window with SDL_SetWindowSize, runs two frames, and checks the swapchain extent matches SDL_GetWindowSizeInPixels.",
+      "seeded_violation": "Drop the swapchain recreation from the pixel-size-changed handler."
+    }
+  ],
+  "adaptation_notes": [
+    "Acme's engine already had this glue in engine/platform/window.cpp; the agent adapted it in place rather than copying this file."
+  ]
+}

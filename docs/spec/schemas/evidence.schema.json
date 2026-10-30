@@ -65,7 +65,7 @@
         },
         "subject_detail": {
           "type": "object",
-          "description": "binding: library, version, variant, contract, contract_version; pairing: two libraries with versions and variants; composition: lock_hash."
+          "description": "The subject's exact pins: a binding's pin and contract version, a pairing's two pins, or a composition's lock_hash."
         },
         "platform": {
           "type": "string",
@@ -236,6 +236,126 @@
               "type": "boolean"
             }
           }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "subject_kind": {
+                "const": "binding"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "subject_detail": {
+                "additionalProperties": false,
+                "required": [
+                  "pin",
+                  "contract",
+                  "contract_version"
+                ],
+                "properties": {
+                  "pin": {
+                    "$ref": "#/$defs/pin"
+                  },
+                  "contract": {
+                    "type": "string"
+                  },
+                  "contract_version": {
+                    "type": "string",
+                    "pattern": "^\\d+\\.\\d+\\.\\d+$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "subject_kind": {
+                "const": "pairing"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "subject_detail": {
+                "additionalProperties": false,
+                "required": [
+                  "pins"
+                ],
+                "properties": {
+                  "pins": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "$ref": "#/$defs/pin"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "subject_kind": {
+                "const": "composition"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "subject_detail": {
+                "additionalProperties": false,
+                "required": [
+                  "lock_hash"
+                ],
+                "properties": {
+                  "lock_hash": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "version",
+        "variant",
+        "content_hash"
+      ],
+      "properties": {
+        "library": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^(sha512|sha256|git):[0-9a-f]+$"
         }
       }
     }

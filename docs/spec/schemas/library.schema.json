@@ -276,6 +276,10 @@
                   "private"
                 ],
                 "description": "Overrides the version's vcpkg registry when the variant needs an overlay port."
+              },
+              "pin": {
+                "$ref": "#/$defs/version/properties/pin",
+                "description": "A variant built from different source, such as a patched fork, has its own pin."
               }
             }
           }

@@ -54,7 +54,8 @@
           "version",
           "variant",
           "registry",
-          "content_hash"
+          "content_hash",
+          "license"
         ],
         "properties": {
           "version": {
@@ -96,6 +97,10 @@
           "content_hash": {
             "type": "string",
             "pattern": "^(sha512|sha256|git):[0-9a-f]+$"
+          },
+          "license": {
+            "type": "string",
+            "description": "SPDX expression from the map's license fact, carried so a license report is always possible."
           }
         }
       }

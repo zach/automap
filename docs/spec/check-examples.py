@@ -98,10 +98,34 @@ for p in sorted(EX.glob("*/contracts/*/*.json")):
 contract_rules = {r["id"]: r for c in contracts.values() for r in c["rules"]}
 
 # ---- libraries (public and private maps share one schema) ----
+# A private map's file with the id of a public library extends it: library
+# fields and existing versions must match, and it may only add versions
+# and variants.
 libraries = {}
-for p in sorted(EX.glob("*/libraries/*.json")):
+library_files = sorted(EX.glob("map/libraries/*.json")) + sorted(
+    p for p in EX.glob("*/libraries/*.json") if p.parts[-3] != "map")
+for p in library_files:
     d = validate(p, "library")
-    libraries[d["id"]] = (p, d)
+    if d["id"] in libraries:
+        base = libraries[d["id"]][1]
+        for k in ("name", "license", "contribution_policy", "slots", "source"):
+            if d.get(k) != base.get(k):
+                fail(p, f"extends {d['id']} but its {k} differs from the map it extends")
+        for v in d["versions"]:
+            bv = next((x for x in base["versions"] if x["version"] == v["version"]), None)
+            if bv is None:
+                base["versions"].append(v)
+                continue
+            for k in set(v) | set(bv):
+                if k != "variants" and v.get(k) != bv.get(k):
+                    fail(p, f"extends {d['id']} {v['version']} but its {k} differs")
+            names = {x["name"] for x in bv["variants"]}
+            for var in v["variants"]:
+                if var["name"] in names:
+                    fail(p, f"variant {var['name']} already exists in the map it extends")
+                bv["variants"].append(var)
+    else:
+        libraries[d["id"]] = (p, d)
     if p.stem != d["id"]:
         fail(p, "file name must be the library id")
     for s in d["slots"]:
@@ -129,6 +153,18 @@ for p in sorted(EX.glob("*/libraries/*.json")):
                     check_against(p, f"{v['version']}/{var['name']}/facts/{seam}", merged, object_schema(contracts[seam]["facts"], "facts"))
     if d.get("source", {}).get("kind") == "path" and d.get("console_variants"):
         fail(p, "console_variants belong to the public map only")
+
+
+def merged_facts(v, variant):
+    var = next((x for x in v["variants"] if x["name"] == variant), {})
+    out = {seam: dict(f) for seam, f in v["facts"].items()}
+    for seam, over in var.get("facts", {}).items():
+        out.setdefault(seam, {}).update(over)
+    return out
+
+
+def variant_of(v, variant):
+    return next((x for x in v["variants"] if x["name"] == variant), None)
 
 
 def library_version(lib, version, variant=None):
@@ -233,12 +269,15 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
             continue
         if pin["variant"] != m["variants"].get(lib):
             fail(lock_path, f"{lib}: pinned variant differs from the manifest")
-        if "pin" in v and pin.get("commit") != v["pin"]["commit"]:
+        expected = (variant_of(v, pin["variant"]).get("pin") or v.get("pin") or {}).get("commit")
+        if pin.get("commit") != expected:
             fail(lock_path, f"{lib}: pinned commit differs from the map")
+        if pin["license"] != libraries[lib][1]["license"]["spdx"]:
+            fail(lock_path, f"{lib}: license differs from the map")
         if pin["registry"]["kind"] == "private" and pin["registry"].get("id") not in private:
             fail(lock_path, f"{lib}: private registry {pin['registry'].get('id')} is not a private map of this composition")
         for plat in m["platforms"]:
-            if plat not in v["facts"].get("platform", {}).get("targets", []):
+            if plat not in merged_facts(v, pin["variant"]).get("platform", {}).get("targets", []):
                 fail(m_path, f"{lib} doesn't list {plat} among its targets")
     for c, ver in lock["contracts"].items():
         if c in contracts and contracts[c]["version"] != ver:
@@ -267,6 +306,23 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
             bad = [r["rule"] for r in pred["results"] if r["status"] in ("fail", "unverifiable")]
             if bad:
                 fail(e_path, f"level {pred['level']} with failing or unverifiable results: {bad}")
+
+# ---- published evidence in maps ----
+for e_path in sorted(p for p in EX.glob("*/evidence/**/*.json") if p.parts[-4] != "composition"):
+    e = validate(e_path, "evidence")
+    pred = e["predicate"]
+    if pred["verifier"]["kind"] not in ("automap-ci", "nda-holder"):
+        fail(e_path, "a map's evidence comes from Automap's CI or an NDA holder")
+    if pred["subject_kind"] == "binding":
+        pin, c = pred["subject_detail"]["pin"], pred["subject_detail"]["contract"]
+        if not library_version(pin["library"], pin["version"], pin["variant"]):
+            fail(e_path, f"no library example has {pin['library']} {pin['version']} ({pin['variant']})")
+        for r in pred["results"]:
+            if not r["rule"].startswith(c + "."):
+                fail(e_path, f"binding evidence for {c} reports rule {r['rule']}")
+    if pred["level"] in ("probed", "behavioral", "hardware") and any(
+            r["status"] in ("fail", "unverifiable") for r in pred["results"]):
+        fail(e_path, "known-good level with failing or unverifiable results")
 
 for p in sorted(EX.glob("composition/cli-results/*.json")):
     d = validate(p, "cli-result")

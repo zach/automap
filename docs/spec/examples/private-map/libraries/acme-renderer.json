@@ -1,0 +1,106 @@
+{
+  "id": "acme-renderer",
+  "name": "Acme Renderer (in-house)",
+  "license": {
+    "spdx": "LicenseRef-Acme-Proprietary",
+    "class": "proprietary",
+    "warning": "Acme Games proprietary code; not for redistribution."
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "not-applicable",
+    "source": "In-house code; the developer's agent edits it directly."
+  },
+  "slots": [
+    "gpu"
+  ],
+  "source": {
+    "kind": "path",
+    "path": "engine/acme-renderer"
+  },
+  "versions": [
+    {
+      "version": "0.9.4",
+      "released": "2026-10-12",
+      "build_backend": {
+        "vcpkg": {
+          "port": "acme-renderer",
+          "registry": "private"
+        }
+      },
+      "cmake": {
+        "package": "AcmeRenderer",
+        "targets": [
+          "Acme::Renderer"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "callback-struct",
+          "hooks": [
+            {
+              "api": "acme::gfx::DeviceDesc::alloc_callbacks",
+              "signature": "acme::gfx::AllocCallbacks{alloc, realloc, free, user}"
+            }
+          ],
+          "aligned": true,
+          "install_before": "acme::gfx::Device::create",
+          "query": "acme::gfx::Device::alloc_callbacks()"
+        },
+        "diagnostics": {
+          "log_hook": "acme::set_log_sink(acme::LogSink*)",
+          "assert_hook": "acme::set_assert_handler(acme::AssertHandler)",
+          "query": "acme::log_sink(), acme::assert_handler()"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "platform",
+              "step": "acme-renderer:Device::create"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "platform",
+              "step": "acme-renderer:Device::wait_idle"
+            },
+            {
+              "phase": "platform",
+              "step": "acme-renderer:Device::destroy",
+              "after": [
+                "acme-renderer:Device::wait_idle"
+              ]
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "ACME_GFX_VALIDATION"
+          ],
+          "self_check": "acme::gfx::check_abi()",
+          "min_language_standard": "C++20",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang"
+          ],
+          "headless": "null swapchain when no window is given",
+          "gpu_backends": {
+            "windows-x64-msvc": "direct3d12",
+            "linux-x64-clang": "vulkan"
+          },
+          "web": false
+        }
+      }
+    }
+  ]
+}
