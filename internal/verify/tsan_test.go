@@ -97,3 +97,16 @@ func TestTSanTriplet(t *testing.T) {
 		t.Errorf("macOS triplet %q:\n%s", name, contents)
 	}
 }
+
+// macOS names a frame's module with its architecture, as in
+// "(testbed:arm64+0x10000bdfc)" (Apple Clang, macos-arm64 runner).
+func TestARaceInTheExecutableCountsOnMacOS(t *testing.T) {
+	reports := verify.ParseTSan(sample(t, "tsan-macos-race.txt"), "testbed")
+
+	if len(reports) != 1 || !reports[0].Counts {
+		t.Fatalf("reports %+v, want one that counts", reports)
+	}
+	if reports[0].Summary != "data race jobs.cpp:86 in am::jobs::submit(char const*, void (*)(void*), void*, am::jobs::Counter*)" {
+		t.Errorf("summary %q", reports[0].Summary)
+	}
+}
