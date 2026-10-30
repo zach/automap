@@ -10,6 +10,7 @@ The CLI is Go ([ADR-0064](docs/adr/0064-cli-is-written-in-go.md)), at the versio
 | --- | --- |
 | Build the CLI | `go build -o automap ./cmd/automap` |
 | Run every test | `go test ./...` |
+| Run the build tests too | `VCPKG_ROOT=<vcpkg> go test ./...` (they need vcpkg, CMake, Ninja and clang; CI always runs them) |
 | Rewrite golden files from the CLI's output | `go test ./... -update`, then review the diff |
 | Format and vet | `gofmt -l .` (must print nothing), `go vet ./...` |
 | Check the spec's examples against the schemas | `python3 docs/spec/check-examples.py` (needs `pip install jsonschema`) |
@@ -29,6 +30,7 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `internal/mapmodel/` | Loads, validates and layers the public and private maps. |
 | `internal/composition/` | The manifest and lock, resolution, startup planning, and the files a composition is made of. |
 | `internal/canonical/` | RFC 8785 canonical JSON, for the lock. |
+| `internal/verify/` | Builds through CMake and vcpkg, runs the smoke test, writes evidence. |
 | `internal/clitest/` | The test harness that runs the CLI as a process. |
 | `schemas/` | The published JSON Schemas, embedded in the binary. |
 | `testdata/map/` | The fixture map: two stub libraries with recipes, probes and seeded violations. |

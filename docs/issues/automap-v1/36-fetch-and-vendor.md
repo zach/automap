@@ -8,3 +8,4 @@
 
 - [ ] After `fetch`, `verify` succeeds with the network disabled.
 - [ ] After `vendor`, a fresh clone builds and verifies with the network disabled and no caches.
+- [ ] With `VCPKG_ROOT` unset, the CLI bootstraps the vcpkg tool release the public map's `map.json` names into its cache, and `fetch` fills it (SPEC §5.5).
