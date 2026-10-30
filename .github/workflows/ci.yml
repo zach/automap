@@ -143,7 +143,11 @@ jobs:
           baseline=$(jq -r .build_backend.vcpkg.baseline map/map.json)
           # Versioned ports, such as a curated library's pinned port
           # version, are read from vcpkg's history: clone it without blobs.
-          git clone -q --filter=blob:none https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          # On Windows, vcpkg's git can't fetch a blobless clone's objects
+          # lazily, so the clone is complete there.
+          filter=--filter=blob:none
+          [ "$RUNNER_OS" = Windows ] && filter=
+          git clone -q $filter https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
           git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
           if [ "$RUNNER_OS" = Windows ]; then
             cmd //c "$(cygpath -w "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat")" -disableMetrics

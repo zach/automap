@@ -228,10 +228,10 @@ func run(args []string) error {
 	for _, p := range job.Picks {
 		start = append(start, "--with", p.Library+":"+p.Variant)
 	}
-	cli(start...) // a failing verification still writes evidence
+	_, startErr := cli(start...) // a failing verification still writes evidence
 	raw, err := os.ReadFile(filepath.Join(repo, "evidence", job.Platform+".json"))
 	if err != nil {
-		return fmt.Errorf("the composition wrote no evidence: %v", err)
+		return fmt.Errorf("the composition wrote no evidence (automap start: %v): %v", startErr, err)
 	}
 	var comp Statement
 	if err := json.Unmarshal(raw, &comp); err != nil {
@@ -246,8 +246,12 @@ func run(args []string) error {
 		json.Unmarshal(raw, &man)
 	}
 
-	// Every seed whose rule applies here must be caught (ADR-0071). Each
-	// runs in its own scratch copy, so a few run at once.
+	// Every seed whose rule applies here must be caught (ADR-0071). A
+	// library rule's seeds run wherever the library is; a composition
+	// rule's mistake depends on the libraries around it, so its seeds run
+	// in the reference compositions (SPEC §6.1). Each seed runs in its own
+	// scratch copy, so a few run at once.
+	reference := slices.ContainsFunc(job.Edges, func(e Edge) bool { return e.Kind == "composition" })
 	var (
 		uncaught []Uncaught
 		mu       sync.Mutex
@@ -255,7 +259,7 @@ func run(args []string) error {
 		slots    = make(chan struct{}, 4)
 	)
 	for _, s := range verify.Seeds(m, &man) {
-		if !applies(comp, s) {
+		if !applies(comp, s) || s.Library == "" && !reference {
 			continue
 		}
 		spec := s.Rule
