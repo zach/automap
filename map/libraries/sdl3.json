@@ -53,9 +53,10 @@
         {
           "name": "default",
           "build_options": {
-            "vcpkg_features": "vulkan"
+            "vcpkg_features": "vulkan,x11,wayland",
+            "vcpkg_default_features": "false"
           },
-          "description": "SDL with the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend."
+          "description": "SDL with the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers on Linux; the port's other default Linux feature, IBus input methods, is off."
         }
       ],
       "facts": {
@@ -165,7 +166,7 @@
           ],
           "headless": "SDL_VIDEO_DRIVER=offscreen",
           "system_dependencies": {
-            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev), Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev), IBus (libibus-1.0-dev) and D-Bus (libdbus-1-dev) development packages, for the sdl3 port's default Linux features; autoconf, autoconf-archive, automake and libtool, which vcpkg needs to build libxcrypt for them; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",

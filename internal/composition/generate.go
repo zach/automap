@@ -194,8 +194,9 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 // registry's baseline.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
-		Name     string   `json:"name"`
-		Features []string `json:"features,omitempty"`
+		Name            string   `json:"name"`
+		DefaultFeatures *bool    `json:"default-features,omitempty"`
+		Features        []string `json:"features,omitempty"`
 	}
 	type override struct {
 		Name    string `json:"name"`
@@ -216,15 +217,19 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 			continue
 		}
 		port := v.BuildBackend.Vcpkg.Port
-		var features []string
+		dep := dependency{Name: port}
 		if variant := v.Variant(lock.Pins[lib].Variant); variant != nil {
 			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
 				if f = strings.TrimSpace(f); f != "" {
-					features = append(features, f)
+					dep.Features = append(dep.Features, f)
 				}
 			}
+			if variant.BuildOptions["vcpkg_default_features"] == "false" {
+				off := false
+				dep.DefaultFeatures = &off
+			}
 		}
-		doc.Dependencies = append(doc.Dependencies, dependency{Name: port, Features: features})
+		doc.Dependencies = append(doc.Dependencies, dep)
 		doc.Overrides = append(doc.Overrides, override{Name: port, Version: v.Version})
 	}
 	return indentJSON(doc)

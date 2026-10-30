@@ -61,9 +61,9 @@ jobs:
       - name: System packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang pkg-config autoconf autoconf-archive automake libtool jq \
+          sudo apt-get install -y ninja-build clang pkg-config jq \
             libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
-            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev libibus-1.0-dev libdbus-1-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
             mesa-vulkan-drivers libvulkan1
       - name: vcpkg at the map's baseline
         run: |
