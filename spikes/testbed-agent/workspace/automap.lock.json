@@ -1,0 +1,39 @@
+{
+  "format": "automap-lock/0.1-draft",
+  "map_release": "spike-draft",
+  "pins": {
+    "dear-imgui": {
+      "version": "1.93.0",
+      "variant": "docking",
+      "registry": "git",
+      "source": "https://github.com/ocornut/imgui",
+      "commit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+      "content_hash": "git-commit:b916186e66aa3c02b72c6ca17455516512ed8049"
+    },
+    "jolt": {
+      "version": "5.6.0",
+      "variant": "default",
+      "registry": "git",
+      "source": "https://github.com/jrouwe/JoltPhysics",
+      "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+      "content_hash": "git-commit:e77f175595e64cb44218cc9d9d56fc365ad0e36a"
+    },
+    "sdl3": {
+      "version": "3.4.18",
+      "variant": "default",
+      "registry": "git",
+      "source": "https://github.com/libsdl-org/SDL",
+      "commit": "829a65d769d935c4852f8159e964312c0957260a",
+      "content_hash": "git-commit:829a65d769d935c4852f8159e964312c0957260a"
+    }
+  },
+  "contracts": {
+    "allocation": "0.1.0",
+    "build-flags": "0.1.0",
+    "diagnostics": "0.1.0",
+    "jobs": "0.1.0",
+    "lifecycle": "0.1.0",
+    "platform": "0.1.0"
+  },
+  "lock_hash": "8c53582a5bc09f81e03f42a21903424ea760e42bcf30e9e09c5e6bddfb9a9366"
+}

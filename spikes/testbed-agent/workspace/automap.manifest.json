@@ -1,0 +1,54 @@
+{
+  "format": "automap-manifest/0.1-draft",
+  "map_release": "spike-draft",
+  "platforms": [
+    "linux-x64-clang"
+  ],
+  "slots": {
+    "windowing": "sdl3",
+    "input": "sdl3",
+    "gpu": "sdl3",
+    "tools-ui": "dear-imgui",
+    "physics-3d": "jolt"
+  },
+  "variants": {
+    "sdl3": "default",
+    "dear-imgui": "docking",
+    "jolt": "default"
+  },
+  "choices": {
+    "allocation": {
+      "allocator": "system"
+    },
+    "diagnostics": {
+      "backend": "stderr"
+    },
+    "build-flags": {
+      "cxx_standard": 20
+    },
+    "jobs": {
+      "scheduler": "automap-thread-pool",
+      "workers": 3
+    }
+  },
+  "glue": {
+    "interfaces": "glue/automap",
+    "bindings": {
+      "sdl3/allocation": "glue/sdl3_bindings.cpp",
+      "sdl3/diagnostics": "glue/sdl3_bindings.cpp",
+      "sdl3/build-flags": "glue/sdl3_bindings.cpp",
+      "sdl3/lifecycle": "main.cpp",
+      "dear-imgui/allocation": "glue/imgui_bindings.cpp",
+      "dear-imgui/diagnostics": null,
+      "dear-imgui/build-flags": "glue/imgui_bindings.cpp",
+      "jolt/allocation": "glue/jolt_bindings.cpp",
+      "jolt/diagnostics": "glue/jolt_bindings.cpp",
+      "jolt/jobs": "glue/jolt_job_system.cpp",
+      "jolt/lifecycle": "glue/jolt_bindings.cpp",
+      "jolt/build-flags": "glue/jolt_bindings.cpp"
+    },
+    "pairings": {
+      "dear-imgui/sdl3": "glue/imgui_sdl3_gpu.cpp"
+    }
+  }
+}

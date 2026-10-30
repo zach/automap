@@ -1,0 +1,145 @@
+{
+  "format": "automap-evidence/0.1-draft",
+  "subject": {
+    "kind": "composition",
+    "lock_hash": "8c53582a5bc09f81e03f42a21903424ea760e42bcf30e9e09c5e6bddfb9a9366"
+  },
+  "platform": "linux-x64-clang",
+  "level": "probed",
+  "signed": false,
+  "produced_at": "2026-10-30T04:58:00Z",
+  "results": [
+    {
+      "rule": "platform.targets-supported",
+      "library": "dear-imgui",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "platform.targets-supported",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "platform.targets-supported",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "diagnostics.log-routed",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "diagnostics.assert-routed",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "build-flags.abi-match",
+      "library": "sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "library": "dear-imgui",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "library": "dear-imgui",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "build-flags.abi-match",
+      "library": "dear-imgui",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "pairing.dear-imgui-sdl3.backends-initialized",
+      "library": "dear-imgui+sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "pairing.dear-imgui-sdl3.frames-presented",
+      "library": "dear-imgui+sdl3",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "diagnostics.log-routed",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "diagnostics.assert-routed",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "build-flags.abi-match",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "jobs.routed-through-interface",
+      "library": "jolt",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "lifecycle.init-order",
+      "library": "composition",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "lifecycle.shutdown-reverse",
+      "library": "composition",
+      "ok": true,
+      "failure_code": null
+    },
+    {
+      "rule": "jobs.tsan-clean",
+      "library": "composition",
+      "ok": true,
+      "failure_code": null
+    }
+  ]
+}
