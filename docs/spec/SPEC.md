@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0077](../adr/0077-tests-attach-at-the-cli-process.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -341,7 +341,7 @@ It uses the same schema, the same contracts and the same checks as Jolt; nothing
 
 ### 4.5 Recipes
 
-A recipe names its subject, the library versions and variants it applies to, its reference glue (each file with a role: glue, build fragment, setup glue or probe), its entry points (each with a phase and whether it runs at init or shutdown [ADR-0074](../adr/0074-spike-format-fixes.md)), its probes (each naming its rule, its check and its seeded violation [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md)), rules it marks not-applicable with reasons, and adaptation notes. A pairing recipe also states the pairing's own rules and its cross-library ordering constraints: each names a step that must run `before` another, at init or shutdown.
+A recipe names its subject, the library versions and variants it applies to, its reference glue (each file with a role: glue, build fragment, setup glue or probe), its entry points (each with a phase and whether it runs at init or shutdown [ADR-0074](../adr/0074-spike-format-fixes.md)), its probes (each naming its rule, its check, and its seeded violation as a description and a patch CI applies [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md)), rules it marks not-applicable with reasons, and adaptation notes. A pairing recipe also states the pairing's own rules and its cross-library ordering constraints: each names a step that must run `before` another, at init or shutdown.
 
 ### 4.6 Manifest
 
@@ -479,7 +479,7 @@ The agent interface is the CLI, the router skill and the `AGENTS.md` section (§
 
 ### 6.1 Probes and seeded violations
 
-Each probed rule has a probe in the recipe that binds a library (or in the contract, for composition rules). Automap's CI runs every probe against at least one seeded violation, for example installing hooks late, running init steps out of order or mismatching a define, and the rule counts as probed only once the probe reports failure. A probe that passes its seeded violation is treated as guidance until fixed. Seeded-violation runs repeat whenever a probe or its library changes [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md).
+Each probed rule has a probe in the recipe that binds a library (or in the contract, for composition rules). Automap's CI runs every probe against at least one seeded violation, for example installing hooks late, running init steps out of order or mismatching a define, and the rule counts as probed only once the probe reports failure. Each seeded violation is a patch: recipes carry them for library and pairing rules, contracts for composition rules, and CI applies each to reference glue or the manifest, runs `verify`, and expects the rule's failure code. A probe that passes its seeded violation is treated as guidance until fixed. Seeded-violation runs repeat whenever a probe or its library changes [ADR-0071](../adr/0071-probes-must-prove-they-can-fail.md).
 
 ### 6.2 Evidence levels
 
@@ -763,6 +763,8 @@ Four layers [ADR-0068](../adr/0068-test-strategy-four-layers.md):
 3. **The map tests itself:** every recipe's probes run in Automap's CI on the declared edges.
 4. **The eval suite as acceptance:** each slice's acceptance criteria are eval tasks a fresh agent session must pass.
 
+Layers 1 and 2 attach at one seam: the CLI run as a process. A test runs `automap <command> --json` against a fixture map and a fixture repo and checks the JSON result and the files written. The fixture map holds two tiny stub C++ libraries with their own recipes, probes and seeded violations, so `verify` runs real CMake and vcpkg builds in seconds. Go tests below the CLI cover only pure functions with no I/O, such as lock canonicalization and resolution [ADR-0077](../adr/0077-tests-attach-at-the-cli-process.md).
+
 `check-examples.py`'s rules move into the CLI's own validation (layer 1), and the examples become test fixtures.
 
 ### 10.5 Work tracking
@@ -845,7 +847,7 @@ These details are needed to build v1 but no ADR records them. They follow from t
 4. Fact, choice and failure-code names in the example contracts, including the `allocator-slot`, `logging-slot` and `profiling-slot` choices and the C++20 default.
 5. Fetching evidence for a lock's pins from the main branch rather than from the lock's map release (§5.3).
 6. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
-7. The `--probe` mode and probe results file (§5.6), and the choices header's macro names (§4.9).
+7. The `--probe` mode and probe results file (§5.6), the choices header's macro names (§4.9), and seeded violations as patch files (§6.1).
 8. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
 9. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
 
@@ -929,3 +931,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0074](../adr/0074-spike-format-fixes.md) | Seven format fixes from the spike |
 | [0075](../adr/0075-variants-per-platform.md) | A composition can choose a library's variant per platform |
 | [0076](../adr/0076-probed-rules-name-their-platforms.md) | A probed rule may name the platforms its probe can run on |
+| [0077](../adr/0077-tests-attach-at-the-cli-process.md) | The build's tests attach at the CLI, run as a process |

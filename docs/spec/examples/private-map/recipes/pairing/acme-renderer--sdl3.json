@@ -66,7 +66,10 @@
     {
       "rule": "acme-renderer--sdl3.surface-tracks-window",
       "check": "am_probe_acme_sdl3_surface(): resizes the window with SDL_SetWindowSize, runs two frames, and checks the swapchain extent matches SDL_GetWindowSizeInPixels.",
-      "seeded_violation": "Drop the swapchain recreation from the pixel-size-changed handler."
+      "seeded_violation": {
+        "description": "Drop the swapchain recreation from the pixel-size-changed handler.",
+        "patch": "acme-renderer--sdl3/seeded/acme-renderer--sdl3.surface-tracks-window.patch"
+      }
     }
   ],
   "adaptation_notes": [

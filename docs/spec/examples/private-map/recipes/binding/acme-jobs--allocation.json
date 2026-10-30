@@ -36,7 +36,10 @@
     {
       "rule": "allocation.routed-through-facade",
       "check": "am_probe_acme_allocation(): Scheduler::allocator() is the facade's acme-jobs allocator, and the facade's acme-jobs counter rises when the scheduler starts.",
-      "seeded_violation": "Leave SchedulerDesc::allocator null so acme-jobs uses its default heap."
+      "seeded_violation": {
+        "description": "Leave SchedulerDesc::allocator null so acme-jobs uses its default heap.",
+        "patch": "acme-jobs--allocation/seeded/allocation.routed-through-facade.patch"
+      }
     }
   ],
   "not_applicable": [

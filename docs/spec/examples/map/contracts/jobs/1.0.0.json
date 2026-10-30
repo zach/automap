@@ -67,7 +67,11 @@
       "platforms": [
         "linux-x64-clang",
         "macos-arm64-appleclang"
-      ]
+      ],
+      "seeded_violation": {
+        "description": "Add an unsynchronized counter shared by every job in the reference thread pool.",
+        "patch": "1.0.0/seeded/jobs.tsan-clean.patch"
+      }
     },
     {
       "id": "jobs.no-blocking-waits-on-workers",

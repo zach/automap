@@ -95,6 +95,8 @@ for p in sorted(EX.glob("*/contracts/*/*.json")):
     for r in d["rules"]:
         if not r["id"].startswith(d["contract"] + "."):
             fail(p, f"rule {r['id']} must be prefixed with the contract id")
+        if r["kind"] == "probed" and r["applies_to"] == "composition" and "seeded_violation" not in r:
+            fail(p, f"probed composition rule {r['id']} needs a seeded violation (ADR-0071)")
 contract_rules = {r["id"]: r for c in contracts.values() for r in c["rules"]}
 
 

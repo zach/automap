@@ -48,7 +48,10 @@
     {
       "rule": "jobs.routed-through-interface",
       "check": "am_probe_acme_jobs(): submits 1,000 jobs with dependencies through am::jobs and checks each ran exactly once, on a thread acme::jobs::Scheduler reports as its worker, after its dependencies.",
-      "seeded_violation": "Make the glue's submit run the job inline on the calling thread instead of handing it to acme::jobs::Scheduler."
+      "seeded_violation": {
+        "description": "Make the glue's submit run the job inline on the calling thread instead of handing it to acme::jobs::Scheduler.",
+        "patch": "acme-jobs--jobs/seeded/jobs.routed-through-interface.patch"
+      }
     }
   ],
   "adaptation_notes": [

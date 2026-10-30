@@ -56,7 +56,11 @@
       "kind": "probed",
       "applies_to": "composition",
       "text": "Every library in the composition lists every platform in the manifest among its targets, and the composition builds and completes a probe run on each.",
-      "failure_code": "PLATFORM_UNSUPPORTED(<library>,<platform>)"
+      "failure_code": "PLATFORM_UNSUPPORTED(<library>,<platform>)",
+      "seeded_violation": {
+        "description": "Add to the manifest a platform one library doesn't list.",
+        "patch": "1.0.0/seeded/platform.targets-supported.patch"
+      }
     }
   ],
   "shared_interface": null

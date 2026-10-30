@@ -40,12 +40,18 @@
     {
       "rule": "allocation.hooks-before-first-allocation",
       "check": "The facade's probe-build block tracking: at SDL_Quit SDL frees what it allocated, and any block the facade never allocated fails the rule as ALLOC_HOOK_LATE(sdl3).",
-      "seeded_violation": "Call SDL_SetHint(SDL_HINT_APP_NAME, \"probe\") before am_bind_sdl3_allocation(), so SDL allocates the hint with its default allocator."
+      "seeded_violation": {
+        "description": "Call SDL_SetHint(SDL_HINT_APP_NAME, \"probe\") before am_bind_sdl3_allocation(), so SDL allocates the hint with its default allocator.",
+        "patch": "sdl3--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
     },
     {
       "rule": "allocation.routed-through-facade",
       "check": "am_probe_sdl3_allocation(): SDL_GetMemoryFunctions returns the four sdl3 trampolines, and the facade's sdl3 counter rises across SDL_Init.",
-      "seeded_violation": "Remove the SDL_SetMemoryFunctions call from am_bind_sdl3_allocation()."
+      "seeded_violation": {
+        "description": "Remove the SDL_SetMemoryFunctions call from am_bind_sdl3_allocation().",
+        "patch": "sdl3--allocation/seeded/allocation.routed-through-facade.patch"
+      }
     }
   ],
   "adaptation_notes": [

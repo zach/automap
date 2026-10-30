@@ -49,7 +49,10 @@
     {
       "rule": "jobs.routed-through-interface",
       "check": "am_probe_jolt_jobs(): one PhysicsSystem::Update with two active bodies; the shared scheduler's jolt counter rises and no thread outside the scheduler ran a Jolt job.",
-      "seeded_violation": "Construct JPH::JobSystemThreadPool in place of the adapter, so Jolt runs its own threads."
+      "seeded_violation": {
+        "description": "Construct JPH::JobSystemThreadPool in place of the adapter, so Jolt runs its own threads.",
+        "patch": "jolt--jobs/seeded/jobs.routed-through-interface.patch"
+      }
     }
   ],
   "adaptation_notes": [

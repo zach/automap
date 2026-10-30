@@ -83,12 +83,18 @@
     {
       "rule": "dear-imgui--sdl3.events-forwarded",
       "check": "am_probe_imgui_sdl3_events(): pushes a synthetic SDL_EVENT_MOUSE_MOTION, runs one frame, and checks ImGui's io.MousePos matches it.",
-      "seeded_violation": "Skip the ImGui_ImplSDL3_ProcessEvent call in the event loop."
+      "seeded_violation": {
+        "description": "Skip the ImGui_ImplSDL3_ProcessEvent call in the event loop.",
+        "patch": "dear-imgui--sdl3/seeded/dear-imgui--sdl3.events-forwarded.patch"
+      }
     },
     {
       "rule": "lifecycle.shutdown-reverse",
       "check": "The lifecycle probe checks this recipe's shutdown ordering constraints.",
-      "seeded_violation": "Call ImGui_ImplSDLGPU3_Shutdown before SDL_WaitForGPUIdle in am_pair_imgui_sdl3_shutdown()."
+      "seeded_violation": {
+        "description": "Call ImGui_ImplSDLGPU3_Shutdown before SDL_WaitForGPUIdle in am_pair_imgui_sdl3_shutdown().",
+        "patch": "dear-imgui--sdl3/seeded/lifecycle.shutdown-reverse.patch"
+      }
     }
   ],
   "adaptation_notes": [

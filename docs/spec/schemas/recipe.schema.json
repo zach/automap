@@ -205,8 +205,22 @@
             "description": "The glue function or procedure that performs the check."
           },
           "seeded_violation": {
-            "type": "string",
-            "description": "The known mistake CI introduces to show the probe fails."
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "description",
+              "patch"
+            ],
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "The known mistake, in words."
+              },
+              "patch": {
+                "type": "string",
+                "description": "A patch, relative to the recipe's or contract version's directory, that CI applies to reference glue (or the manifest) to introduce the mistake."
+              }
+            }
           }
         }
       }
