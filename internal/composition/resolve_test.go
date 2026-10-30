@@ -1,6 +1,8 @@
 package composition_test
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -8,9 +10,17 @@ import (
 	"github.com/zach/automap/internal/mapmodel"
 )
 
+// fixtureMap loads the fixture map: the stub libraries in testdata/map with
+// the public map's contracts and probe harness.
 func fixtureMap(t *testing.T) *mapmodel.Map {
 	t.Helper()
-	m, problems := mapmodel.Load("../../testdata/map", nil)
+	dir := t.TempDir()
+	for src, dst := range map[string]string{"../../testdata/map": "", "../../map/contracts": "contracts", "../../map/probe-harness": "probe-harness"} {
+		if err := os.CopyFS(filepath.Join(dir, dst), os.DirFS(src)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	m, problems := mapmodel.Load(dir, nil)
 	if len(problems) > 0 {
 		t.Fatalf("fixture map: %v", problems)
 	}
