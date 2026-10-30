@@ -45,3 +45,28 @@ func TestASpendingCapStopIsSkippedNotFailed(t *testing.T) {
 		}
 	}
 }
+
+func TestGrade(t *testing.T) {
+	var task Task
+	task.Pass.Level = "probed"
+	task.Pass.Slots = map[string]string{"physics-3d": "jolt"}
+	for _, c := range []struct {
+		name, level string
+		slots       map[string]string
+		pass        bool
+	}{
+		{"probed with jolt in physics-3d", "probed", map[string]string{"physics-3d": "jolt", "windowing": "sdl3"}, true},
+		{"probed without the library", "probed", map[string]string{"windowing": "sdl3"}, false},
+		{"jolt below probed", "smoke", map[string]string{"physics-3d": "jolt"}, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			status, reason := grade(&task, c.level, "summary", c.slots)
+			if (status == "pass") != c.pass {
+				t.Errorf("grade %s (%s), want pass %v", status, reason, c.pass)
+			}
+			if status != "pass" && reason == "" {
+				t.Error("a failed grade gives no reason")
+			}
+		})
+	}
+}

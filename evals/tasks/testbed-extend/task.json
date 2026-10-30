@@ -1,0 +1,14 @@
+{
+  "id": "testbed-extend",
+  "request": "Add 3D physics.",
+  "setup": [
+    ["start", "--with", "sdl3", "--with", "dear-imgui:docking", "--no-verify", "--json"]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "physics-3d": "jolt"
+    }
+  },
+  "timeout_minutes": 60
+}
