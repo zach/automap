@@ -10,6 +10,7 @@ import (
 
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
+	"github.com/zach/automap/internal/verify"
 )
 
 // start creates a composition in the current directory (SPEC §5.4).
@@ -86,10 +87,21 @@ func start(a *args, r *result) int {
 		pin := lock.Pins[lib]
 		pinned = append(pinned, fmt.Sprintf("%s %s %s", lib, pin.Version, pin.Variant))
 	}
-	r.OK = true
-	r.Summary = fmt.Sprintf("Started a testbed (%s); it is not verified yet.", strings.Join(pinned, ", "))
-	r.Warnings = append(r.Warnings, warning{Code: "NOT_VERIFIED", Message: "This CLI build can't build or verify compositions yet."})
-	return exitOK
+	started := fmt.Sprintf("Started a testbed (%s)", strings.Join(pinned, ", "))
+	host := verify.HostPlatform()
+	switch {
+	case a.bools["no-verify"]:
+		r.OK = true
+		r.Summary = started + "; it is not verified: run automap verify."
+		return exitOK
+	case !contains(man.Platforms, host):
+		r.OK = true
+		r.Summary = started + "; it is not verified: it doesn't target this machine's platform, " + host + "."
+		return exitOK
+	}
+	status = runVerify(m, man, lock, host, r)
+	r.Summary = started + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
+	return status
 }
 
 func failWith(r *result, fails []composition.Failure, summary string, status int) int {

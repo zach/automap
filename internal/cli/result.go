@@ -29,9 +29,11 @@ type result struct {
 	CLIVersion   string    `json:"cli_version"`
 	OK           bool      `json:"ok"`
 	Summary      string    `json:"summary"`
+	Level        string    `json:"level,omitempty"`
 	Warnings     []warning `json:"warnings"`
 	Failures     []failure `json:"failures"`
 	FilesWritten []string  `json:"files_written,omitempty"`
+	EvidenceFile string    `json:"evidence_file,omitempty"`
 	Entries      []entry   `json:"entries,omitempty"`
 }
 
@@ -44,8 +46,9 @@ type warning struct {
 }
 
 type failure struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code        string `json:"code"`
+	Message     string `json:"message"`
+	DetailsFile string `json:"details_file,omitempty"`
 }
 
 func newResult(command string) *result {
