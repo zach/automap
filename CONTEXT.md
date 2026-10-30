@@ -163,8 +163,12 @@ The shared interface every composition includes, through which probes record the
 _Avoid_: test framework, test runner
 
 **Probe**:
-An executable check that glue satisfies one rule, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
+An executable check that glue satisfies one rule, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works. A probe counts only once it has been shown to fail on a seeded violation.
 _Avoid_: test (too broad), assertion, validator
+
+**Seeded violation**:
+A known mistake Automap's CI introduces on purpose to show that a probe reports failure.
+_Avoid_: mutation (too general), negative test
 
 **Evidence**:
 A record that one binding, pairing or composition passed verification at a stated evidence level on one platform. Automap's published evidence is signed and stored in the map; evidence for a developer's own composition lives in their repo beside the lock.
