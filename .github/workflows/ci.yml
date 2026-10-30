@@ -61,7 +61,7 @@ jobs:
       - name: System packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang pkg-config jq autoconf autoconf-archive automake libtool \
+          sudo apt-get install -y ninja-build clang pkg-config jq autoconf autoconf-archive automake libtool libltdl-dev \
             libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
             libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
             mesa-vulkan-drivers libvulkan1
