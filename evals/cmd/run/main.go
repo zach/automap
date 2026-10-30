@@ -91,7 +91,7 @@ func main() {
 			report.Model = used
 		}
 		report.Tasks = append(report.Tasks, r)
-		fmt.Printf("%s: %s in %.0fs %s\n", r.ID, r.Status, r.DurationSec, r.Reason)
+		fmt.Printf("%s: %s in %.0fs, model %s, level %q, cost $%.2f. %s\n", r.ID, r.Status, r.DurationSec, used, r.Level, r.CostUSD, r.Reason)
 	}
 	if report.Model == "" {
 		report.Model = *model
