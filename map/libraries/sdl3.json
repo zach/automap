@@ -165,7 +165,7 @@
           ],
           "headless": "SDL_VIDEO_DRIVER=offscreen",
           "system_dependencies": {
-            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev), Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev), IBus (libibus-1.0-dev) and D-Bus (libdbus-1-dev) development packages, for the sdl3 port's default Linux features; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev), Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev), IBus (libibus-1.0-dev) and D-Bus (libdbus-1-dev) development packages, for the sdl3 port's default Linux features; autoconf, autoconf-archive, automake and libtool, which vcpkg needs to build libxcrypt for them; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
