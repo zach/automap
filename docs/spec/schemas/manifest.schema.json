@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/manifest.schema.json",
+  "title": "Manifest",
+  "description": "automap.manifest.json in the developer's repo: the composition the agent edits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "map_release",
+    "build_backend",
+    "platforms",
+    "executable",
+    "slots",
+    "variants",
+    "choices",
+    "glue"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "$comment": {
+      "type": "string"
+    },
+    "format": {
+      "const": "automap-manifest/1"
+    },
+    "map_release": {
+      "type": "string",
+      "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$|^git:[0-9a-f]{40}$|^unreleased$",
+      "description": "A map release, git:<commit> for a map read from a clean checkout, or unreleased (ADR-0079)."
+    },
+    "build_backend": {
+      "const": "vcpkg"
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
+        "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+      }
+    },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "description": "The CMake target verify builds and runs, and (for a testbed) the sources start wrote for it.",
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "private_maps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "location"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "location": {
+            "type": "string"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$",
+              "description": "<os>-<arch>-<toolchain>, e.g. linux-x64-clang. Private maps may add platform ids of their own (NDA platforms)."
+            }
+          },
+          "$comment": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "slots": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "variants": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          {
+            "type": "object",
+            "required": [
+              "default"
+            ],
+            "description": "Per-platform variants: 'default' plus any platform ids that differ.",
+            "propertyNames": {
+              "pattern": "^default$|^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          }
+        ]
+      }
+    },
+    "choices": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "allocation",
+          "jobs",
+          "math-types",
+          "handles",
+          "lifecycle",
+          "diagnostics",
+          "serialization",
+          "build-flags",
+          "platform",
+          "determinism",
+          "assets"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "glue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interfaces",
+        "choices_header",
+        "startup",
+        "bindings",
+        "pairings",
+        "setup"
+      ],
+      "properties": {
+        "interfaces": {
+          "type": "string"
+        },
+        "choices_header": {
+          "type": "string"
+        },
+        "bindings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+/[a-z0-9-]+$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "pairings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+/[a-z0-9-]+$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "setup": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "not_applicable"
+                ],
+                "properties": {
+                  "not_applicable": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "startup": {
+          "description": "The startup the CLI writes (a list of files), or the developer's own startup code that the lifecycle probe judges instead (ADR-0080).",
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "developer_owned"
+              ],
+              "properties": {
+                "developer_owned": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

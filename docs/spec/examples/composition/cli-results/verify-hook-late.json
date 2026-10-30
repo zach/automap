@@ -1,0 +1,18 @@
+{
+  "command": "verify",
+  "cli_version": "1.0.0",
+  "ok": false,
+  "summary": "Composition is smoke on linux-x64-clang: 1 probed rule failed.",
+  "level": "smoke",
+  "warnings": [],
+  "failures": [
+    {
+      "code": "ALLOC_HOOK_LATE(sdl3)",
+      "rule": "allocation.hooks-before-first-allocation",
+      "library": "sdl3",
+      "message": "SDL freed a block the allocation facade never allocated: a call into SDL ran before am_bind_sdl3_allocation() in the memory phase.",
+      "details_file": "build/automap/probe-linux-x64-clang.log"
+    }
+  ],
+  "evidence_file": "evidence/linux-x64-clang.json"
+}

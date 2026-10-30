@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/slot.schema.json",
+  "title": "Slot",
+  "description": "A named role in an engine that one library fills. map/slots/<id>.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "description"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "description": "Library ids in the map that fill this slot."
+    }
+  }
+}

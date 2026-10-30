@@ -1,0 +1,7 @@
+{
+  "id": "gpu",
+  "description": "The GPU API the engine renders through.",
+  "examples": [
+    "sdl3"
+  ]
+}

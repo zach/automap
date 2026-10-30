@@ -1,0 +1,11 @@
+{
+  "format": "automap-map/1",
+  "id": "automap",
+  "kind": "public",
+  "build_backend": {
+    "vcpkg": {
+      "baseline": "d186940b2f0c4e8e5b4ff804af57d2a26fbfa091",
+      "tool": "2026-09-26"
+    }
+  }
+}

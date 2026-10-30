@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "dear-imgui",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "dear-imgui": {
+      "versions": [
+        "1.93.0"
+      ],
+      "variants": [
+        "docking"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+    }
+  ],
+  "adaptation_notes": [
+    "A composition that wants Dear ImGui's asserts in the facade can define IM_ASSERT in its ImGui config header to call the facade; no probe checks this."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "format": "automap-map/1",
+  "id": "acme-nebula",
+  "kind": "private",
+  "platforms": [
+    "nebula-arm64-clang"
+  ]
+}

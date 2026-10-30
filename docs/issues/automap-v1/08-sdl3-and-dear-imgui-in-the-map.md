@@ -1,0 +1,14 @@
+# 08: SDL3 and Dear ImGui in the map
+
+**What to build:** SDL3 and Dear ImGui (docking) enter the public map with library entries, library recipes (build fragments, setup glue), their bindings, the `dear-imgui--sdl3` pairing recipe with its rules, ordering constraints and probes, and the testbed's executable source. A Linux job in Automap's CI starts the testbed on Mesa lavapipe with SDL's offscreen driver and reaches probed.
+
+**Blocked by:** [07: Slice-1 contracts and shared interfaces](07-slice-1-contracts-and-shared-interfaces.md)
+
+**Status:** ready-for-agent
+
+- [ ] `automap start --with sdl3 --with dear-imgui:docking` on a clean Linux runner ends probed.
+- [ ] Every probe in these recipes fails its seeded violation in CI.
+- [ ] Facts validate against the contracts; pins match upstream tags and vcpkg's source hashes; SDL3's default variant enables the sdl3 port's `vulkan` feature, which SDL_GPU needs for its Vulkan backend; its platform facts record its headless environment and Linux system dependencies.
+- [ ] SDL3's library recipe provides the window and GPU device in the context; the pairing's entry points read them (ADR-0080).
+- [ ] Probe mode writes no `imgui.ini`; the testbed's normal mode runs a frame loop with one Dear ImGui window until closed.
+- [ ] Dear ImGui's diagnostics binding is not-applicable, with the reason, in evidence.

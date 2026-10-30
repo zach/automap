@@ -1,0 +1,7 @@
+{
+  "id": "jobs",
+  "description": "The scheduler that runs work on worker threads; implements the jobs contract's shared interface.",
+  "examples": [
+    "enkits"
+  ]
+}

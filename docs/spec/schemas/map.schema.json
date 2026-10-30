@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zach/automap/schemas/map.schema.json",
+  "title": "Map",
+  "description": "map.json at the root of the public map or a private map.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "id",
+    "kind"
+  ],
+  "properties": {
+    "format": {
+      "const": "automap-map/1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Private maps for NDA platforms only: the platform ids this map may add to libraries' targets."
+    },
+    "build_backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vcpkg"
+      ],
+      "description": "Public map only.",
+      "properties": {
+        "vcpkg": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline",
+            "tool"
+          ],
+          "properties": {
+            "baseline": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "The curated registry commit this map's facts and evidence were verified against."
+            },
+            "automap_registry": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "commit"
+              ],
+              "description": "The Automap registry, once the map uses it; AUTOMAP_REGISTRY overrides the URL.",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "commit": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}$"
+                }
+              }
+            },
+            "tool": {
+              "type": "string",
+              "description": "The vcpkg tool release the CLI bootstraps when VCPKG_ROOT isn't set."
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "public"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "build_backend"
+        ],
+        "not": {
+          "required": [
+            "platforms"
+          ]
+        }
+      }
+    }
+  ]
+}

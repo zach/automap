@@ -1,0 +1,145 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "a853916eac6d4556875b50e2e8775f6a5312f881c6d68209fdcaa4f81d571aeb"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:ff54e2b0299fb5907ecf1806366ed4c039124e7d423ff9733b580931b386ade5"
+    },
+    "platform": "nebula-arm64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-30T09:20:41Z",
+    "map_release": "map-2026.10.29",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "nebula-clang 19.1 (hypothetical)",
+      "runner_image": "acme-devkit-ci-07",
+      "environment": {},
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "acme-jobs",
+        "status": "not-applicable",
+        "reason": "acme-jobs takes its allocator per instance, at construction."
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "acme-jobs",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "acme-jobs",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "acme-renderer",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "acme-renderer",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "acme-renderer",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "acme-jobs",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "not-applicable",
+        "reason": "The rule's probe runs only on linux-x64-clang and macos-arm64-appleclang (ADR-0076)."
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "status": "not-applicable",
+        "reason": "The composition has no math library, so no pairing glue converts math types."
+      },
+      {
+        "rule": "acme-renderer--sdl3.surface-tracks-window",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "nda-holder",
+      "id": "acme-games/nebula-ci (key fingerprint SHA256:hypothetical)",
+      "signed": true
+    }
+  }
+}

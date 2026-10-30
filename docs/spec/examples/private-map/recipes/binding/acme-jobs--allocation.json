@@ -1,0 +1,54 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "acme-jobs",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "acme-jobs": {
+      "versions": [
+        "2.3.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-jobs--allocation/acme_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "acme-jobs--allocation/acme_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_acme_allocation"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_acme_allocation(): Scheduler::allocator() is the facade's acme-jobs allocator, and the facade's acme-jobs counter rises when the scheduler starts.",
+      "seeded_violation": {
+        "description": "Leave SchedulerDesc::allocator null so acme-jobs uses its default heap.",
+        "patch": "acme-jobs--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "not_applicable": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "reason": "acme-jobs takes its allocator per instance, at construction; it cannot allocate before the hook exists."
+    }
+  ],
+  "adaptation_notes": [
+    "The facade's allocator object outlives the scheduler; destroy the scheduler in the jobs phase before the memory phase ends."
+  ]
+}

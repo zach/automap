@@ -1,0 +1,121 @@
+{
+  "kind": "pairing",
+  "subject": {
+    "libraries": [
+      "dear-imgui",
+      "sdl3"
+    ]
+  },
+  "applies_to": {
+    "dear-imgui": {
+      "versions": [
+        "1.93.0"
+      ],
+      "variants": [
+        "docking"
+      ]
+    },
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "dear-imgui--sdl3/imgui_sdl3_gpu.h",
+      "role": "glue"
+    },
+    {
+      "path": "dear-imgui--sdl3/imgui_sdl3_gpu.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "dear-imgui--sdl3/imgui_sdl3_gpu_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_pair_imgui_sdl3_init",
+      "steps": [
+        "dear-imgui--sdl3:ImGui_ImplSDL3_InitForSDLGPU",
+        "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Init"
+      ],
+      "after": [
+        "dear-imgui:CreateContext"
+      ],
+      "reads": [
+        "sdl3.window",
+        "sdl3.gpu_device"
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_pair_imgui_sdl3_shutdown",
+      "steps": [
+        "dear-imgui--sdl3:SDL_WaitForGPUIdle",
+        "dear-imgui--sdl3:ImGui_ImplSDL3_Shutdown",
+        "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown"
+      ],
+      "reads": [
+        "sdl3.gpu_device"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "dear-imgui--sdl3.events-forwarded",
+      "kind": "probed",
+      "applies_to": "pairing",
+      "text": "Every SDL event the game polls is passed to ImGui_ImplSDL3_ProcessEvent before the next ImGui frame starts.",
+      "failure_code": "EVENTS_NOT_FORWARDED(dear-imgui--sdl3)"
+    }
+  ],
+  "ordering": [
+    {
+      "before": "sdl3:SDL_ClaimWindowForGPUDevice",
+      "after": "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Init",
+      "when": "init"
+    },
+    {
+      "before": "dear-imgui--sdl3:SDL_WaitForGPUIdle",
+      "after": "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown",
+      "when": "shutdown"
+    },
+    {
+      "before": "dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown",
+      "after": "sdl3:SDL_DestroyGPUDevice",
+      "when": "shutdown"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "dear-imgui--sdl3.events-forwarded",
+      "check": "am_probe_imgui_sdl3_events(): pushes a synthetic SDL_EVENT_MOUSE_MOTION, runs one frame, and checks ImGui's io.MousePos matches it.",
+      "seeded_violation": {
+        "description": "Skip the ImGui_ImplSDL3_ProcessEvent call in the event loop.",
+        "patch": "dear-imgui--sdl3/seeded/dear-imgui--sdl3.events-forwarded.patch"
+      }
+    },
+    {
+      "rule": "lifecycle.shutdown-reverse",
+      "check": "The lifecycle probe checks this recipe's shutdown ordering constraints.",
+      "seeded_violation": {
+        "description": "Call ImGui_ImplSDLGPU3_Shutdown before SDL_WaitForGPUIdle in am_pair_imgui_sdl3_shutdown().",
+        "patch": "dear-imgui--sdl3/seeded/lifecycle.shutdown-reverse.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_pair_imgui_sdl3_shutdown() calls SDL_WaitForGPUIdle first: the renderer backend releases GPU resources the device may still be using.",
+    "In probe mode the setup sets io.IniFilename = nullptr so probe runs write no imgui.ini into the repository.",
+    "The SDL3 platform backend and SDL_GPU renderer backend are compiled from the same Dear ImGui commit as the core, through the port's sdl3-binding and sdlgpu3-binding features."
+  ]
+}

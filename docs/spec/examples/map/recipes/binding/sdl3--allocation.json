@@ -1,0 +1,65 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "sdl3",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl3--allocation/sdl3_allocation.h",
+      "role": "glue"
+    },
+    {
+      "path": "sdl3--allocation/sdl3_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "sdl3--allocation/sdl3_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_sdl3_allocation",
+      "steps": [
+        "sdl3:SDL_SetMemoryFunctions"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "The facade's probe-build block tracking: at SDL_Quit SDL frees what it allocated, and any block the facade never allocated fails the rule as ALLOC_HOOK_LATE(sdl3).",
+      "seeded_violation": {
+        "description": "Call SDL_SetHint(SDL_HINT_APP_NAME, \"probe\") before am_bind_sdl3_allocation(), so SDL allocates the hint with its default allocator.",
+        "patch": "sdl3--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_sdl3_allocation(): SDL_GetMemoryFunctions returns the four sdl3 trampolines, and the facade's sdl3 counter rises across SDL_Init.",
+      "seeded_violation": {
+        "description": "Remove the SDL_SetMemoryFunctions call from am_bind_sdl3_allocation().",
+        "patch": "sdl3--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "SDL_SetMemoryFunctions must be the first call into SDL, before SDL_SetHint or SDL_SetAppMetadata (SDL_stdinc.h); the memory phase guarantees this as long as no game code calls SDL earlier.",
+    "SDL's hooks carry no user data or alignment, so the glue defines one static trampoline set for sdl3 that tags each block for the facade.",
+    "Do not use SDL_GetNumAllocations as a probe: it returns -1 unless SDL is built with SDL_TRACK_ALLOCATIONS."
+  ]
+}

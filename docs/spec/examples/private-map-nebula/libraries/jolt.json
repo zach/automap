@@ -1,0 +1,220 @@
+{
+  "id": "jolt",
+  "name": "Jolt Physics",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/jrouwe/JoltPhysics"
+  },
+  "slots": [
+    "physics-3d"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/jrouwe/JoltPhysics"
+  },
+  "versions": [
+    {
+      "version": "5.6.0",
+      "released": "2026-07-11",
+      "pin": {
+        "tag": "v5.6.0",
+        "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+        "content_hash": "sha512:bc6f2436bef91a6ffd09eee98186be645f6e9a9b3f65a7a645abf00432ac40ada03320c1fe946661817a94eda372cf8d88e4889991cdd25f1c16ecf9a4486677"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "joltphysics",
+          "registry": "curated",
+          "port_version": 1
+        }
+      },
+      "cmake": {
+        "package": "Jolt",
+        "targets": [
+          "Jolt::Jolt"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        },
+        {
+          "name": "double-precision",
+          "build_options": {
+            "DOUBLE_PRECISION": "ON"
+          },
+          "registry": "automap",
+          "description": "RVec3 becomes DVec3. ABI-affecting; delivered through the Automap registry's joltphysics overlay port because vcpkg features must be additive.",
+          "facts": {
+            "math-types": {
+              "types": [
+                {
+                  "name": "JPH::Vec3",
+                  "scalar": "float"
+                },
+                {
+                  "name": "JPH::RVec3",
+                  "scalar": "double"
+                },
+                {
+                  "name": "JPH::Quat",
+                  "scalar": "float"
+                },
+                {
+                  "name": "JPH::Mat44",
+                  "scalar": "float"
+                }
+              ],
+              "position_precision": "double"
+            }
+          }
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "JPH::Allocate",
+              "signature": "void*(size_t)"
+            },
+            {
+              "api": "JPH::Reallocate",
+              "signature": "void*(void*, size_t old_size, size_t new_size)"
+            },
+            {
+              "api": "JPH::Free",
+              "signature": "void(void*)"
+            },
+            {
+              "api": "JPH::AlignedAllocate",
+              "signature": "void*(size_t, size_t alignment)"
+            },
+            {
+              "api": "JPH::AlignedFree",
+              "signature": "void(void*)"
+            }
+          ],
+          "aligned": true,
+          "install_before": "JPH::Factory and JPH::RegisterTypes(); unavailable when built with DISABLE_CUSTOM_ALLOCATOR",
+          "query": "read the same global function pointers"
+        },
+        "jobs": {
+          "job_model": "dependency-jobs-with-barriers",
+          "interface": "JPH::JobSystem (derive from JPH::JobSystemWithBarrier)",
+          "provides_scheduler": false
+        },
+        "diagnostics": {
+          "log_hook": "JPH::Trace",
+          "assert_hook": "JPH::AssertFailed at runtime, only when JPH_ENABLE_ASSERTS (Debug builds)",
+          "query": "read the same global function pointers"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "jolt:allocation-hooks"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "jolt:Trace+AssertFailed"
+            },
+            {
+              "phase": "jobs",
+              "step": "jolt:job-system-adapter",
+              "after": [
+                "automap:scheduler"
+              ]
+            },
+            {
+              "phase": "systems",
+              "step": "jolt:Factory+RegisterTypes"
+            },
+            {
+              "phase": "systems",
+              "step": "jolt:PhysicsSystem::Init",
+              "after": [
+                "jolt:Factory+RegisterTypes"
+              ]
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "jolt:PhysicsSystem-destroyed"
+            },
+            {
+              "phase": "systems",
+              "step": "jolt:UnregisterTypes+Factory",
+              "after": [
+                "jolt:PhysicsSystem-destroyed"
+              ]
+            },
+            {
+              "phase": "jobs",
+              "step": "jolt:job-system-adapter-destroyed"
+            }
+          ],
+          "reloadable": false
+        },
+        "math-types": {
+          "types": [
+            {
+              "name": "JPH::Vec3",
+              "scalar": "float"
+            },
+            {
+              "name": "JPH::RVec3",
+              "scalar": "float"
+            },
+            {
+              "name": "JPH::Quat",
+              "scalar": "float"
+            },
+            {
+              "name": "JPH::Mat44",
+              "scalar": "float"
+            }
+          ],
+          "position_precision": "float",
+          "handedness": "right-handed; no fixed up axis (gravity is a setting)"
+        },
+        "build-flags": {
+          "abi_defines": [
+            "JPH_DOUBLE_PRECISION",
+            "JPH_CROSS_PLATFORM_DETERMINISTIC",
+            "JPH_FLOATING_POINT_EXCEPTIONS_ENABLED",
+            "JPH_PROFILE_ENABLED",
+            "JPH_EXTERNAL_PROFILE",
+            "JPH_DEBUG_RENDERER",
+            "JPH_DISABLE_TEMP_ALLOCATOR",
+            "JPH_DISABLE_CUSTOM_ALLOCATOR",
+            "JPH_OBJECT_LAYER_BITS",
+            "JPH_ENABLE_ASSERTS",
+            "JPH_OBJECT_STREAM"
+          ],
+          "self_check": "JPH::VerifyJoltVersionID()",
+          "min_language_standard": "C++17",
+          "exceptions": "never-thrown",
+          "rtti": "consumers-must-match",
+          "consumer_flags": "Translation units that derive from Jolt classes compile with -fno-rtti (MSVC: /GR-) unless Jolt is built with CPP_RTTI_ENABLED."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang",
+            "nebula-arm64-clang"
+          ],
+          "headless": "no display needed",
+          "web": true
+        }
+      }
+    }
+  ]
+}

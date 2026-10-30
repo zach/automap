@@ -1,0 +1,71 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "sdl3"
+  },
+  "applies_to": {
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl3/sdl3.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "sdl3/sdl3_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "sdl3/sdl3_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "platform",
+      "when": "init",
+      "call": "am_sdl3_setup_init",
+      "steps": [
+        "sdl3:SDL_Init",
+        "sdl3:SDL_CreateWindow",
+        "sdl3:SDL_CreateGPUDevice",
+        "sdl3:SDL_ClaimWindowForGPUDevice"
+      ],
+      "provides": [
+        {
+          "name": "sdl3.window",
+          "type": "SDL_Window*"
+        },
+        {
+          "name": "sdl3.gpu_device",
+          "type": "SDL_GPUDevice*"
+        }
+      ]
+    },
+    {
+      "phase": "platform",
+      "when": "shutdown",
+      "call": "am_sdl3_setup_shutdown",
+      "steps": [
+        "sdl3:SDL_WaitForGPUIdle",
+        "sdl3:SDL_ReleaseWindowFromGPUDevice",
+        "sdl3:SDL_DestroyGPUDevice",
+        "sdl3:SDL_DestroyWindow",
+        "sdl3:SDL_Quit"
+      ]
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(SDL3 CONFIG REQUIRED) and links SDL3::SDL3.",
+    "Setup glue runs SDL_Init, creates one window and a GPU device for the platform's backend, and claims the window for the device; shutdown waits for the GPU to go idle, releases the window from the device, and destroys both before SDL_Quit.",
+    "Headless runs need no different build: verify sets SDL_VIDEO_DRIVER=offscreen."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "command": "extend",
+  "cli_version": "1.0.0",
+  "ok": true,
+  "summary": "Added jolt 5.6.0 (default) to physics-3d; the composition is probed on linux-x64-clang.",
+  "level": "probed",
+  "warnings": [],
+  "failures": [],
+  "files_written": [
+    "automap.manifest.json",
+    "automap.lock.json",
+    "vcpkg.json",
+    "AGENTS.md",
+    "cmake/automap/jolt.cmake",
+    "cmake/automap/automap.cmake",
+    "glue/automap/jobs.h",
+    "glue/automap/jobs.cpp",
+    "glue/automap/choices.h",
+    "glue/automap/startup.h",
+    "glue/automap/startup.cpp",
+    "glue/jolt/jolt_allocation.cpp",
+    "glue/jolt/jolt_allocation_probe.cpp",
+    "glue/jolt/jolt_diagnostics.cpp",
+    "glue/jolt/jolt_diagnostics_probe.cpp",
+    "glue/jolt/jolt_job_system.h",
+    "glue/jolt/jolt_job_system.cpp",
+    "glue/jolt/jolt_jobs_probe.cpp",
+    "glue/jolt/jolt_setup.h",
+    "glue/jolt/jolt_setup.cpp",
+    "evidence/linux-x64-clang.json"
+  ],
+  "evidence_file": "evidence/linux-x64-clang.json"
+}

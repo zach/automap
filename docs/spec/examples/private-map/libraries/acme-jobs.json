@@ -1,0 +1,94 @@
+{
+  "id": "acme-jobs",
+  "name": "Acme Jobs (in-house)",
+  "license": {
+    "spdx": "LicenseRef-Acme-Proprietary",
+    "class": "proprietary",
+    "warning": "Acme Games proprietary code; not for redistribution."
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "not-applicable",
+    "source": "In-house code; the developer's agent edits it directly."
+  },
+  "slots": [
+    "jobs"
+  ],
+  "source": {
+    "kind": "path",
+    "path": "engine/acme-jobs"
+  },
+  "versions": [
+    {
+      "version": "2.3.0",
+      "released": "2026-10-20",
+      "cmake": {
+        "package": "AcmeJobs",
+        "targets": [
+          "Acme::Jobs"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "per-instance",
+          "hooks": [
+            {
+              "api": "acme::jobs::SchedulerDesc::allocator",
+              "signature": "acme::Allocator*"
+            }
+          ],
+          "aligned": true,
+          "install_before": "acme::jobs::Scheduler construction",
+          "query": "acme::jobs::Scheduler::allocator()"
+        },
+        "jobs": {
+          "job_model": "scheduler",
+          "interface": "acme::jobs::Scheduler",
+          "provides_scheduler": true
+        },
+        "diagnostics": {
+          "log_hook": "acme::set_log_sink(acme::LogSink*)",
+          "assert_hook": "acme::set_assert_handler(acme::AssertHandler)",
+          "query": "acme::log_sink(), acme::assert_handler()"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "jobs",
+              "step": "acme-jobs:Scheduler::start"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "jobs",
+              "step": "acme-jobs:Scheduler::stop"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "ACME_JOBS_FIBERS"
+          ],
+          "self_check": "acme::jobs::check_abi()",
+          "min_language_standard": "C++20",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang"
+          ],
+          "headless": "no display needed",
+          "web": false
+        }
+      }
+    }
+  ]
+}

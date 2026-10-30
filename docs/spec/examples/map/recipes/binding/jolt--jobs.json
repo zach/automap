@@ -1,0 +1,75 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "jobs",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default",
+        "double-precision"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--jobs/jolt_job_system.h",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--jobs/jolt_job_system.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--jobs/jolt_jobs_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "jobs",
+      "when": "init",
+      "call": "am_bind_jolt_jobs",
+      "steps": [
+        "jolt:job-system-adapter"
+      ],
+      "after": [
+        "automap:scheduler"
+      ],
+      "provides": [
+        {
+          "name": "jolt.job_system",
+          "type": "JPH::JobSystem*"
+        }
+      ]
+    },
+    {
+      "phase": "jobs",
+      "when": "shutdown",
+      "call": "am_unbind_jolt_jobs",
+      "steps": [
+        "jolt:job-system-adapter-destroyed"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "jobs.routed-through-interface",
+      "check": "am_probe_jolt_jobs(): one PhysicsSystem::Update with two active bodies; the shared scheduler's jolt counter rises and no thread outside the scheduler ran a Jolt job.",
+      "seeded_violation": {
+        "description": "Construct JPH::JobSystemThreadPool in place of the adapter, so Jolt runs its own threads.",
+        "patch": "jolt--jobs/seeded/jobs.routed-through-interface.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The adapter derives from JPH::JobSystemWithBarrier and submits each Jolt job to am::jobs; GetMaxConcurrency returns the choices header's worker count.",
+    "The adapter counts jobs in flight; am_unbind_jolt_jobs() waits for the count to reach zero before destroying it, or a worker can still be running a Jolt job.",
+    "Translation units that derive from Jolt classes compile with -fno-rtti (MSVC /GR-); Jolt's build fragment sets this on the glue target."
+  ]
+}

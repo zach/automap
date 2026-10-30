@@ -1,0 +1,88 @@
+{
+  "contract": "math-types",
+  "version": "1.0.0",
+  "description": "Vector, quaternion and matrix types at library boundaries, and the adapters that convert between them.",
+  "facts": {
+    "types": {
+      "description": "The library's public math types.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "scalar"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "scalar": {
+              "enum": [
+                "float",
+                "double",
+                "int32"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "position_precision": {
+      "description": "The scalar type world positions use.",
+      "schema": {
+        "enum": [
+          "float",
+          "double"
+        ]
+      }
+    },
+    "handedness": {
+      "required": false,
+      "description": "Coordinate convention, when the library has one.",
+      "schema": {
+        "type": "string"
+      }
+    }
+  },
+  "choices": {
+    "position_precision": {
+      "description": "World-position precision for the composition.",
+      "schema": {
+        "enum": [
+          "float",
+          "double"
+        ]
+      },
+      "default": "float"
+    }
+  },
+  "rules": [
+    {
+      "id": "math-types.precision-agrees",
+      "kind": "probed",
+      "applies_to": "composition",
+      "text": "Every library that exposes world positions uses the composition's position_precision.",
+      "failure_code": "PRECISION_MISMATCH(<library>)",
+      "seeded_violation": {
+        "description": "Choose double position precision while a library uses float.",
+        "patch": "1.0.0/seeded/math-types.precision-agrees.json-patch"
+      }
+    },
+    {
+      "id": "math-types.adapters-round-trip",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "The library's adapters to the composition's math library convert a set of sample values there and back without loss.",
+      "failure_code": "ADAPTER_LOSSY(<library>)"
+    },
+    {
+      "id": "math-types.conventions-stated",
+      "kind": "guidance",
+      "applies_to": "library",
+      "text": "Each adapter states the handedness and up-axis conversion it applies."
+    }
+  ],
+  "shared_interface": null
+}

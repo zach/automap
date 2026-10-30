@@ -1,0 +1,108 @@
+{
+  "id": "dear-imgui",
+  "name": "Dear ImGui",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "restricted",
+    "source": "https://github.com/ocornut/imgui/blob/master/.github/pull_request_template.md"
+  },
+  "slots": [
+    "tools-ui"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/ocornut/imgui"
+  },
+  "versions": [
+    {
+      "version": "1.93.0",
+      "released": "2026-10-14",
+      "pin": {
+        "tag": "v1.93.0-docking",
+        "commit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "content_hash": "sha512:00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "imgui",
+          "registry": "curated"
+        }
+      },
+      "cmake": {
+        "package": "imgui",
+        "targets": [
+          "imgui::imgui"
+        ]
+      },
+      "variants": [
+        {
+          "name": "docking",
+          "build_options": {
+            "vcpkg_features": "docking-experimental,sdl3-binding,sdlgpu3-binding"
+          },
+          "description": "The docking branch, built with its SDL3 platform and SDL_GPU renderer backends from the same commit."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "ImGui::SetAllocatorFunctions",
+              "signature": "void(ImGuiMemAllocFunc, ImGuiMemFreeFunc, void*)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "ImGui::CreateContext()",
+          "query": "ImGui::GetAllocatorFunctions"
+        },
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": "compile-time IM_ASSERT only",
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "dear-imgui:SetAllocatorFunctions"
+            },
+            {
+              "phase": "systems",
+              "step": "dear-imgui:CreateContext"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "dear-imgui:DestroyContext"
+            }
+          ],
+          "reloadable": true
+        },
+        "build-flags": {
+          "abi_defines": [
+            "IMGUI_USER_CONFIG",
+            "IMGUI_DISABLE_DEFAULT_ALLOCATORS"
+          ],
+          "self_check": "IMGUI_CHECKVERSION()",
+          "min_language_standard": "C++11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "runs wherever its backends run",
+          "web": true
+        }
+      }
+    }
+  ]
+}

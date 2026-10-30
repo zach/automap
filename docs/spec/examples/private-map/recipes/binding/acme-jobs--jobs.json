@@ -1,0 +1,61 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "acme-jobs",
+    "contract": "jobs",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "acme-jobs": {
+      "versions": [
+        "2.3.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-jobs--jobs/acme_scheduler.h",
+      "role": "glue"
+    },
+    {
+      "path": "acme-jobs--jobs/acme_scheduler.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "acme-jobs--jobs/acme_jobs_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "jobs",
+      "when": "init",
+      "call": "am_bind_acme_jobs",
+      "after": [
+        "acme-jobs:Scheduler::start"
+      ]
+    },
+    {
+      "phase": "jobs",
+      "when": "shutdown",
+      "call": "am_unbind_acme_jobs"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "jobs.routed-through-interface",
+      "check": "am_probe_acme_jobs(): submits 1,000 jobs with dependencies through am::jobs and checks each ran exactly once, on a thread acme::jobs::Scheduler reports as its worker, after its dependencies.",
+      "seeded_violation": {
+        "description": "Make the glue's submit run the job inline on the calling thread instead of handing it to acme::jobs::Scheduler.",
+        "patch": "acme-jobs--jobs/seeded/jobs.routed-through-interface.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "acme-jobs fills the jobs slot, so it implements the shared scheduler interface (the manifest's jobs.scheduler choice is jobs-slot) and the reference thread pool is not written.",
+    "The worker count comes from the choices header, never from a constant in this glue."
+  ]
+}
