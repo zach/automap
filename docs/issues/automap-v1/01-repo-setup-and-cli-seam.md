@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `AGENTS.md` is the one instruction file: build and test commands, the repo layout, and the working rules that still apply; `CLAUDE.md` is a single `@AGENTS.md` import line (ADR-0066).
-- [ ] The published JSON Schemas are in the repo and embedded in the binary.
-- [ ] `automap verify --json` in a directory with no manifest exits with status 2 and prints a CLI result with `ok: false` and failure code `NO_MANIFEST`.
-- [ ] A test harness builds the binary, runs it in a temporary copy of a fixture repo, compares its JSON output and written files with golden files, and validates every JSON result against the CLI result schema.
-- [ ] Go tests run in CI on Linux on every push.
+- [x] `AGENTS.md` is the one instruction file: build and test commands, the repo layout, and the working rules that still apply; `CLAUDE.md` is a single `@AGENTS.md` import line (ADR-0066).
+- [x] The published JSON Schemas are in the repo and embedded in the binary.
+- [x] `automap verify --json` in a directory with no manifest exits with status 2 and prints a CLI result with `ok: false` and failure code `NO_MANIFEST`.
+- [x] A test harness builds the binary, runs it in a temporary copy of a fixture repo, compares its JSON output and written files with golden files, and validates every JSON result against the CLI result schema.
+- [x] Go tests run in CI on Linux on every push.
