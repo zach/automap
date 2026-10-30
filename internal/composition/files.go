@@ -82,8 +82,16 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 
 	for _, rid := range Recipes(m, man) {
 		r := m.Recipes[rid]
+		entry := GlueEntryFor(man, r)
 		for _, g := range r.ReferenceGlue {
+			// Glue goes where the manifest records it, so a developer's
+			// moved glue is found where they put it.
 			dst := path.Join(GlueDirFor(r), path.Base(g.Path))
+			for _, f := range entry.Files {
+				if path.Base(f) == path.Base(g.Path) {
+					dst = f
+				}
+			}
 			if g.Role == "build-fragment" {
 				dst = path.Join("cmake/automap", r.Subject.Library+".cmake")
 			}

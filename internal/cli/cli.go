@@ -19,6 +19,8 @@ commands:
                                              create a composition in the current directory, then verify it
   show <library|slot|contract|recipe> <id>   show one map entry and its facts
   find [<query>] [--slot <slot>]             search the map's libraries
+  extend <library>[:<variant>] [--slot <slot>]... [--no-verify]
+                                             add a library to the composition, then verify it
   verify [--seed <rule>[:<library>]]         build the composition, run its smoke test and probes, write evidence;
                                              with --seed, check a probe catches its seeded violation
 
@@ -36,6 +38,7 @@ type command struct {
 
 var commands = map[string]command{
 	"start":  {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
+	"extend": {bools: []string{"json", "no-verify"}, values: []string{"map", "slot"}, run: extend},
 	"verify": {bools: []string{"json"}, values: []string{"map", "platform", "seed"}, run: verifyCmd},
 	"show":   {bools: []string{"json"}, values: []string{"map"}, run: show},
 	"find":   {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
