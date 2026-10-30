@@ -1,0 +1,8 @@
+--- a/stub-window.cmake
++++ b/stub-window.cmake
+@@ -2,4 +2,4 @@
+ find_package(StubWindow CONFIG REQUIRED)
+ 
+ target_link_libraries(automap_glue PUBLIC StubWindow::StubWindow)
+-set_target_properties(automap_glue PROPERTIES CXX_STANDARD ${AUTOMAP_CXX_STANDARD} CXX_STANDARD_REQUIRED ON)
++set_target_properties(automap_glue PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)

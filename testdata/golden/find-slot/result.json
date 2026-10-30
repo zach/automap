@@ -1,0 +1,18 @@
+{
+  "command": "find",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "1 library fills tools-ui: stub-ui 1.0.0.",
+  "warnings": [],
+  "failures": [],
+  "entries": [
+    {
+      "id": "stub-ui",
+      "kind": "library",
+      "variants": [
+        "default"
+      ],
+      "version": "1.0.0"
+    }
+  ]
+}

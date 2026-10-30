@@ -1,0 +1,27 @@
+{
+  "command": "show",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "slot windowing, from automap.",
+  "warnings": [],
+  "failures": [],
+  "entries": [
+    {
+      "definition": {
+        "id": "windowing",
+        "description": "Creates and manages OS windows and the main loop's event pump.",
+        "examples": [
+          "stub-window"
+        ]
+      },
+      "id": "windowing",
+      "kind": "slot",
+      "libraries": [
+        "stub-window"
+      ],
+      "maps": [
+        "automap"
+      ]
+    }
+  ]
+}

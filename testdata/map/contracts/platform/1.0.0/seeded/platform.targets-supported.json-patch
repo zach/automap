@@ -1,0 +1,7 @@
+[
+  {
+    "op": "add",
+    "path": "/platforms/-",
+    "value": "linux-arm64-gcc"
+  }
+]

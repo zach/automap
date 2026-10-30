@@ -1,0 +1,71 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "stub-window"
+  },
+  "applies_to": {
+    "stub-window": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default",
+        "wide-events"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-window/stub-window.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "stub-window/stub_window_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "stub-window/stub_window_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "platform",
+      "when": "init",
+      "call": "am_stub_window_setup_init",
+      "steps": [
+        "stub-window:init",
+        "stub-window:open_window"
+      ],
+      "provides": [
+        {
+          "name": "stub-window.window",
+          "type": "stub_window*"
+        }
+      ]
+    },
+    {
+      "phase": "platform",
+      "when": "shutdown",
+      "call": "am_stub_window_setup_shutdown",
+      "steps": [
+        "stub-window:close_window",
+        "stub-window:shutdown"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "build-flags.language-settings-agree",
+      "check": "The build-flags probe compares the C++ standard each glue target compiles with against the composition's choice.",
+      "seeded_violation": {
+        "description": "Compile stub-window's glue as C++17 while the composition chooses C++20.",
+        "patch": "stub-window/seeded/build-flags.language-settings-agree.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The build fragment calls find_package(StubWindow CONFIG REQUIRED) and links StubWindow::StubWindow.",
+    "Headless runs need no different build: verify sets STUB_WINDOW_HEADLESS=1."
+  ]
+}

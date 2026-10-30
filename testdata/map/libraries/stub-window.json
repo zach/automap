@@ -1,0 +1,136 @@
+{
+  "id": "stub-window",
+  "name": "Stub Window",
+  "license": {
+    "spdx": "MIT-0",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "allowed",
+    "source": "testdata/map/README.md"
+  },
+  "slots": [
+    "windowing",
+    "input"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/zach/automap/tree/main/testdata/map/ports/stub-window"
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "released": "2026-01-15",
+      "pin": {
+        "tag": "v1.0.0",
+        "commit": "1111111111111111111111111111111111111111",
+        "content_hash": "sha512:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "stub-window",
+          "registry": "automap"
+        }
+      },
+      "cmake": {
+        "package": "StubWindow",
+        "targets": [
+          "StubWindow::StubWindow"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "The stub as built by default."
+        },
+        {
+          "name": "wide-events",
+          "build_options": {
+            "vcpkg_features": "wide-events"
+          },
+          "description": "64-bit event ids, an ABI-affecting define consumers must match.",
+          "facts": {
+            "build-flags": {
+              "abi_defines": [
+                "STUB_WINDOW_WIDE_EVENTS=1"
+              ]
+            }
+          }
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "stub_window_set_allocator",
+              "signature": "void(stub_window_alloc_fn, stub_window_free_fn)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "any other call into stub-window",
+          "query": "stub_window_get_allocator"
+        },
+        "diagnostics": {
+          "log_hook": "stub_window_set_log(stub_window_log_fn)",
+          "assert_hook": null,
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "stub-window:set_allocator"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "stub-window:set_log"
+            },
+            {
+              "phase": "platform",
+              "step": "stub-window:init"
+            },
+            {
+              "phase": "platform",
+              "step": "stub-window:open_window",
+              "after": [
+                "stub-window:init"
+              ]
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "platform",
+              "step": "stub-window:close_window"
+            },
+            {
+              "phase": "platform",
+              "step": "stub-window:shutdown",
+              "after": [
+                "stub-window:close_window"
+              ]
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": "stub_window_abi_check()",
+          "min_language_standard": "C11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "STUB_WINDOW_HEADLESS=1",
+          "web": false
+        }
+      }
+    }
+  ]
+}

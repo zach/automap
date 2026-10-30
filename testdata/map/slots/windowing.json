@@ -1,0 +1,7 @@
+{
+  "id": "windowing",
+  "description": "Creates and manages OS windows and the main loop's event pump.",
+  "examples": [
+    "stub-window"
+  ]
+}

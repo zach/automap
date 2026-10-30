@@ -1,0 +1,63 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-ui",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-ui": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-ui--allocation/stub_ui_allocation.h",
+      "role": "glue"
+    },
+    {
+      "path": "stub-ui--allocation/stub_ui_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "stub-ui--allocation/stub_ui_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_stub_ui_allocation",
+      "steps": [
+        "stub-ui:set_allocator"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "The facade's probe-build block tracking: a block stub-ui releases that the facade never allocated fails the rule as ALLOC_HOOK_LATE(stub-ui).",
+      "seeded_violation": {
+        "description": "Allocate through stub-ui before am_bind_stub_ui_allocation() installs the hooks.",
+        "patch": "stub-ui--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_stub_ui_allocation(): the facade's stub-ui counter rises across a smoke run.",
+      "seeded_violation": {
+        "description": "Remove the stub_ui_set_allocator call from am_bind_stub_ui_allocation().",
+        "patch": "stub-ui--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "stub_ui_set_allocator must run before any other call into stub-ui; the memory phase guarantees this."
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-ui",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-ui": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-ui--diagnostics/stub_ui_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "stub-ui--diagnostics/stub_ui_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_stub_ui_diagnostics",
+      "steps": [
+        "stub-ui:set_assert_handler"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_stub_ui_diagnostics(): a failed stub-ui assertion reaches the diagnostics facade.",
+      "seeded_violation": {
+        "description": "Remove the stub_ui_set_assert_handler call from am_bind_stub_ui_diagnostics().",
+        "patch": "stub-ui--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "stub-ui has no log hook; only its assertions are routed."
+  ]
+}

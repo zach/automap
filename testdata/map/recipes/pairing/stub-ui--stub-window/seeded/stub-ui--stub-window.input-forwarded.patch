@@ -1,0 +1,9 @@
+--- a/stub_ui_stub_window.cpp
++++ b/stub_ui_stub_window.cpp
+@@ -20,5 +20,5 @@
+ }
+ 
+ void am_pair_stub_ui_stub_window_event(const stub_window_event& event) {
+-    stub_ui_feed_event(event.id, event.x, event.y);
++    (void)event;
+ }

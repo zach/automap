@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sync"
+	"strings"
 
-	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zach/automap/schemas"
 )
 
@@ -32,7 +31,11 @@ type result struct {
 	Summary    string    `json:"summary"`
 	Warnings   []warning `json:"warnings"`
 	Failures   []failure `json:"failures"`
+	Entries    []entry   `json:"entries,omitempty"`
 }
+
+// entry is one map entry in a find or show result.
+type entry map[string]any
 
 type warning struct {
 	Code    string `json:"code"`
@@ -70,21 +73,13 @@ func (r *result) print(w io.Writer, asJSON bool) error {
 	if err != nil {
 		return err
 	}
-	schema, err := cliResultSchema()
-	if err != nil {
+	var doc any
+	if err := json.Unmarshal(out, &doc); err != nil {
 		return err
 	}
-	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(out))
-	if err != nil {
-		return err
-	}
-	if err := schema.Validate(doc); err != nil {
-		return fmt.Errorf("CLI result breaks the cli-result schema: %v\n%s", err, out)
+	if v := schemas.Validate("cli-result", doc); v != nil {
+		return fmt.Errorf("CLI result breaks the cli-result schema: %s\n%s", strings.Join(v, "; "), out)
 	}
 	_, err = w.Write(append(out, '\n'))
 	return err
 }
-
-var cliResultSchema = sync.OnceValues(func() (*jsonschema.Schema, error) {
-	return schemas.Compile("cli-result")
-})

@@ -1,0 +1,10 @@
+--- a/stub_ui_allocation.cpp
++++ b/stub_ui_allocation.cpp
+@@ -14,7 +14,6 @@
+ } // namespace
+ 
+ bool am_bind_stub_ui_allocation(am::Context&) {
+-    stub_ui_set_allocator(&allocator);
+     am::lifecycle::init_step("stub-ui:set_allocator");
+     return true;
+ }

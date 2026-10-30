@@ -1,0 +1,52 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "stub-window",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "stub-window": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default",
+        "wide-events"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-window--diagnostics/stub_window_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "stub-window--diagnostics/stub_window_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_stub_window_diagnostics",
+      "steps": [
+        "stub-window:set_log"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_stub_window_diagnostics(): a message stub-window logs reaches the diagnostics facade.",
+      "seeded_violation": {
+        "description": "Remove the stub_window_set_log call from am_bind_stub_window_diagnostics().",
+        "patch": "stub-window--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "stub-window logs through one function pointer with no user data."
+  ]
+}

@@ -1,0 +1,15 @@
+--- a/stub_ui_stub_window.cpp
++++ b/stub_ui_stub_window.cpp
+@@ -13,10 +13,10 @@
+ }
+ 
+ void am_pair_stub_ui_stub_window_shutdown(am::Context&) {
+-    stub_ui_disable_input();
+-    am::lifecycle::shutdown_step("stub-ui--stub-window:unroute_input");
+     stub_ui_detach();
+     am::lifecycle::shutdown_step("stub-ui--stub-window:detach");
++    stub_ui_disable_input();
++    am::lifecycle::shutdown_step("stub-ui--stub-window:unroute_input");
+ }
+ 
+ void am_pair_stub_ui_stub_window_event(const stub_window_event& event) {

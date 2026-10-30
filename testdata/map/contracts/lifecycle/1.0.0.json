@@ -1,0 +1,115 @@
+{
+  "contract": "lifecycle",
+  "version": "1.0.0",
+  "description": "Init and shutdown order across six fixed phases, and which libraries may live in a hot-reloadable module. Glue records each step, with its declared 'after' steps, through the probe harness.",
+  "phases": [
+    "memory",
+    "diagnostics",
+    "platform",
+    "jobs",
+    "systems",
+    "game"
+  ],
+  "facts": {
+    "init_steps": {
+      "description": "The library's init steps, each with its phase and the steps it must follow.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "step"
+          ],
+          "properties": {
+            "phase": {
+              "enum": [
+                "memory",
+                "diagnostics",
+                "platform",
+                "jobs",
+                "systems",
+                "game"
+              ]
+            },
+            "step": {
+              "type": "string"
+            },
+            "after": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "shutdown_steps": {
+      "description": "The library's shutdown steps.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "step"
+          ],
+          "properties": {
+            "phase": {
+              "enum": [
+                "memory",
+                "diagnostics",
+                "platform",
+                "jobs",
+                "systems",
+                "game"
+              ]
+            },
+            "step": {
+              "type": "string"
+            },
+            "after": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reloadable": {
+      "description": "Whether the library may live in a hot-reloadable module rather than the host.",
+      "schema": {
+        "type": "boolean"
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "lifecycle.init-order",
+      "kind": "probed",
+      "applies_to": "composition",
+      "text": "Init steps run in non-decreasing phase order, each after every step it declares in 'after', and every pairing ordering constraint holds.",
+      "failure_code": "INIT_ORDER(<step> before <step>)"
+    },
+    {
+      "id": "lifecycle.shutdown-reverse",
+      "kind": "probed",
+      "applies_to": "composition",
+      "text": "Shutdown steps run in non-increasing phase order, each after every step it declares in 'after', and every pairing ordering constraint holds.",
+      "failure_code": "SHUTDOWN_ORDER(<step> before <step>)"
+    },
+    {
+      "id": "lifecycle.reload-boundary",
+      "kind": "guidance",
+      "applies_to": "composition",
+      "text": "Libraries that are not reloadable stay in the host module; hooks with global state are re-installed after a reload."
+    }
+  ],
+  "shared_interface": null
+}

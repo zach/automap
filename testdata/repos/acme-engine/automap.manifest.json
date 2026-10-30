@@ -1,0 +1,138 @@
+{
+  "$schema": "https://github.com/zach/automap/schemas/manifest.schema.json",
+  "$comment": "The spec's Acme example, with its private maps copied into the repo by the test: private-map/ and private-map-nebula/.",
+  "format": "automap-manifest/1",
+  "map_release": "map-2026.10.29",
+  "build_backend": "vcpkg",
+  "platforms": [
+    "windows-x64-msvc",
+    "linux-x64-clang",
+    "nebula-arm64-clang"
+  ],
+  "executable": {
+    "target": "acme_game"
+  },
+  "private_maps": [
+    {
+      "id": "acme",
+      "location": "private-map"
+    },
+    {
+      "id": "acme-nebula",
+      "location": "private-map-nebula",
+      "platforms": [
+        "nebula-arm64-clang"
+      ]
+    }
+  ],
+  "slots": {
+    "windowing": "sdl3",
+    "input": "sdl3",
+    "gpu": "acme-renderer",
+    "physics-3d": "jolt",
+    "jobs": "acme-jobs"
+  },
+  "variants": {
+    "sdl3": {
+      "default": "acme-patched",
+      "nebula-arm64-clang": "nebula"
+    },
+    "jolt": "default",
+    "acme-jobs": "default",
+    "acme-renderer": {
+      "default": "default",
+      "nebula-arm64-clang": "nebula"
+    }
+  },
+  "choices": {
+    "allocation": {
+      "allocator": "system"
+    },
+    "jobs": {
+      "scheduler": "jobs-slot",
+      "workers": 7
+    },
+    "build-flags": {
+      "cxx_standard": 20
+    },
+    "math-types": {
+      "position_precision": "float"
+    }
+  },
+  "glue": {
+    "interfaces": "engine/glue/automap",
+    "choices_header": "engine/glue/automap/choices.h",
+    "startup": {
+      "developer_owned": [
+        "engine/core/engine_main.cpp"
+      ]
+    },
+    "bindings": {
+      "sdl3/allocation": [
+        "engine/glue/sdl3/sdl3_allocation.h",
+        "engine/glue/sdl3/sdl3_allocation.cpp",
+        "engine/glue/sdl3/sdl3_allocation_probe.cpp"
+      ],
+      "sdl3/diagnostics": [
+        "engine/glue/sdl3/sdl3_diagnostics.cpp",
+        "engine/glue/sdl3/sdl3_diagnostics_probe.cpp"
+      ],
+      "jolt/allocation": [
+        "engine/glue/jolt/jolt_allocation.cpp",
+        "engine/glue/jolt/jolt_allocation_probe.cpp"
+      ],
+      "jolt/diagnostics": [
+        "engine/glue/jolt/jolt_diagnostics.cpp",
+        "engine/glue/jolt/jolt_diagnostics_probe.cpp"
+      ],
+      "jolt/jobs": [
+        "engine/glue/jolt/jolt_job_system.h",
+        "engine/glue/jolt/jolt_job_system.cpp",
+        "engine/glue/jolt/jolt_jobs_probe.cpp"
+      ],
+      "acme-jobs/allocation": [
+        "engine/glue/acme/acme_allocation.cpp",
+        "engine/glue/acme/acme_allocation_probe.cpp"
+      ],
+      "acme-jobs/diagnostics": [
+        "engine/glue/acme/acme_diagnostics.cpp",
+        "engine/glue/acme/acme_diagnostics_probe.cpp"
+      ],
+      "acme-jobs/jobs": [
+        "engine/glue/acme/acme_scheduler.h",
+        "engine/glue/acme/acme_scheduler.cpp",
+        "engine/glue/acme/acme_jobs_probe.cpp"
+      ],
+      "acme-renderer/allocation": [
+        "engine/glue/acme/renderer_allocation.cpp",
+        "engine/glue/acme/renderer_allocation_probe.cpp"
+      ],
+      "acme-renderer/diagnostics": [
+        "engine/glue/acme/renderer_diagnostics.cpp",
+        "engine/glue/acme/renderer_diagnostics_probe.cpp"
+      ]
+    },
+    "pairings": {
+      "acme-renderer/sdl3": [
+        "engine/platform/window.cpp",
+        "engine/glue/acme/acme_sdl3_surface_probe.cpp"
+      ]
+    },
+    "setup": {
+      "sdl3": [
+        "engine/glue/sdl3/sdl3_setup.h",
+        "engine/glue/sdl3/sdl3_setup.cpp"
+      ],
+      "jolt": [
+        "engine/glue/jolt/jolt_setup.h",
+        "engine/glue/jolt/jolt_setup.cpp"
+      ],
+      "acme-jobs": {
+        "not_applicable": "Acme's engine constructs its scheduler itself; am_bind_acme_jobs() adopts the running instance."
+      },
+      "acme-renderer": {
+        "not_applicable": "Acme's engine creates its renderer device itself in engine/platform/window.cpp."
+      }
+    }
+  }
+}

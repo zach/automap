@@ -1,0 +1,10 @@
+--- a/stub_window_diagnostics.cpp
++++ b/stub_window_diagnostics.cpp
+@@ -9,7 +9,6 @@
+ } // namespace
+ 
+ bool am_bind_stub_window_diagnostics(am::Context&) {
+-    stub_window_set_log(&forward_log);
+     am::lifecycle::init_step("stub-window:set_log");
+     return true;
+ }
