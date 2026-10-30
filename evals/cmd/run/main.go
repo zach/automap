@@ -31,9 +31,14 @@ type Task struct {
 	// Repo is the starting repo, a directory beside task.json, or "" for an
 	// empty repo.
 	Repo string `json:"repo,omitempty"`
-	// Pass is what grading requires of automap verify --json.
+	// Setup is automap invocations that bring the repo to the task's
+	// starting point before the session, such as starting the testbed.
+	Setup [][]string `json:"setup,omitempty"`
+	// Pass is what grading requires: the level automap verify --json
+	// reports, and the library each named slot holds in the manifest.
 	Pass struct {
-		Level string `json:"level"`
+		Level string            `json:"level"`
+		Slots map[string]string `json:"slots,omitempty"`
 	} `json:"pass"`
 	TimeoutMinutes int `json:"timeout_minutes"`
 }
@@ -195,6 +200,14 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 		"AUTOMAP_MAP="+mapDir,
 		"VCPKG_DEFAULT_BINARY_CACHE="+cache,
 	)
+	for _, args := range t.Setup {
+		setup := exec.Command(automap, args...)
+		setup.Dir, setup.Env = repo, env
+		if out, err := setup.CombinedOutput(); err != nil {
+			r.Status, r.Reason = "fail", fmt.Sprintf("setup automap %s: %v\n%s", strings.Join(args, " "), err, out)
+			return r, ""
+		}
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t.TimeoutMinutes)*time.Minute)
 	defer cancel()
 	began := time.Now()
@@ -235,20 +248,36 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 
 	// Grade through the CLI, as the developer would: verify must reach the
 	// task's level.
-	grade := exec.Command(automap, "verify", "--json")
-	grade.Dir, grade.Env = repo, env
-	out, _ := grade.Output()
+	verify := exec.Command(automap, "verify", "--json")
+	verify.Dir, verify.Env = repo, env
+	out, _ := verify.Output()
 	var result struct {
 		Level   string `json:"level"`
 		Summary string `json:"summary"`
 	}
 	json.Unmarshal(out, &result)
 	r.Level = result.Level
-	if result.Level == t.Pass.Level {
-		r.Status = "pass"
-		return r, used
+	var manifest struct {
+		Slots map[string]string `json:"slots"`
 	}
-	r.Status = "fail"
-	r.Reason = fmt.Sprintf("verify reports %q, want %s: %s", result.Level, t.Pass.Level, result.Summary)
+	if raw, err := os.ReadFile(filepath.Join(repo, "automap.manifest.json")); err == nil {
+		json.Unmarshal(raw, &manifest)
+	}
+	r.Status, r.Reason = grade(t, result.Level, result.Summary, manifest.Slots)
 	return r, used
+}
+
+// grade judges a session's outcome: verify reached the task's level, and
+// the manifest puts each library the task names in its slot. It is a pure
+// function.
+func grade(t *Task, level, summary string, slots map[string]string) (status, reason string) {
+	if level != t.Pass.Level {
+		return "fail", fmt.Sprintf("verify reports %q, want %s: %s", level, t.Pass.Level, summary)
+	}
+	for slot, lib := range t.Pass.Slots {
+		if slots[slot] != lib {
+			return "fail", fmt.Sprintf("the manifest's %s slot holds %q, want %s", slot, slots[slot], lib)
+		}
+	}
+	return "pass", ""
 }
