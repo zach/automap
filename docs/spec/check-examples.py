@@ -295,7 +295,12 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
             fail(lock_path, f"{where}: {lib}: pinned commit differs from the map")
         if pin["license"] != libraries[lib][1]["license"]["spdx"]:
             fail(lock_path, f"{where}: {lib}: license differs from the map")
-        if pin["registry"]["kind"] == "private" and pin["registry"].get("id") not in private:
+        source = libraries[lib][1].get("source", {})
+        if "path" in pin and (source.get("kind") != "path" or pin["path"] != source.get("path")):
+            fail(lock_path, f"{where}: {lib}: only a path library is pinned by path, and the path must match the map")
+        if "registry" in pin and source.get("kind") == "path":
+            fail(lock_path, f"{where}: {lib}: a path library has no registry")
+        if pin.get("registry", {}).get("kind") == "private" and pin["registry"].get("id") not in private:
             fail(lock_path, f"{where}: {lib}: private registry {pin['registry'].get('id')} is not a private map of this composition")
         return v
 

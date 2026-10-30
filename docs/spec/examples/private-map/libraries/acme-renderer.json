@@ -21,12 +21,6 @@
     {
       "version": "0.9.4",
       "released": "2026-10-12",
-      "build_backend": {
-        "vcpkg": {
-          "port": "acme-renderer",
-          "registry": "private"
-        }
-      },
       "cmake": {
         "package": "AcmeRenderer",
         "targets": [

@@ -96,7 +96,7 @@
           "type": "string"
         }
       },
-      "description": "Where the library's source comes from; 'path' for a directory in the developer's repo."
+      "description": "Where the library's source comes from. 'path' is a directory in the developer's repo, added with add_subdirectory; it has no pin or build backend."
     },
     "console_variants": {
       "type": "array",
@@ -133,7 +133,6 @@
       "required": [
         "version",
         "released",
-        "build_backend",
         "cmake",
         "variants",
         "facts"
@@ -199,7 +198,8 @@
                 }
               }
             }
-          }
+          },
+          "description": "Required unless the library's source kind is path; a path library joins the build as ordinary CMake targets in the developer's repo."
         },
         "cmake": {
           "type": "object",
@@ -334,7 +334,8 @@
           "versions": {
             "items": {
               "required": [
-                "pin"
+                "pin",
+                "build_backend"
               ]
             }
           }

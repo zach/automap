@@ -4,7 +4,7 @@
     {
       "name": "automap.lock.json",
       "digest": {
-        "sha256": "8fe1e09fe52425121f63190f4138056bdcbd4e87293c04d16ef51eb95ec84547"
+        "sha256": "a853916eac6d4556875b50e2e8775f6a5312f881c6d68209fdcaa4f81d571aeb"
       }
     }
   ],
@@ -12,7 +12,7 @@
   "predicate": {
     "subject_kind": "composition",
     "subject_detail": {
-      "lock_hash": "sha256:7c2cd8c73ad11acf4ef99f914373a98654021603b457bac8f5c4cd00ed3100be"
+      "lock_hash": "sha256:ff54e2b0299fb5907ecf1806366ed4c039124e7d423ff9733b580931b386ade5"
     },
     "platform": "nebula-arm64-clang",
     "level": "probed",

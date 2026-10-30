@@ -21,12 +21,6 @@
     {
       "version": "2.3.0",
       "released": "2026-10-20",
-      "build_backend": {
-        "vcpkg": {
-          "port": "acme-jobs",
-          "registry": "private"
-        }
-      },
       "cmake": {
         "package": "AcmeJobs",
         "targets": [

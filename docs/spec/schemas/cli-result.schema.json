@@ -21,6 +21,8 @@
         "adopt",
         "eject",
         "verify",
+        "fetch",
+        "vendor",
         "find",
         "show"
       ]

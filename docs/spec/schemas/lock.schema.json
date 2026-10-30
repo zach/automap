@@ -53,7 +53,6 @@
         "required": [
           "version",
           "variant",
-          "registry",
           "content_hash",
           "license"
         ],
@@ -111,8 +110,24 @@
             "additionalProperties": {
               "$ref": "#/$defs/pin"
             }
+          },
+          "path": {
+            "type": "string",
+            "description": "For a library whose source is a directory in the developer's repo, in place of a registry."
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "registry"
+            ]
+          },
+          {
+            "required": [
+              "path"
+            ]
+          }
+        ]
       }
     },
     "contracts": {
@@ -150,7 +165,6 @@
       "required": [
         "version",
         "variant",
-        "registry",
         "content_hash",
         "license"
       ],
@@ -198,8 +212,24 @@
         "license": {
           "type": "string",
           "description": "SPDX expression from the map's license fact, carried so a license report is always possible."
+        },
+        "path": {
+          "type": "string",
+          "description": "For a library whose source is a directory in the developer's repo, in place of a registry."
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "registry"
+          ]
+        },
+        {
+          "required": [
+            "path"
+          ]
+        }
+      ]
     }
   }
 }
