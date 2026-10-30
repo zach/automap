@@ -1,0 +1,48 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "stub-physics"
+  },
+  "applies_to": {
+    "stub-physics": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stub-physics/stub-physics.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "stub-physics/stub_physics_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_stub_physics_setup_init",
+      "steps": [
+        "stub-physics:create_world"
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_stub_physics_setup_shutdown",
+      "steps": [
+        "stub-physics:destroy_world"
+      ]
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(StubPhysics CONFIG REQUIRED) and links StubPhysics::StubPhysics."
+  ]
+}

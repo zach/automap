@@ -36,7 +36,11 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 				continue
 			}
 			if rule.AppliesTo != "library" {
-				out = append(out, Expected{Rule: rule, Platforms: rule.Platforms})
+				e := Expected{Rule: rule, Platforms: rule.Platforms}
+				if rule.ID == "build-flags.abi-defines-match" && !declaresABIDefines(m, man) {
+					e.NotApplicable = "No library in the composition declares an ABI-affecting define."
+				}
+				out = append(out, e)
 				continue
 			}
 			for _, lib := range man.Libraries() {
@@ -62,6 +66,22 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 		}
 	}
 	return out
+}
+
+// declaresABIDefines reports whether any library in the composition, in its
+// chosen variant, declares an ABI-affecting define.
+func declaresABIDefines(m *mapmodel.Map, man *composition.Manifest) bool {
+	for _, lib := range man.Libraries() {
+		v := m.Libraries[lib].Newest()
+		facts := v.Facts["build-flags"]
+		if variant := v.Variant(man.Variants[lib].Default); variant != nil && variant.Facts["build-flags"] != nil {
+			facts = variant.Facts["build-flags"]
+		}
+		if defines, ok := facts["abi_defines"].([]any); ok && len(defines) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // Observed is what a probe run reported, and the results verify computed
@@ -179,6 +199,15 @@ func DeclaredLifecycle(m *mapmodel.Map, man *composition.Manifest) Lifecycle {
 				}
 				add(steps, name, phase, after)
 			}
+		}
+	}
+	for _, c := range composition.InterfaceCalls(m, man) {
+		steps := lc.Init
+		if c.When == "shutdown" {
+			steps = lc.Shutdown
+		}
+		for _, s := range c.Steps {
+			add(steps, s, c.Phase, c.After)
 		}
 	}
 	for _, rid := range composition.Recipes(m, man) {

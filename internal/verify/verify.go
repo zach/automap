@@ -91,8 +91,9 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	os.Remove(in(paths.results))
 
 	env := headlessEnv(m, man)
-	var built, smoked, probesRan bool
-	if err := build(opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target, false); err != nil {
+	var built, smoked, probesRan, tsanRan bool
+	var setAside []TSanReport
+	if err := build(opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error(), DetailsFile: paths.buildLog})
 	} else {
 		built = true
@@ -107,7 +108,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	reached := Level(built, smoked, false, nil)
 	obs := Observed{Level: reached}
 	if smoked {
-		if err := build(opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, true); err != nil {
+		if err := build(opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
 			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
 		} else {
 			err := runExecutable(opts.Root, paths.probeBuild, paths.probeLog, man.Executable.Target, env, paths.results)
@@ -124,6 +125,11 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 				obs.Computed = append(CheckLifecycle(DeclaredLifecycle(m, man), harness.InitSteps, harness.ShutdownSteps), CheckTargets(m, man))
 				if err != nil {
 					out.Failures = append(out.Failures, Failure{Code: "PROBE_FAILED", Message: "The probe run didn't exit cleanly: " + err.Error(), DetailsFile: paths.probeLog})
+				}
+				if rule := expectedRule(m, man, TSanRule); rule != nil && slices.Contains(rule.Platforms, platform) {
+					result, aside := runTSan(opts.Root, platform, man.Executable.Target, env)
+					obs.Computed = append(obs.Computed, result)
+					tsanRan, setAside = true, aside
 				}
 			}
 		}
@@ -155,6 +161,8 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 		Env:       env,
 		Time:      time.Now().UTC(),
 		Results:   out.Results,
+		TSan:      tsanRan,
+		SetAside:  setAside,
 	})
 	if err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "EVIDENCE_FAILED", Message: err.Error()})
@@ -168,6 +176,59 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 		out.Failures = append(out.Failures, Failure{Code: "EVIDENCE_FAILED", Message: err.Error()})
 	}
 	return out
+}
+
+// tsanProcedure is the ThreadSanitizer run, as the jobs contract states it.
+const tsanProcedure = "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+
+// expectedRule finds a probed rule that applies to the composition.
+func expectedRule(m *mapmodel.Map, man *composition.Manifest, id string) *mapmodel.Rule {
+	for _, e := range ExpectedRules(m, man) {
+		if e.Rule.ID == id {
+			return &e.Rule
+		}
+	}
+	return nil
+}
+
+// runTSan builds the composition with ThreadSanitizer in its own directory,
+// runs it with --probe, and judges every report by the frame rule
+// (ADR-0073): a report fails the rule when a frame of either access stack
+// is in code the composition builds; the others are set aside.
+func runTSan(root, platform, target string, env []string) (Result, []TSanReport) {
+	r := Result{Rule: TSanRule}
+	dir := path.Join("build/automap", platform+"-tsan")
+	buildLog := path.Join("build/automap", "tsan-build-"+platform+".log")
+	runLog := path.Join("build/automap", "tsan-"+platform+".log")
+	flags := "-fsanitize=thread -g"
+	if err := build(root, dir, buildLog, platform, target, "-DAUTOMAP_PROBE=ON",
+		"-DCMAKE_C_FLAGS="+flags, "-DCMAKE_CXX_FLAGS="+flags,
+		"-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=thread", "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=thread"); err != nil {
+		r.Status, r.Reason = "unverifiable", "The ThreadSanitizer build failed; "+buildLog+" has the details."
+		return r, nil
+	}
+	results := path.Join("build/automap", "probe-results-tsan-"+platform+".json")
+	stderr, err := runCapturing(root, dir, runLog, target, append(slices.Clone(env), "TSAN_OPTIONS=halt_on_error=0:exitcode=66"), results)
+	reports := ParseTSan(stderr, target)
+	if err != nil && len(reports) == 0 {
+		r.Status, r.Reason = "unverifiable", "The ThreadSanitizer run didn't complete: "+err.Error()
+		return r, nil
+	}
+	var aside []TSanReport
+	for _, rep := range reports {
+		if !rep.Counts {
+			aside = append(aside, rep)
+			continue
+		}
+		if r.Status != "fail" {
+			r.Status, r.FailureCode = "fail", "TSAN_REPORT("+rep.Summary+")"
+			r.Reason = "ThreadSanitizer reported " + rep.Summary + " with a frame in code the composition builds; " + runLog + " has the report."
+		}
+	}
+	if r.Status == "" {
+		r.Status = "pass"
+	}
+	return r, aside
 }
 
 // harnessResults is the probe harness's results file (SPEC §5.6).
@@ -190,8 +251,9 @@ func readResults(file string) (*harnessResults, error) {
 }
 
 // build configures and builds the executable through CMake with vcpkg's
-// toolchain, logging to logFile. A probe build defines AUTOMAP_PROBE.
-func build(root, buildDir, logFile, platform, target string, probe bool) error {
+// toolchain, logging to logFile, with extra configure arguments such as
+// -DAUTOMAP_PROBE=ON for a probe build.
+func build(root, buildDir, logFile, platform, target string, extra ...string) error {
 	vcpkg := os.Getenv("VCPKG_ROOT")
 	if vcpkg == "" {
 		return errors.New("VCPKG_ROOT isn't set: set it to the root of a vcpkg installation")
@@ -204,9 +266,7 @@ func build(root, buildDir, logFile, platform, target string, probe bool) error {
 	configure := []string{"-S", root, "-B", filepath.Join(root, filepath.FromSlash(buildDir)), "-G", "Ninja",
 		"-DCMAKE_BUILD_TYPE=Debug",
 		"-DCMAKE_TOOLCHAIN_FILE=" + filepath.Join(vcpkg, "scripts", "buildsystems", "vcpkg.cmake")}
-	if probe {
-		configure = append(configure, "-DAUTOMAP_PROBE=ON")
-	}
+	configure = append(configure, extra...)
 	cmdEnv := os.Environ()
 	if strings.HasSuffix(platform, "-clang") {
 		configure = append(configure, "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++")
@@ -226,14 +286,21 @@ func build(root, buildDir, logFile, platform, target string, probe bool) error {
 // runExecutable runs the executable headless for SmokeFrames frames, with
 // --probe <results> when results isn't empty, and checks it exits cleanly.
 func runExecutable(root, buildDir, logFile, target string, env []string, results string) error {
+	_, err := runCapturing(root, buildDir, logFile, target, env, results)
+	return err
+}
+
+// runCapturing runs the executable as runExecutable does and also returns
+// what it wrote to stderr.
+func runCapturing(root, buildDir, logFile, target string, env []string, results string) (string, error) {
 	log, err := os.Create(filepath.Join(root, filepath.FromSlash(logFile)))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer log.Close()
 	exe, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(buildDir), target))
 	if err != nil {
-		return err
+		return "", err
 	}
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
@@ -244,7 +311,7 @@ func runExecutable(root, buildDir, logFile, target string, env []string, results
 	if results != "" {
 		abs, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(results)))
 		if err != nil {
-			return err
+			return "", err
 		}
 		args = append(args, "--probe", abs)
 	}
@@ -259,15 +326,15 @@ func runExecutable(root, buildDir, logFile, target string, env []string, results
 	err = cmd.Run()
 	log.Write(stderr.Bytes())
 	if ctx.Err() != nil {
-		return fmt.Errorf("%s ran %d frames for longer than %s", target, SmokeFrames, smokeTimeout)
+		return stderr.String(), fmt.Errorf("%s ran %d frames for longer than %s", target, SmokeFrames, smokeTimeout)
 	}
 	if err != nil {
 		if code := initFailed.FindString(stderr.String()); code != "" {
-			return fmt.Errorf("%s didn't start: %s (%v)", target, code, err)
+			return stderr.String(), fmt.Errorf("%s didn't start: %s (%v)", target, code, err)
 		}
-		return fmt.Errorf("%s didn't run %d headless frames and shut down cleanly: %v", target, SmokeFrames, err)
+		return stderr.String(), fmt.Errorf("%s didn't run %d headless frames and shut down cleanly: %v", target, SmokeFrames, err)
 	}
-	return nil
+	return stderr.String(), nil
 }
 
 var initFailed = regexp.MustCompile(`INIT_FAILED\([^)]*\)`)
@@ -318,6 +385,8 @@ type EvidenceInput struct {
 	Env       []string
 	Time      time.Time
 	Results   []Result
+	TSan      bool         // whether a ThreadSanitizer run happened
+	SetAside  []TSanReport // its reports wholly outside the composition's code
 }
 
 // Evidence is the composition's evidence for one run: an in-toto v1
@@ -340,6 +409,9 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 		"environment": environment,
 		"sanitizers":  map[string]string{},
 	}
+	if in.TSan {
+		conditions["sanitizers"] = map[string]string{"thread": tsanProcedure}
+	}
 	if img := os.Getenv("ImageOS"); img != "" {
 		conditions["runner_image"] = img + " " + os.Getenv("ImageVersion")
 	}
@@ -358,6 +430,14 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 			"results":        in.Results,
 			"verifier":       map[string]any{"kind": "developer-local", "id": "local", "signed": false},
 		},
+	}
+	if len(in.SetAside) > 0 {
+		var aside []map[string]string
+		for _, r := range in.SetAside {
+			aside = append(aside, map[string]string{"tool": "ThreadSanitizer", "summary": r.Summary,
+				"reason": "Every frame of both access stacks is in code the composition doesn't build: " + strings.Join(r.Modules, ", ") + "."})
+		}
+		statement["predicate"].(map[string]any)["set_aside_reports"] = aside
 	}
 	out, err := json.MarshalIndent(statement, "", "  ")
 	return append(out, '\n'), err

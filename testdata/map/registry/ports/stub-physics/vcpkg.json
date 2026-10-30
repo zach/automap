@@ -1,0 +1,6 @@
+{
+  "name": "stub-physics",
+  "version": "1.0.0",
+  "description": "A tiny physics library for Automap's fixture map.",
+  "license": "MIT-0"
+}

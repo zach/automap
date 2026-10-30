@@ -9,13 +9,13 @@
 #include "automap/probe.h"
 #include "automap/startup.h"
 
-#if __has_include("dear-imgui--sdl3/imgui_sdl3_gpu.h")
+#if defined(AUTOMAP_LIBRARY_DEAR_IMGUI) && defined(AUTOMAP_LIBRARY_SDL3)
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
 #include "dear-imgui--sdl3/imgui_sdl3_gpu.h"
 #define AUTOMAP_TESTBED_IMGUI 1
-#elif __has_include(<SDL3/SDL.h>)
+#elif defined(AUTOMAP_LIBRARY_SDL3)
 #include <SDL3/SDL.h>
 #define AUTOMAP_TESTBED_SDL3 1
 #endif

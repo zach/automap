@@ -1,0 +1,13 @@
+--- a/automap/jobs.cpp
++++ b/automap/jobs.cpp
+@@ -44,7 +44,10 @@
+     return *p;
+ }
+ 
++int jobs_run = 0; // shared by every job, unsynchronized
++
+ void run(const Task& t) {
++    ++jobs_run;
+     t.job(t.data);
+     if (t.done != nullptr) t.done->pending.fetch_sub(1, std::memory_order_acq_rel);
+ }
