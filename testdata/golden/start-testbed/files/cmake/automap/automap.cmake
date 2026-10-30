@@ -4,7 +4,7 @@
 set(AUTOMAP_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
 set(AUTOMAP_CXX_STANDARD 20)
 
-add_library(automap_glue STATIC
+add_library(automap_glue OBJECT
     ${AUTOMAP_ROOT}/glue/automap/alloc.cpp
     ${AUTOMAP_ROOT}/glue/automap/diag.cpp
     ${AUTOMAP_ROOT}/glue/automap/lifecycle.cpp
@@ -19,6 +19,7 @@ add_library(automap_glue STATIC
     ${AUTOMAP_ROOT}/glue/stub-ui/stub_ui_setup.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_allocation.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_allocation_probe.cpp
+    ${AUTOMAP_ROOT}/glue/stub-window/stub_window_build_flags_probe.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_diagnostics.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_diagnostics_probe.cpp
     ${AUTOMAP_ROOT}/glue/stub-window/stub_window_setup.cpp

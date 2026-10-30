@@ -475,7 +475,7 @@ Every command takes `--json` and then prints one object conforming to [`cli-resu
 - **CMake** is the only glue and build target [ADR-0035](../adr/0035-glue-targets-cmake-only.md). Glue refers to libraries only by CMake package and imported target, such as `find_package(Jolt CONFIG REQUIRED)` and `Jolt::Jolt`. Each library's build fragment lives in `cmake/automap/<library>.cmake`; `cmake/automap/automap.cmake` includes them and defines the glue targets; the developer's `CMakeLists.txt` includes that file once. In-repo libraries join with `add_subdirectory`.
 - **Pins** carry vcpkg's SHA-512 of each source archive as the content hash, recorded in the map beside each version's commit [ADR-0036](../adr/0036-what-a-pin-contains.md).
 - **Headless runs** need no special build options: `verify` sets each library's `headless` environment from its platform facts, such as `SDL_VIDEO_DRIVER=offscreen`. System packages a library needs that vcpkg doesn't supply are platform facts (`system_dependencies`), and Automap's CI images and the eval environment install them.
-- **Probe builds** use a separate build directory with `AUTOMAP_PROBE` defined, so probe code never reaches the developer's normal build.
+- **Probe builds** use a separate build directory (`build/automap/<platform>-probe`) with `AUTOMAP_PROBE` defined, so probe code never reaches the developer's normal build.
 
 ### 5.6 Glue at runtime
 
@@ -483,7 +483,7 @@ The CLI writes the composition's **startup** (`context.h`, `startup.h` and `star
 
 The developer's `main` calls startup once and shutdown once: the testbed `main` that `start` writes, or an adopted engine's own. An adopted engine may keep its own startup code instead, marked as developer-owned in the manifest; the lifecycle probe judges its order the same way.
 
-With `--probe`, the composition's executable also runs every probe after startup and 120 headless frames, records results and lifecycle steps through the probe harness, and writes them to `build/automap/probe-results-<platform>.json` (rule results shaped as in evidence, plus the recorded steps), which the CLI reads.
+With `--probe <results-file>`, the composition's executable also runs every probe after startup and 120 headless frames, records results and lifecycle steps through the probe harness, and writes them to the results file, `build/automap/probe-results-<platform>.json` (rule results shaped as in evidence, plus the recorded steps), which the CLI reads. Probe glue registers each probe with the harness, to run either after the frames or after shutdown (for checks that need every library to have released what it allocated); the glue target is a CMake object library, so every registration links into the executable. The CLI judges lifecycle order, pairing ordering constraints and platform targets itself, from the recorded steps and the manifest.
 
 ### 5.7 Agent interface
 
