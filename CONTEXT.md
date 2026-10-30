@@ -86,6 +86,10 @@ _Avoid_: benchmark, test suite, telemetry
 A small map of stub libraries, with their own recipes, probes and seeded violations, that the CLI's own tests run against so builds take seconds.
 _Avoid_: mock map, test map
 
+**Fixture repo**:
+A small developer's repo, with or without a composition, that the CLI's own tests copy to a temporary directory and run the CLI in, comparing its output and written files with golden files.
+_Avoid_: test project, sample repo
+
 **Automap registry**:
 Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express, libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale.
 _Avoid_: the map (the map describes; the registry builds), overlay, fork

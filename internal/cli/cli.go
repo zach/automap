@@ -42,12 +42,24 @@ func verify(args []string, stdout, stderr io.Writer) int {
 	}
 
 	r := newResult("verify")
+	status := exitFailed
 	if _, err := os.Stat(manifestFile); errors.Is(err, os.ErrNotExist) {
 		r.Summary = "Nothing to verify: no " + manifestFile + " in the current directory."
 		r.fail("NO_MANIFEST", "No composition here. Run automap start to create one, or automap adopt to adopt an existing engine.")
-		r.print(stdout, *asJSON)
-		return exitUsage
+		status = exitUsage
+	} else {
+		r.Summary = "Verify cannot build a composition yet."
+		r.fail("NOT_IMPLEMENTED", "This CLI build does not build or probe compositions.")
 	}
-	fmt.Fprintln(stderr, "automap: verify is not implemented yet")
-	return exitFailed
+	return finish(r, status, *asJSON, stdout, stderr)
+}
+
+// finish prints r and returns status, or reports on stderr and returns
+// exitFailed when r can't be printed.
+func finish(r *result, status int, asJSON bool, stdout, stderr io.Writer) int {
+	if err := r.print(stdout, asJSON); err != nil {
+		fmt.Fprintf(stderr, "automap: %v\n", err)
+		return exitFailed
+	}
+	return status
 }

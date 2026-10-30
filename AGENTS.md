@@ -49,11 +49,13 @@ SPEC §10.1 gives the layout later tickets add: `map/`, `evals/`, and the `regis
 
 ## Working rules
 
+These override the upstream skills where they conflict.
+
 - **Human checkpoints exist only where direction is set** ([ADR-0069](docs/adr/0069-human-checkpoints-only-where-direction-is-set.md)): any new or changed ADR; what the map covers and new contract major versions; the v1 release. Ask the product owner (Zach) for those and nothing else; everything else merges on its evidence and evals.
 - **One question at a time,** each with a recommended answer and a one- or two-sentence rationale, worded so "yes" accepts it. Say so when a question needs the product owner's taste or judgment rather than hiding it behind a recommendation.
 - **Don't ask what you can find out.** Read the docs, research, or run a quick experiment first.
 - **Challenge the product owner** when an answer conflicts with an earlier decision, the research, or what developers need, before recording it.
-- **An ADR records only what the product owner agreed to.** If writing one surfaces a new consequence or assumption, ask about it instead of writing it in. ADRs have **Context, Options, Decision, Consequences** sections.
+- **An ADR records only what the product owner agreed to.** If writing one surfaces a new consequence or assumption, ask about it instead of writing it in. Every decision with real alternatives gets an ADR in `docs/adr/` with **Context, Options, Decision, Consequences** sections.
 - **Documents state the current version only.** No "amended", "previously", "no longer", changelog notes or superseded markers. When something changes, rewrite the affected docs in place; git history is the record of what changed.
 - **Write docs as decisions land.** New or sharpened terms go into `CONTEXT.md` immediately, and the glossary's terms are the names used in code, tests and failure codes.
 - **Don't build in assumptions that agents are weaker stewards of code than humans.** Automap assumes agents can be the primary steward of an engine's code, including Automap's own.
@@ -64,7 +66,7 @@ SPEC §10.1 gives the layout later tickets add: `map/`, `evals/`, and the `regis
 
 ## Skills
 
-Multi-step procedures live in skills. `.claude/skills/` holds skills vendored from [mattpocock/skills](https://github.com/mattpocock/skills) at commit `a496f55` (v1.3.2, MIT, see `.claude/skills/LICENSE-mattpocock-skills`). The build uses `tdd`, `implement`, `implement-spec`, `code-review` and `diagnosing-bugs`, with `domain-modeling`, `to-tickets` and `handoff` ([ADR-0067](docs/adr/0067-build-team-skills.md)); the exploration's `grill-with-docs`, `grilling`, `prototype`, `research`, `to-spec` and `setup-matt-pocock-skills` remain installed. Upstream skills call the glossary `GLOSSARY.md`; read it as `CONTEXT.md`.
+Multi-step procedures live in skills. `.claude/skills/` holds skills vendored from [mattpocock/skills](https://github.com/mattpocock/skills) at commit `a496f55` (v1.3.2, MIT, see `.claude/skills/LICENSE-mattpocock-skills`). The build uses `tdd`, `implement`, `implement-spec`, `code-review` and `diagnosing-bugs`, with `domain-modeling`, `to-tickets` and `handoff` ([ADR-0067](docs/adr/0067-build-team-skills.md)); the exploration's `grill-with-docs`, `grilling`, `prototype`, `research`, `to-spec` and `setup-matt-pocock-skills` are also installed. Upstream skills call the glossary `GLOSSARY.md`; read it as `CONTEXT.md`.
 
 - **Issue tracker:** local markdown under `docs/issues/`. See `docs/agents/issue-tracker.md`.
 - **Domain docs:** single context, `CONTEXT.md` and `docs/adr/` at the root. See `docs/agents/domain.md`.

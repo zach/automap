@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zach/automap/schemas"
@@ -54,33 +55,36 @@ func (r *result) fail(code, message string) {
 
 // print writes r as JSON, or as text for a person. The JSON is checked
 // against the embedded cli-result schema first: output that breaks the
-// published contract is a CLI bug, never something to print.
-func (r *result) print(w io.Writer, asJSON bool) {
+// published contract is a CLI bug, reported on stderr instead of printed.
+func (r *result) print(w io.Writer, asJSON bool) error {
 	if !asJSON {
-		fmt.Fprintln(w, r.Summary)
+		var text bytes.Buffer
+		fmt.Fprintln(&text, r.Summary)
 		for _, f := range r.Failures {
-			fmt.Fprintf(w, "%s: %s\n", f.Code, f.Message)
+			fmt.Fprintf(&text, "%s: %s\n", f.Code, f.Message)
 		}
-		return
+		_, err := w.Write(text.Bytes())
+		return err
 	}
 	out, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
-		panic(err)
+		return err
+	}
+	schema, err := cliResultSchema()
+	if err != nil {
+		return err
 	}
 	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(out))
 	if err != nil {
-		panic(err)
+		return err
 	}
-	if err := cliResultSchema().Validate(doc); err != nil {
-		panic(fmt.Sprintf("CLI result breaks the cli-result schema: %v\n%s", err, out))
+	if err := schema.Validate(doc); err != nil {
+		return fmt.Errorf("CLI result breaks the cli-result schema: %v\n%s", err, out)
 	}
-	w.Write(append(out, '\n'))
+	_, err = w.Write(append(out, '\n'))
+	return err
 }
 
-func cliResultSchema() *jsonschema.Schema {
-	s, err := schemas.Compile("cli-result")
-	if err != nil {
-		panic(err)
-	}
-	return s
-}
+var cliResultSchema = sync.OnceValues(func() (*jsonschema.Schema, error) {
+	return schemas.Compile("cli-result")
+})

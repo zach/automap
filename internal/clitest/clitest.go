@@ -145,15 +145,15 @@ func (r *Run) ExpectGolden(t *testing.T, name string) {
 		}
 	}
 	for _, path := range union(expected, after) {
-		w, wok := expected[path]
-		g, gok := after[path]
+		want, inWant := expected[path]
+		got, inGot := after[path]
 		switch {
-		case !gok:
+		case !inGot:
 			t.Errorf("%s: expected in the repo after the run, missing", path)
-		case !wok:
+		case !inWant:
 			t.Errorf("%s: written by the run, not in %s", path, rel(t, golden, "files"))
-		case !bytes.Equal(w, g):
-			t.Errorf("%s differs from golden\ngot:\n%s\nwant:\n%s", path, g, w)
+		case !bytes.Equal(want, got):
+			t.Errorf("%s differs from golden\ngot:\n%s\nwant:\n%s", path, got, want)
 		}
 	}
 }
