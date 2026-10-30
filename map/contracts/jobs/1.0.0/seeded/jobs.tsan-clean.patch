@@ -1,6 +1,6 @@
 --- a/automap/jobs.cpp
 +++ b/automap/jobs.cpp
-@@ -44,8 +44,11 @@
+@@ -44,6 +44,8 @@
      return *p;
  }
  
@@ -8,10 +8,15 @@
 +
  void run(const Task& t) {
      t.job(t.data);
-+    ++jobs_seen;
      if (t.done != nullptr) t.done->pending.fetch_sub(1, std::memory_order_acq_rel);
- }
- 
+@@ -63,6 +65,7 @@
+ void worker_loop() {
+     Pool& p = pool();
+     for (;;) {
++        ++jobs_seen;
+         Task t;
+         {
+             std::unique_lock<std::mutex> lock(p.mutex);
 @@ -80,6 +83,7 @@
  
  void submit(const char* library, Job job, void* data, Counter* done) {
