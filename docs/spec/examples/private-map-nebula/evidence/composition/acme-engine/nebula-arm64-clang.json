@@ -23,9 +23,7 @@
       "compiler": "nebula-clang 19.1 (hypothetical)",
       "runner_image": "acme-devkit-ci-07",
       "environment": {},
-      "sanitizers": {
-        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66"
-      }
+      "sanitizers": {}
     },
     "results": [
       {
@@ -101,7 +99,8 @@
       },
       {
         "rule": "jobs.tsan-clean",
-        "status": "pass"
+        "status": "not-applicable",
+        "reason": "The rule's probe runs only on linux-x64-clang and macos-arm64-appleclang (ADR-0076)."
       },
       {
         "rule": "lifecycle.init-order",

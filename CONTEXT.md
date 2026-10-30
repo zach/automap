@@ -131,7 +131,7 @@ An interface Automap delivers as glue source, such as a neutral job-system inter
 _Avoid_: adapter, abstraction layer, API
 
 **Rule**:
-One requirement that glue must meet, stated by a contract or by a pairing's recipe. A rule is either probed (it has a probe, and passing it counts as evidence) or guidance (labeled, and never counts as evidence).
+One requirement that glue must meet, stated by a contract or by a pairing's recipe. A rule is either probed (it has a probe, and passing it counts as evidence) or guidance (labeled, and never counts as evidence). A probed rule may name the platforms its probe can run on; elsewhere its result is not-applicable.
 _Avoid_: constraint, check, requirement
 
 **Binding**:

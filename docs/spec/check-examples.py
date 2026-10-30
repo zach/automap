@@ -97,6 +97,14 @@ for p in sorted(EX.glob("*/contracts/*/*.json")):
             fail(p, f"rule {r['id']} must be prefixed with the contract id")
 contract_rules = {r["id"]: r for c in contracts.values() for r in c["rules"]}
 
+
+def check_results(e_path, pred):
+    """Results for platform-limited rules are not-applicable elsewhere (ADR-0076)."""
+    for r in pred["results"]:
+        plats = contract_rules.get(r["rule"], {}).get("platforms")
+        if plats and pred["platform"] not in plats and r["status"] != "not-applicable":
+            fail(e_path, f"{r['rule']} runs only on {plats}; on {pred['platform']} it is not-applicable")
+
 # ---- libraries (public and private maps share one schema) ----
 # A private map's file with the id of a library in a map beneath it extends
 # that library (ADR-0075): library fields and existing versions must match,
@@ -313,6 +321,7 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
     for e_path in sorted(comp.glob("evidence/*.json")):
         e = validate(e_path, "evidence")
         pred = e["predicate"]
+        check_results(e_path, pred)
         if e_path.stem != pred["platform"]:
             fail(e_path, "file name must be the platform id")
         if pred["subject_kind"] == "composition":
@@ -338,6 +347,7 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
 for e_path in sorted(p for p in EX.glob("*/evidence/**/*.json") if p.parts[-4] != "composition"):
     e = validate(e_path, "evidence")
     pred = e["predicate"]
+    check_results(e_path, pred)
     in_public = e_path.relative_to(EX).parts[0] == "map"
     if pred["verifier"]["kind"] != ("automap-ci" if in_public else "nda-holder"):
         fail(e_path, "the public map's evidence comes from Automap's CI; a private map's from the NDA holder")

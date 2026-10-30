@@ -69,15 +69,15 @@
     {
       "id": "math-types.adapters-round-trip",
       "kind": "probed",
-      "applies_to": "pairing",
-      "text": "Each adapter in pairing glue converts a set of sample values there and back without loss.",
-      "failure_code": "ADAPTER_LOSSY(<adapter>)"
+      "applies_to": "library",
+      "text": "The library's adapters to the composition's math library convert a set of sample values there and back without loss.",
+      "failure_code": "ADAPTER_LOSSY(<library>)"
     },
     {
       "id": "math-types.conventions-stated",
       "kind": "guidance",
-      "applies_to": "pairing",
-      "text": "Adapters state the handedness and up-axis conversion they apply."
+      "applies_to": "library",
+      "text": "Each adapter states the handedness and up-axis conversion it applies."
     }
   ],
   "shared_interface": null
