@@ -57,7 +57,16 @@ protected:
         for (JPH::uint i = 0; i < count; ++i) QueueJob(jobs[i]);
     }
 
-    void FreeJob(Job* job) override { jobs_.DestructObject(job); }
+    // Jolt frees a job from whichever thread drops its last reference,
+    // ordering the free after the other threads' use of the job with an
+    // atomic fence, which ThreadSanitizer can't see when the release happens
+    // inside the Jolt library. An acq_rel operation on released_ makes the
+    // same ordering explicit: every worker releases to it before dropping
+    // its reference.
+    void FreeJob(Job* job) override {
+        released_.fetch_add(0, std::memory_order_acq_rel);
+        jobs_.DestructObject(job);
+    }
 
 private:
     using Jobs = JPH::FixedSizeFreeList<Job>;
@@ -66,12 +75,14 @@ private:
         Job* job = static_cast<Job*>(data);
         AutomapJobSystem* self = static_cast<AutomapJobSystem*>(job->GetJobSystem());
         job->Execute();
+        self->released_.fetch_add(1, std::memory_order_release);
         job->Release();
         self->in_flight_.fetch_sub(1, std::memory_order_acq_rel);
     }
 
     Jobs jobs_;
     std::atomic<int> in_flight_{0};
+    std::atomic<unsigned> released_{0};
 };
 
 } // namespace

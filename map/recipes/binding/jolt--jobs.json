@@ -69,6 +69,7 @@
   "adaptation_notes": [
     "The adapter derives from JPH::JobSystemWithBarrier and submits each Jolt job to am::jobs; GetMaxConcurrency is the interface's worker count plus the calling thread.",
     "The adapter counts jobs in flight and its destructor, which am_unbind_jolt_jobs() runs, waits for the count to reach zero: a worker can still be releasing a Jolt job after Update returns.",
+    "Jolt orders a job's free after other threads' use of it with an atomic fence, which ThreadSanitizer doesn't model when the last release happens inside the uninstrumented library; the adapter's FreeJob makes the ordering explicit with an acq_rel operation every worker releases to, so the jobs.tsan-clean run sees it.",
     "Translation units that derive from Jolt classes compile with -fno-rtti (MSVC /GR-); Jolt's build fragment sets this on the glue target."
   ]
 }
