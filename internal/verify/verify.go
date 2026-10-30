@@ -213,7 +213,12 @@ func runTSan(root, platform, target string, env []string) (Result, []TSanReport)
 	buildLog := path.Join("build/automap", "tsan-build-"+platform+".log")
 	runLog := path.Join("build/automap", "tsan-"+platform+".log")
 	flags := "-fsanitize=thread -g"
+	triplet, contents := TSanTriplet(platform)
+	triplets, _ := filepath.Abs(filepath.Join(root, "build", "automap", "tsan-triplets"))
+	os.MkdirAll(triplets, 0o755)
+	os.WriteFile(filepath.Join(triplets, triplet+".cmake"), []byte(contents), 0o644)
 	if err := build(root, dir, buildLog, platform, target, "-DAUTOMAP_PROBE=ON",
+		"-DVCPKG_OVERLAY_TRIPLETS="+triplets, "-DVCPKG_TARGET_TRIPLET="+triplet,
 		"-DCMAKE_C_FLAGS="+flags, "-DCMAKE_CXX_FLAGS="+flags,
 		"-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=thread", "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=thread"); err != nil {
 		r.Status, r.Reason = "unverifiable", "The ThreadSanitizer build failed; "+buildLog+" has the details."

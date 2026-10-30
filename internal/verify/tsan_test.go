@@ -75,3 +75,25 @@ func TestClangsRuntimeFramesAndThreadCreationDontCount(t *testing.T) {
 		t.Errorf("summary %q", reports[0].Summary)
 	}
 }
+
+func TestTSanTriplet(t *testing.T) {
+	name, contents := verify.TSanTriplet("linux-x64-clang")
+	if name != "x64-linux-automap-tsan" {
+		t.Errorf("triplet %q, want x64-linux-automap-tsan", name)
+	}
+	for _, want := range []string{
+		"set(VCPKG_TARGET_ARCHITECTURE x64)",
+		"set(VCPKG_CMAKE_SYSTEM_NAME Linux)",
+		"set(VCPKG_LIBRARY_LINKAGE static)",
+		`set(VCPKG_C_FLAGS "-fsanitize=thread")`,
+		`set(VCPKG_CXX_FLAGS "-fsanitize=thread")`,
+		`set(VCPKG_LINKER_FLAGS "-fsanitize=thread")`,
+	} {
+		if !strings.Contains(contents, want) {
+			t.Errorf("triplet lacks %s:\n%s", want, contents)
+		}
+	}
+	if name, contents := verify.TSanTriplet("macos-arm64-appleclang"); name != "arm64-osx-automap-tsan" || !strings.Contains(contents, "set(VCPKG_CMAKE_SYSTEM_NAME Darwin)") {
+		t.Errorf("macOS triplet %q:\n%s", name, contents)
+	}
+}

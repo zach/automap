@@ -94,3 +94,31 @@ func contains(xs []string, x string) bool {
 	}
 	return false
 }
+
+// TSanTriplet is the vcpkg overlay triplet the ThreadSanitizer build uses,
+// so the libraries vcpkg builds from source are instrumented as the glue
+// is: otherwise ThreadSanitizer sees a library's inline code where the
+// glue calls it but not the library's own synchronization, and reports
+// races that aren't there. It is the platform's static triplet with
+// -fsanitize=thread. It is a pure function.
+func TSanTriplet(platform string) (name, contents string) {
+	parts := strings.SplitN(platform, "-", 3)
+	system, osName := "Linux", "linux"
+	if parts[0] == "macos" {
+		system, osName = "Darwin", "osx"
+	}
+	arch := parts[1]
+	name = arch + "-" + osName + "-automap-tsan"
+	contents = "# Written by automap for the ThreadSanitizer build.\n" +
+		"set(VCPKG_TARGET_ARCHITECTURE " + arch + ")\n" +
+		"set(VCPKG_CRT_LINKAGE dynamic)\n" +
+		"set(VCPKG_LIBRARY_LINKAGE static)\n" +
+		"set(VCPKG_CMAKE_SYSTEM_NAME " + system + ")\n" +
+		"set(VCPKG_C_FLAGS \"-fsanitize=thread\")\n" +
+		"set(VCPKG_CXX_FLAGS \"-fsanitize=thread\")\n" +
+		"set(VCPKG_LINKER_FLAGS \"-fsanitize=thread\")\n"
+	if system == "Darwin" {
+		contents += "set(VCPKG_OSX_ARCHITECTURES " + map[string]string{"arm64": "arm64", "x64": "x86_64"}[arch] + ")\n"
+	}
+	return name, contents
+}

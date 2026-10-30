@@ -298,7 +298,7 @@ The example contracts are allocation, jobs, lifecycle, diagnostics, build flags,
 { "id": "jobs.tsan-clean", "kind": "probed", "applies_to": "composition",
   "text": "A ThreadSanitizer build completes a smoke run with no report that has a frame, in either stack, in code the composition builds.",
   "failure_code": "TSAN_REPORT(<summary>)",
-  "procedure": "Separate build directory; -fsanitize=thread for C, C++ and link; Debug; TSAN_OPTIONS=halt_on_error=0:exitcode=66; run the composition's executable with --probe; parse every 'WARNING: ThreadSanitizer' report; a report counts unless every frame in both stacks is in code the composition doesn't build, in which case it is recorded under set_aside_reports.",
+  "procedure": "Separate build directory; -fsanitize=thread for C, C++ and link, and for the libraries vcpkg builds, through an overlay triplet; Debug; TSAN_OPTIONS=halt_on_error=0:exitcode=66; run the composition's executable with --probe; parse every 'WARNING: ThreadSanitizer' report; a report counts unless every frame in both stacks is in code the composition doesn't build, in which case it is recorded under set_aside_reports.",
   "platforms": ["linux-x64-clang", "macos-arm64-appleclang"] }
 ```
 
