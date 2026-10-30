@@ -88,6 +88,7 @@ func TestTheJobsCompositionIsProbedWithACleanThreadSanitizerRun(t *testing.T) {
 var physicsSeeds = []struct{ seed, code string }{
 	{"jobs.routed-through-interface:stub-physics", "JOBS_NOT_ROUTED(stub-physics)"},
 	{"jobs.tsan-clean", "TSAN_REPORT(data race jobs.cpp"},
+	{"math-types.precision-agrees", "PRECISION_MISMATCH(stub-physics)"},
 }
 
 func TestEveryJobsSeedIsCaught(t *testing.T) {

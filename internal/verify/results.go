@@ -306,3 +306,38 @@ func CheckTargets(m *mapmodel.Map, man *composition.Manifest) Result {
 	}
 	return r
 }
+
+// Precisions is each library's position_precision math-types fact, in its
+// chosen variant, for the libraries that declare one.
+func Precisions(m *mapmodel.Map, man *composition.Manifest) map[string]string {
+	out := map[string]string{}
+	for _, lib := range man.Libraries() {
+		v := m.Libraries[lib].Newest()
+		facts := v.Facts["math-types"]
+		if variant := v.Variant(man.Variants[lib].Default); variant != nil && variant.Facts["math-types"]["position_precision"] != nil {
+			facts = variant.Facts["math-types"]
+		}
+		if p, ok := facts["position_precision"].(string); ok {
+			out[lib] = p
+		}
+	}
+	return out
+}
+
+// CheckPrecision is the math-types.precision-agrees result: every library
+// that exposes world positions uses the composition's position_precision.
+// It is a pure function.
+func CheckPrecision(choice string, precisions map[string]string) Result {
+	libs := make([]string, 0, len(precisions))
+	for lib := range precisions {
+		libs = append(libs, lib)
+	}
+	slices.Sort(libs)
+	for _, lib := range libs {
+		if precisions[lib] != choice {
+			return Result{Rule: "math-types.precision-agrees", Status: "fail", FailureCode: fmt.Sprintf("PRECISION_MISMATCH(%s)", lib),
+				Reason: fmt.Sprintf("%s uses %s world positions, but the composition chooses %s.", lib, precisions[lib], choice)}
+		}
+	}
+	return Result{Rule: "math-types.precision-agrees", Status: "pass"}
+}

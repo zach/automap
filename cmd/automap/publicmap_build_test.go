@@ -65,18 +65,15 @@ var testbedSeeds = []struct{ seed, code string }{
 }
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
-	// The jobs contract's seed needs a library with jobs facts; the
-	// fixture's stub-physics composition runs it (TestEveryJobsSeedIsCaught).
-	exercisedByFixture := filepath.Join("contracts", "jobs")
 	var patches int
 	filepath.WalkDir(filepath.Join(clitest.Root(t), "map"), func(p string, d os.DirEntry, err error) error {
-		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) && !strings.Contains(p, exercisedByFixture) {
+		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) {
 			patches++
 		}
 		return nil
 	})
-	if patches != len(testbedSeeds) {
-		t.Errorf("the public map carries %d seed patches but the testbed test covers %d", patches, len(testbedSeeds))
+	if covered := len(testbedSeeds) + len(joltSeeds); patches != covered {
+		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
 
@@ -103,6 +100,65 @@ func TestTheTestbedStartsProbed(t *testing.T) {
 	}
 
 	for _, c := range testbedSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds Jolt adds when it extends the testbed, with their failure
+// codes. A composition rule's seed is named by the recipe's library.
+var joltSeeds = []struct{ seed, code string }{
+	{"allocation.hooks-before-first-allocation:jolt", "ALLOC_HOOK_LATE(jolt)"},
+	{"allocation.routed-through-facade:jolt", "ALLOC_NOT_ROUTED(jolt)"},
+	{"diagnostics.routed-through-facade:jolt", "DIAG_NOT_ROUTED(jolt)"},
+	{"jobs.routed-through-interface:jolt", "JOBS_NOT_ROUTED(jolt)"},
+	{"jobs.tsan-clean", "TSAN_REPORT(data race jobs.cpp"},
+	{"lifecycle.init-order:jolt", "before jolt:Trace+AssertFailed)"},
+	{"build-flags.abi-defines-match:jolt", "ABI_DEFINE_MISMATCH(jolt)"},
+	{"math-types.precision-agrees", "PRECISION_MISMATCH(jolt)"},
+}
+
+func TestTheTestbedExtendsWithJoltProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	requireTSan(t)
+	repo := testbedRepo(t)
+	if run := repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json"); run.Exit != 0 {
+		t.Fatalf("start: exit %d\n%s", run.Exit, run.Stdout)
+	}
+
+	run := repo.Automap(t, "extend", "jolt", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	want := map[string]bool{"build-flags.abi-defines-match": false, "jobs.tsan-clean": false, "jobs.routed-through-interface": false}
+	for _, r := range e.Predicate.Results {
+		if _, ok := want[r.Rule]; ok && r.Status == "pass" {
+			want[r.Rule] = true
+		}
+		// verify builds Debug, where Jolt's assertions are compiled in, so
+		// its assert hook is checked and the result carries no condition.
+		if r.Rule == "diagnostics.routed-through-facade" && r.Library == "jolt" && (r.Status != "pass" || r.Reason != "") {
+			t.Errorf("Jolt's diagnostics result %+v, want a pass that checked the assert hook", r)
+		}
+	}
+	for rule, passed := range want {
+		if !passed {
+			t.Errorf("%s didn't pass in the Jolt composition", rule)
+		}
+	}
+
+	for _, c := range joltSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

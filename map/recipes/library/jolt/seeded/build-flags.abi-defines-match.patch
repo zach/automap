@@ -1,0 +1,7 @@
+--- a/jolt.cmake
++++ b/jolt.cmake
+@@ -6,3 +6,4 @@
+ 
+ target_link_libraries(automap_glue PUBLIC Jolt::Jolt)
+ target_compile_options(automap_glue PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/GR-,-fno-rtti>)
++target_compile_definitions(automap_glue PRIVATE JPH_CROSS_PLATFORM_DETERMINISTIC)

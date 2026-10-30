@@ -1,0 +1,19 @@
+--- a/jolt_job_system.cpp
++++ b/jolt_job_system.cpp
+@@ -6,6 +6,7 @@
+ #include <Jolt/Jolt.h>
+ 
+ #include <Jolt/Core/FixedSizeFreeList.h>
++#include <Jolt/Core/JobSystemThreadPool.h>
+ #include <Jolt/Core/JobSystemWithBarrier.h>
+ #include <Jolt/Physics/PhysicsSettings.h>
+ 
+@@ -77,7 +78,7 @@
+ } // namespace
+ 
+ bool am_bind_jolt_jobs(am::Context& ctx) {
+-    ctx.jolt.job_system = new AutomapJobSystem();
++    ctx.jolt.job_system = new JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, 2);
+     am::lifecycle::init_step("jolt:job-system-adapter");
+     return true;
+ }

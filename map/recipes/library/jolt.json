@@ -1,0 +1,84 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "jolt"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt/jolt.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "jolt/jolt_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "jolt/jolt_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_jolt_setup_init",
+      "steps": [
+        "jolt:Factory+RegisterTypes",
+        "jolt:PhysicsSystem::Init"
+      ],
+      "provides": [
+        {
+          "name": "jolt.physics_system",
+          "type": "JPH::PhysicsSystem*"
+        },
+        {
+          "name": "jolt.temp_allocator",
+          "type": "JPH::TempAllocator*"
+        }
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_jolt_setup_shutdown",
+      "steps": [
+        "jolt:PhysicsSystem-destroyed",
+        "jolt:UnregisterTypes+Factory"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "lifecycle.init-order",
+      "check": "verify checks each recorded step against the phase Jolt's lifecycle facts declare.",
+      "seeded_violation": {
+        "description": "Install a Jolt trace hook and record Jolt's Trace+AssertFailed step from setup glue, in the systems phase.",
+        "patch": "jolt/seeded/lifecycle.init-order.patch"
+      }
+    },
+    {
+      "rule": "build-flags.abi-defines-match",
+      "check": "am_jolt_setup_init() calls JPH::VerifyJoltVersionID(), which compares the version and ABI defines the glue compiled with against the library's, before RegisterTypes() would abort on a mismatch; the failure is recorded first.",
+      "seeded_violation": {
+        "description": "Define JPH_CROSS_PLATFORM_DETERMINISTIC for the glue in Jolt's build fragment, while the joltphysics port is built without it.",
+        "patch": "jolt/seeded/build-flags.abi-defines-match.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The build fragment calls find_package(Jolt CONFIG REQUIRED), links Jolt::Jolt, and compiles the glue with -fno-rtti (MSVC /GR-), since glue derives from Jolt classes and the port builds Jolt without RTTI.",
+    "Setup glue checks JPH::VerifyJoltVersionID(), runs Factory and RegisterTypes, then creates one PhysicsSystem with two object layers (non-moving, moving) mapped to two broad-phase layers and a TempAllocatorImpl. The jolt--jobs binding provides the job system the game passes to PhysicsSystem::Update.",
+    "The layer tables and capacities are placeholders the game replaces; setup glue creates no bodies.",
+    "Shutdown destroys the PhysicsSystem before UnregisterTypes and deleting the Factory."
+  ]
+}

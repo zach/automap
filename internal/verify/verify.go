@@ -107,7 +107,10 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	}
 	reached := Level(built, smoked, false, nil)
 	obs := Observed{Level: reached}
-	if smoked {
+	// The probes run even when the smoke run failed: a probe that records
+	// its failure before startup stops, such as a library's ABI check,
+	// says why.
+	if built {
 		if err := build(opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
 			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
 		} else {
@@ -123,6 +126,11 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 				obs.Ran = true
 				obs.Reported = harness.Results
 				obs.Computed = append(CheckLifecycle(DeclaredLifecycle(m, man), harness.InitSteps, harness.ShutdownSteps), CheckTargets(m, man))
+				precision := "float"
+				if p, ok := man.Choices["math-types"]["position_precision"].(string); ok {
+					precision = p
+				}
+				obs.Computed = append(obs.Computed, CheckPrecision(precision, Precisions(m, man)))
 				if err != nil {
 					out.Failures = append(out.Failures, Failure{Code: "PROBE_FAILED", Message: "The probe run didn't exit cleanly: " + err.Error(), DetailsFile: paths.probeLog})
 				}
@@ -146,7 +154,11 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 			if msg == "" {
 				msg = texts[r.Rule]
 			}
-			out.Failures = append(out.Failures, Failure{Code: r.FailureCode, Rule: r.Rule, Library: r.Library, Message: msg, DetailsFile: paths.probeLog})
+			details := paths.probeLog
+			if r.Rule == TSanRule {
+				details = path.Join(logs, "tsan-"+platform+".log")
+			}
+			out.Failures = append(out.Failures, Failure{Code: r.FailureCode, Rule: r.Rule, Library: r.Library, Message: msg, DetailsFile: details})
 		}
 	}
 	if !opts.Evidence {
@@ -201,7 +213,12 @@ func runTSan(root, platform, target string, env []string) (Result, []TSanReport)
 	buildLog := path.Join("build/automap", "tsan-build-"+platform+".log")
 	runLog := path.Join("build/automap", "tsan-"+platform+".log")
 	flags := "-fsanitize=thread -g"
+	triplet, contents := TSanTriplet(platform)
+	triplets, _ := filepath.Abs(filepath.Join(root, "build", "automap", "tsan-triplets"))
+	os.MkdirAll(triplets, 0o755)
+	os.WriteFile(filepath.Join(triplets, triplet+".cmake"), []byte(contents), 0o644)
 	if err := build(root, dir, buildLog, platform, target, "-DAUTOMAP_PROBE=ON",
+		"-DVCPKG_OVERLAY_TRIPLETS="+triplets, "-DVCPKG_TARGET_TRIPLET="+triplet,
 		"-DCMAKE_C_FLAGS="+flags, "-DCMAKE_CXX_FLAGS="+flags,
 		"-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=thread", "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=thread"); err != nil {
 		r.Status, r.Reason = "unverifiable", "The ThreadSanitizer build failed; "+buildLog+" has the details."
