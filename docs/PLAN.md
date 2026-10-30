@@ -10,7 +10,7 @@ Source: `docs/EXPLORATION_BRIEF.md`. This file tracks where the exploration stan
 | 1. Research | Eight parallel research agents (topic 2 split three ways) | `docs/research/*.md`, `SUMMARY.md`, top-5 walkthrough | Done 2026-10-29 (follow-ups listed in `SUMMARY.md`) |
 | 2. Grilling | Decision tree below, one question at a time | ADRs, `CONTEXT.md`, `OPEN_QUESTIONS.md` | Done 2026-10-30 (ADRs 0001–0069) |
 | 3. Spikes | Only for questions words can't settle; plus the planned testbed spike | `spikes/<name>/` → ADR | Done 2026-10-30 ([07](research/07-spike-testbed-agent.md); ADRs 0070–0074) |
-| 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | In progress: `SPEC.md`, schemas, examples, feature spec and 38 tickets written (ADRs 0075–0077); [definition-of-done review](spec/definition-of-done.md) under way. On sign-off, `exploration` merges to `main` with a merge commit, and ticket 01 starts there ([ADR-0078](adr/0078-exploration-merges-to-main-after-review.md)) |
+| 4. Synthesis | `SPEC.md`, `/to-spec`, `/to-tickets`, definition-of-done review | `docs/spec/SPEC.md`, `docs/issues/` | Written 2026-10-30 (ADRs 0075–0082); [definition-of-done review](spec/definition-of-done.md) complete, awaiting the product owner's sign-off. On sign-off, `exploration` merges to `main` with a merge commit, and ticket 01 starts there ([ADR-0078](adr/0078-exploration-merges-to-main-after-review.md)) |
 
 ## Phase 1 research topics
 
