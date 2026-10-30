@@ -87,7 +87,9 @@
           "format": "date-time"
         },
         "map_release": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$|^git:[0-9a-f]{40}$|^unreleased$",
+          "description": "As in the lock; evidence against an unreleased map is never signed (ADR-0079)."
         },
         "conditions": {
           "type": "object",

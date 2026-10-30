@@ -356,6 +356,8 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
         e = validate(e_path, "evidence")
         pred = e["predicate"]
         check_results(e_path, pred)
+        if pred["map_release"] == "unreleased" and pred["verifier"].get("signed"):
+            fail(e_path, "evidence against an unreleased map is never signed (ADR-0079)")
         if e_path.stem != pred["platform"]:
             fail(e_path, "file name must be the platform id")
         if pred["subject_kind"] == "composition":
@@ -401,6 +403,8 @@ for e_path in sorted(p for p in EX.glob("*/evidence/**/*.json") if p.parts[-4] !
         for r in pred["results"]:
             if not r["rule"].startswith(c + "."):
                 fail(e_path, f"binding evidence for {c} reports rule {r['rule']}")
+    if pred["map_release"] == "unreleased" and pred["verifier"].get("signed"):
+        fail(e_path, "evidence against an unreleased map is never signed (ADR-0079)")
     if pred["level"] in ("probed", "behavioral", "hardware") and any(
             r["status"] in ("fail", "unverifiable") for r in pred["results"]):
         fail(e_path, "known-good level with failing or unverifiable results")

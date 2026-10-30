@@ -1,6 +1,6 @@
 # 02: Map model on the fixture map
 
-**What to build:** The CLI loads the public map and any private maps, validates every file, enforces the cross-file rules, and answers queries. `automap show` and `automap find` print map entries with their facts. A fixture map with two tiny stub C++ libraries (facts for allocation, diagnostics, lifecycle, build flags and platform; bindings; a pairing between them; library recipes) is the test bed for the slices that follow.
+**What to build:** The CLI loads the public map (from a directory given by `--map` or `AUTOMAP_MAP`, ADR-0079) and any private maps, validates every file, enforces the cross-file rules, and answers queries. `automap show` and `automap find` print map entries with their facts. A fixture map with two tiny stub C++ libraries (facts for allocation, diagnostics, lifecycle, build flags and platform; bindings; a pairing between them; library recipes) is the test bed for the slices that follow.
 
 **Blocked by:** [01: Repo setup and the CLI seam](01-repo-setup-and-cli-seam.md)
 

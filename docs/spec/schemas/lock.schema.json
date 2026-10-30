@@ -18,7 +18,8 @@
     },
     "map_release": {
       "type": "string",
-      "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$"
+      "pattern": "^map-\\d{4}\\.\\d{2}\\.\\d{2}$|^git:[0-9a-f]{40}$|^unreleased$",
+      "description": "A map release, git:<commit> for a map read from a clean checkout, or unreleased (ADR-0079)."
     },
     "private_maps": {
       "type": "object",

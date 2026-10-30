@@ -51,7 +51,7 @@ Versioned data describing slots, libraries, contracts, pairings and recipes, plu
 _Avoid_: catalog, database, registry, index
 
 **Map release**:
-An immutable, dated release of the public map. Every lock records the map release it was resolved against.
+An immutable, dated release of the public map. Every lock records the map release it was resolved against. A map read from a directory instead is recorded as its git commit, or as unreleased, and unreleased evidence is never signed.
 _Avoid_: snapshot, baseline (a vcpkg term), map version
 
 **Private map**:

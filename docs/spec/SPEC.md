@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0079](../adr/0079-map-from-a-directory-before-releases.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -445,6 +445,8 @@ schemas/                             the published JSON Schemas
 
 A map release is the `map/` tree at a `map-YYYY.MM.DD` tag, published as a release archive with its SHA-256. Releases freeze facts, recipes and probes. Evidence is about exact pins and ages by the day, so the CLI fetches evidence for a lock's pins from the map's main branch, where Automap's CI keeps appending it. Older versions retire when CI stops re-verifying them and their evidence goes stale [ADR-0033](../adr/0033-automap-ci-verifies-declared-edges-latest-and-previous.md).
 
+Before the first release, in the CLI's tests, and in Automap's CI before a release is cut, the CLI reads the public map from a directory given by `--map <dir>` or `AUTOMAP_MAP`. A clean git checkout is recorded as `map_release: git:<commit>`; anything else as `unreleased`, whose evidence is never signed or known-good [ADR-0079](../adr/0079-map-from-a-directory-before-releases.md).
+
 A private map has the same layout, plus `ports/` for its overlay ports. Maps layer in the manifest's order over the public map (§7.1).
 
 ### 5.4 CLI
@@ -789,7 +791,7 @@ Human checkpoints exist only for any new or changed ADR; what the map covers and
 ### 11.1 The first three slices
 
 **Slice 1: start a testbed, on Linux x64** [ADR-0061](../adr/0061-first-three-vertical-slices.md).
-- The map contains SDL3 and Dear ImGui (docking), the allocation, diagnostics, lifecycle, build-flags and platform contracts, the `dear-imgui--sdl3` pairing, and both library recipes.
+- The CLI reads the map from a directory [ADR-0079](../adr/0079-map-from-a-directory-before-releases.md); it contains SDL3 and Dear ImGui (docking), the allocation, diagnostics, lifecycle, build-flags and platform contracts, the `dear-imgui--sdl3` pairing, and both library recipes.
 - `automap start` writes the manifest, lock, `vcpkg.json`, `vcpkg-configuration.json`, CMake files, shared interfaces, probe harness, choices header, reference glue, testbed entry point, `AGENTS.md` section and router skill.
 - `automap verify` builds, runs headless for a set number of frames on lavapipe, runs the probes, and writes unsigned evidence at the probed level.
 - `automap find` and `automap show` query the map.
@@ -942,3 +944,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0076](../adr/0076-probed-rules-name-their-platforms.md) | A probed rule may name the platforms its probe can run on |
 | [0077](../adr/0077-tests-attach-at-the-cli-process.md) | The build's tests attach at the CLI, run as a process |
 | [0078](../adr/0078-exploration-merges-to-main-after-review.md) | The exploration merges to main when the definition of done is signed off |
+| [0079](../adr/0079-map-from-a-directory-before-releases.md) | The CLI can read the map from a directory, recorded as a commit or as unreleased |
