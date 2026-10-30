@@ -252,6 +252,10 @@ _Avoid_: stack, project, build, configuration
 A composition Automap's CI maintains and verifies on every platform, such as the testbed.
 _Avoid_: sample project, template, demo
 
+**Edge**:
+Something Automap's CI publishes evidence for: a binding, a pairing with a recipe, or a reference composition, at exact library versions and variants, on one platform. Each edge is verified in a composition of its libraries.
+_Avoid_: combination, pair (for a binding)
+
 **Manifest**:
 The file in the developer's repo, edited by the agent, that declares a composition: the library in each slot, the composition's choices, and where each binding's and pairing's glue lives.
 _Avoid_: config, project file; don't use "manifest" alone for a build backend's file (name it, e.g. `vcpkg.json`)

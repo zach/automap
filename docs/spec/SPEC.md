@@ -759,6 +759,7 @@ internal/             CLI packages: cli (commands), clitest (the test harness), 
 map/                  the public map (§5.3)
 schemas/              the published JSON Schemas
 evals/                eval suite tasks and fixtures (including Acme's engine)
+ci/                   Automap's CI for the public map: the edge matrix, verification and evidence, and the reference compositions
 testdata/             fixture repos, the fixture map and golden CLI outputs
 docs/                 this spec, ADRs, CONTEXT.md, issues
 registry (branch)     the Automap vcpkg registry

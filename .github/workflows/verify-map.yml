@@ -7,7 +7,7 @@ name: Verify map
 # the evidence and its bundles into map/evidence on main (ADR-0030).
 on:
   push:
-    branches: [main, ticket-15-ci-evidence]
+    branches: [main]
   schedule:
     - cron: "17 4 * * *"
   workflow_dispatch:
