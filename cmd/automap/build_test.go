@@ -12,7 +12,11 @@ import (
 	"testing"
 
 	"github.com/zach/automap/internal/clitest"
+	"github.com/zach/automap/internal/verify"
 )
+
+// hostPlatform is the platform verify runs on here.
+var hostPlatform = verify.HostPlatform()
 
 // requireBuilds skips a test that builds C++ through vcpkg unless
 // VCPKG_ROOT is set. CI sets AUTOMAP_TEST_BUILDS=1, so there they fail
@@ -112,8 +116,8 @@ func TestVerifyReachesProbed(t *testing.T) {
 	run := repo.Automap(t, "verify", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
-		t.Fatalf("level %q, evidence %q; want probed, evidence/linux-x64-clang.json\n%s", run.Result.Level, run.Result.EvidenceFile, run.Stdout)
+	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/"+hostPlatform+".json" {
+		t.Fatalf("level %q, evidence %q; want probed, evidence/%s.json\n%s", run.Result.Level, run.Result.EvidenceFile, hostPlatform, run.Stdout)
 	}
 	evidence := checkEvidence(t, run, "probed")
 	if env := evidence.Predicate.Conditions.Environment; env["STUB_WINDOW_HEADLESS"] != "1" {
@@ -172,11 +176,11 @@ func TestStartEndsByVerifying(t *testing.T) {
 	run := repo.Automap(t, "start", "--with", "stub-window", "--with", "stub-ui", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/linux-x64-clang.json" {
-		t.Errorf("start reports level %q and evidence %q; want probed and evidence/linux-x64-clang.json", run.Result.Level, run.Result.EvidenceFile)
+	if run.Result.Level != "probed" || run.Result.EvidenceFile != "evidence/"+hostPlatform+".json" {
+		t.Errorf("start reports level %q and evidence %q; want probed and evidence/%s.json", run.Result.Level, run.Result.EvidenceFile, hostPlatform)
 	}
 	checkEvidence(t, run, "probed")
-	if !strings.Contains(run.Result.Summary, "probed on linux-x64-clang") {
+	if !strings.Contains(run.Result.Summary, "probed on "+hostPlatform) {
 		t.Errorf("summary %q doesn't report the level", run.Result.Summary)
 	}
 }
@@ -206,6 +210,7 @@ type evidenceDoc struct {
 		MapRelease string `json:"map_release"`
 		Conditions struct {
 			BuildType   string `json:"build_type"`
+			RunnerImage string `json:"runner_image"`
 			Compiler    string
 			Environment map[string]string
 		}
@@ -223,7 +228,7 @@ type evidenceDoc struct {
 // lock (its hash and the file's digest), with run conditions, unsigned.
 func checkEvidence(t *testing.T, run *clitest.Run, level string) evidenceDoc {
 	t.Helper()
-	raw := run.ReadFile(t, "evidence/linux-x64-clang.json")
+	raw := run.ReadFile(t, "evidence/"+hostPlatform+".json")
 	clitest.ExpectSchema(t, "evidence", raw)
 	var e evidenceDoc
 	json.Unmarshal([]byte(raw), &e)
@@ -245,6 +250,8 @@ func checkEvidence(t *testing.T, run *clitest.Run, level string) evidenceDoc {
 		t.Errorf("verifier %+v, want developer-local, id local, unsigned", p.Verifier)
 	case p.Conditions.BuildType == "" || p.Conditions.Compiler == "":
 		t.Errorf("run conditions %+v lack the build type or compiler", p.Conditions)
+	case os.Getenv("ImageOS") != "" && !strings.Contains(p.Conditions.RunnerImage, os.Getenv("ImageOS")):
+		t.Errorf("run conditions' runner image %q, want the hosted runner's %s", p.Conditions.RunnerImage, os.Getenv("ImageOS"))
 	case p.MapRelease != "unreleased":
 		t.Errorf("map_release %q, want unreleased", p.MapRelease)
 	}

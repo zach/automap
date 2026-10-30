@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -16,6 +17,9 @@ import (
 func requireTSan(t *testing.T) {
 	t.Helper()
 	requireBuilds(t)
+	if hostPlatform == "windows-x64-msvc" {
+		t.Skip("ThreadSanitizer doesn't run on " + hostPlatform)
+	}
 	dir := t.TempDir()
 	src := filepath.Join(dir, "t.cpp")
 	os.WriteFile(src, []byte("int main() { return 0; }\n"), 0o644)
@@ -79,7 +83,7 @@ func TestTheJobsCompositionIsProbedWithACleanThreadSanitizerRun(t *testing.T) {
 			t.Errorf("jobs.tsan-clean %s, want pass", r.Status)
 		}
 	}
-	if !strings.Contains(run.ReadFile(t, "evidence/linux-x64-clang.json"), `"thread": "separate Debug build with -fsanitize=thread`) {
+	if !strings.Contains(run.ReadFile(t, "evidence/"+hostPlatform+".json"), `"thread": "separate Debug build with -fsanitize=thread`) {
 		t.Error("the evidence's run conditions don't record the ThreadSanitizer run")
 	}
 }
@@ -109,6 +113,9 @@ func TestEveryJobsSeedIsCaught(t *testing.T) {
 
 func TestARaceInsideAnUninstrumentedSharedLibraryIsSetAside(t *testing.T) {
 	requireTSan(t)
+	if runtime.GOOS != "linux" {
+		t.Skip("the uninstrumented library is a Linux shared object")
+	}
 	repo := physicsRepo(t, buildableRepo(t))
 	// noise is a shared library built without ThreadSanitizer, like a GPU
 	// driver: its threads race inside it, through the memset interceptor.
@@ -134,7 +141,7 @@ target_link_libraries(testbed PRIVATE noise)
 		run.LogDetails(t)
 		t.Fatalf("exit %d, level %q; want probed, with the driver-like race set aside\n%s", run.Exit, run.Result.Level, run.Stdout)
 	}
-	evidence := run.ReadFile(t, "evidence/linux-x64-clang.json")
+	evidence := run.ReadFile(t, "evidence/"+hostPlatform+".json")
 	if !strings.Contains(evidence, `"set_aside_reports"`) || !strings.Contains(evidence, "libnoise.so") {
 		t.Errorf("the evidence doesn't record the set-aside report in libnoise.so:\n%s", evidence)
 	}
@@ -142,7 +149,12 @@ target_link_libraries(testbed PRIVATE noise)
 
 func TestThreadSanitizerIsNotApplicableOffItsPlatforms(t *testing.T) {
 	repo := buildableRepo(t)
-	repo.EditJSON(t, "map/contracts/jobs/1.0.0.json", set("rules/1/platforms", []any{"macos-arm64-appleclang"}))
+	// The rule runs only on another platform than this one.
+	elsewhere := "macos-arm64-appleclang"
+	if hostPlatform == elsewhere {
+		elsewhere = "linux-x64-clang"
+	}
+	repo.EditJSON(t, "map/contracts/jobs/1.0.0.json", set("rules/1/platforms", []any{elsewhere}))
 	physicsRepo(t, repo)
 
 	run := repo.Automap(t, "verify", "--map", "map", "--json")
@@ -153,8 +165,8 @@ func TestThreadSanitizerIsNotApplicableOffItsPlatforms(t *testing.T) {
 	}
 	e := checkEvidence(t, run, "probed")
 	for _, r := range e.Predicate.Results {
-		if r.Rule == "jobs.tsan-clean" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, "macos-arm64-appleclang")) {
-			t.Errorf("jobs.tsan-clean %+v, want not-applicable on linux, naming the platform it runs on", r)
+		if r.Rule == "jobs.tsan-clean" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, elsewhere)) {
+			t.Errorf("jobs.tsan-clean %+v, want not-applicable on %s, naming the platform it runs on", r, hostPlatform)
 		}
 	}
 }

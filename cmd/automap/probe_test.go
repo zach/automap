@@ -138,3 +138,19 @@ func readRepo(t *testing.T, dir, path string) string {
 	}
 	return string(data)
 }
+
+// MSVC's linker catches an ABI define mismatch the library's header
+// declares with #pragma detect_mismatch, before anything runs; elsewhere
+// the build-flags probe catches it.
+func TestAnABIDefineMismatchFailsAtLinkTimeOnMSVC(t *testing.T) {
+	repo := buildableRepo(t)
+	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
+
+	run := repo.Automap(t, "verify", "--seed", "build-flags.abi-defines-match", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	atLinkTime := run.Result.Level == "none"
+	if want := hostPlatform == "windows-x64-msvc"; atLinkTime != want {
+		t.Errorf("level %q: caught at link time %v, want %v on %s\n%s", run.Result.Level, atLinkTime, want, hostPlatform, run.Stdout)
+	}
+}

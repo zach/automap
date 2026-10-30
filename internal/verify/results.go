@@ -2,6 +2,7 @@ package verify
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -109,11 +110,16 @@ func Results(expected []Expected, platform string, obs Observed) []Result {
 	}
 	for _, e := range expected {
 		r := Result{Rule: e.Rule.ID, Library: e.Library}
-		switch got := firstNonNil(find(obs.Computed, e), find(obs.Reported, e)); {
+		computed := find(obs.Computed, e)
+		switch got := firstNonNil(computed, find(obs.Reported, e)); {
 		case e.NotApplicable != "":
 			r.Status, r.Reason = "not-applicable", e.NotApplicable
 		case len(e.Platforms) > 0 && !slices.Contains(e.Platforms, platform):
 			r.Status, r.Reason = "not-applicable", "The rule's probe runs only on "+strings.Join(e.Platforms, ", ")+"."
+		case computed != nil:
+			// Some results don't need the probes, such as a mismatch the
+			// linker found.
+			r = *computed
 		case !obs.Ran:
 			r.Status, r.Reason = "unverifiable", "No probe ran: the composition reached "+obs.Level+"."
 		case got != nil:
@@ -340,4 +346,20 @@ func CheckPrecision(choice string, precisions map[string]string) Result {
 		}
 	}
 	return Result{Rule: "math-types.precision-agrees", Status: "pass"}
+}
+
+// linkMismatch is MSVC's report of a #pragma detect_mismatch conflict.
+var linkMismatch = regexp.MustCompile(`LNK2038: mismatch detected for '([^']+)': (.*)`)
+
+// LinkMismatch is the build-flags.abi-defines-match result a failed build's
+// log shows, when MSVC's linker found two translation units built with
+// different values of an ABI define declared with #pragma detect_mismatch,
+// or nil. It is a pure function.
+func LinkMismatch(buildLog string) *Result {
+	m := linkMismatch.FindStringSubmatch(buildLog)
+	if m == nil {
+		return nil
+	}
+	return &Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(" + m[1] + ")",
+		Reason: "The linker found translation units built with different " + m[1] + ": " + strings.TrimSpace(m[2]) + "."}
 }
