@@ -1,6 +1,6 @@
 # 01: Repo setup and the CLI seam
 
-**What to build:** The build repository adopts the instruction conventions Automap generates for users, and the CLI exists as a Go binary whose behaviour is tested by running it as a process. With no composition present, `automap verify --json` prints a schema-valid CLI result naming the problem. This is the tracer bullet for every later ticket's tests (ADR-0066, ADR-0077).
+**What to build:** The build repository adopts the instruction conventions Automap generates for users, and the CLI exists as a Go binary whose behaviour is tested by running it as a process. With no composition present, `automap verify --json` prints a schema-valid CLI result naming the problem. This is the tracer bullet for every later ticket's tests (ADR-0066, ADR-0077). It starts on `main` once the exploration has merged there (ADR-0078), and switching the instruction files ends the exploration's "no product code" rule.
 
 **Blocked by:** None (can start immediately)
 

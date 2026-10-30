@@ -21,7 +21,7 @@ A general-purpose agent with no conversation history was given only the repo and
 
 | # | Question | Its rating | Resolution |
 | --- | --- | --- | --- |
-| 1 | Has implementation been authorised, and on which branch? `CLAUDE.md` still says "No product code", and `main` holds only `LICENSE`. | Foundational | To decide with the product owner: when the exploration branch merges to `main` |
+| 1 | Has implementation been authorised, and on which branch? `CLAUDE.md` still says "No product code", and `main` holds only `LICENSE`. | Foundational | The exploration merges to `main` with a merge commit when this review is signed off; ticket 01 starts there and switches the instruction files ([ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)) |
 | 2 | Where does the CLI read the public map in slices 1–2, and what goes in `map_release` before the first release in slice 3? | Foundational | To decide with the product owner |
 | 3 | How do recipe entry points become running code: a generated startup or a hand-written `main`? What supplies arguments such as the window and GPU device? | Foundational | To decide with the product owner |
 | 4 | Which agent runtime and model run the eval suite, with what credentials and budget? | Foundational | To decide with the product owner |

@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0077](../adr/0077-tests-attach-at-the-cli-process.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0078](../adr/0078-exploration-merges-to-main-after-review.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -941,3 +941,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0075](../adr/0075-variants-per-platform.md) | A composition can choose a library's variant per platform |
 | [0076](../adr/0076-probed-rules-name-their-platforms.md) | A probed rule may name the platforms its probe can run on |
 | [0077](../adr/0077-tests-attach-at-the-cli-process.md) | The build's tests attach at the CLI, run as a process |
+| [0078](../adr/0078-exploration-merges-to-main-after-review.md) | The exploration merges to main when the definition of done is signed off |
