@@ -6,7 +6,6 @@ Running list for the exploration. Each item names the Phase 2 branch (see `docs/
 
 | ID | Question | Branch | Raised |
 | --- | --- | --- | --- |
-| OQ-006 | Which agent instruction files (`CLAUDE.md`, `AGENTS.md`) the repo where Automap itself is built uses, and what they contain (spec section 10). This exploration repo uses `CLAUDE.md`. | 15 | 2026-10-29 |
 
 ## Parked
 
