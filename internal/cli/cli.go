@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 )
 
@@ -62,6 +63,13 @@ func Run(argv []string, stdout, stderr io.Writer) int {
 	if status := checkLock(r); status != exitOK {
 		return finish(r, status, a.bools["json"], stdout, stderr)
 	}
+	if stale := agentfiles.StaleSkills(".", Version); len(stale) > 0 {
+		written, err := writeFiles(stale)
+		if err != nil {
+			fmt.Fprintf(stderr, "automap: rewriting the router skill: %v\n", err)
+		}
+		r.FilesWritten = append(r.FilesWritten, written...)
+	}
 	status := cmd.run(a, r)
 	return finish(r, status, a.bools["json"], stdout, stderr)
 }
@@ -94,7 +102,7 @@ func checkLock(r *result) int {
 	}
 	if _, err := composition.CheckLock(raw); err != nil {
 		r.Summary = "Refusing to act on a hand-edited lock."
-		r.fail("LOCK_EDITED", composition.LockFile+" was edited by hand: "+err.Error()+". Only the CLI writes the lock: restore it from version control and make the change through the CLI.")
+		r.fail("LOCK_EDITED", composition.LockFile+" was edited by hand: "+err.Error()+". "+agentfiles.Never(1)+" Restore it from version control and make the change through the CLI.")
 		return exitRefused
 	}
 	return exitOK

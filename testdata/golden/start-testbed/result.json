@@ -6,6 +6,8 @@
   "warnings": [],
   "failures": [],
   "files_written": [
+    ".claude/skills/automap/SKILL.md",
+    "AGENTS.md",
     "CMakeLists.txt",
     "automap.lock.json",
     "automap.manifest.json",

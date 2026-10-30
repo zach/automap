@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
 	"github.com/zach/automap/internal/verify"
@@ -206,7 +207,7 @@ func loadComposition(a *args, r *result) (*mapmodel.Map, *composition.Manifest, 
 	lock, err := composition.CheckLock(rawLock)
 	if err != nil {
 		r.Summary = "Refusing to act on a hand-edited lock."
-		r.fail("LOCK_EDITED", err.Error())
+		r.fail("LOCK_EDITED", composition.LockFile+" was edited by hand: "+err.Error()+". "+agentfiles.Never(1))
 		return nil, nil, nil, exitRefused
 	}
 	m, status := loadMap(a, r)

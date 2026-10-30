@@ -487,7 +487,7 @@ With `--probe <results-file>`, the composition's executable also runs every prob
 
 ### 5.7 Agent interface
 
-The agent interface is the CLI, the router skill and the `AGENTS.md` section (§2.7). The router skill is written to `.claude/skills/automap/SKILL.md` and into any other agent's skill directory already present in the repo, and rewritten when the CLI is upgraded [ADR-0044](../adr/0044-router-skill-ships-inside-the-cli.md). It covers: choosing between `find`, `extend` and `upgrade`; reading failure codes and details files; adapting reference glue with a recipe's notes; the four nevers; and the reference CI workflow for multi-platform evidence.
+The agent interface is the CLI, the router skill and the `AGENTS.md` section (§2.7). The router skill is written to `.claude/skills/automap/SKILL.md` and into any other agent's skill directory already present in the repo (`.agents/skills/`, `.github/skills/`, `.codex/skills/`, `.cursor/skills/`). It records the CLI version that wrote it in its frontmatter `metadata` as `automap-cli-version`, and any command run by a newer CLI rewrites it [ADR-0044](../adr/0044-router-skill-ships-inside-the-cli.md). It covers: choosing between `find`, `extend` and `upgrade`; reading failure codes and details files; adapting reference glue with a recipe's notes; the four nevers; and the reference CI workflow for multi-platform evidence.
 
 ---
 
