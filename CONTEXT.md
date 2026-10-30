@@ -123,7 +123,7 @@ One of the six fixed stages of an engine's startup, in order: memory, diagnostic
 _Avoid_: stage, level, loading phase, init order
 
 **Shared interface**:
-An interface a contract defines and delivers as glue source, such as a neutral job-system interface. Never an Automap library the engine links.
+An interface Automap delivers as glue source, such as a neutral job-system interface. Contracts define all of them except the probe harness. Never an Automap library the engine links.
 _Avoid_: adapter, abstraction layer, API
 
 **Rule**:
@@ -143,12 +143,24 @@ Code in the developer's repo that wires libraries together at their seams. The d
 _Avoid_: boilerplate, integration code, wrapper
 
 **Recipe**:
-What Automap provides for one binding or pairing: reference glue, the probes that check any glue doing the same job, and notes on adapting the reference glue.
+What Automap provides for one binding, pairing or library: reference glue (including build fragments and setup glue), the probes that check any glue doing the same job, and notes on adapting the reference glue.
 _Avoid_: template, snippet, tutorial, guide
 
 **Reference glue**:
 Glue that Automap has verified for a binding or pairing. The CLI writes it into new compositions; agents adapt it where glue already exists.
 _Avoid_: template, boilerplate, sample code
+
+**Build fragment**:
+The part of a composition's build file that adds one library: how it is fetched, its options, its targets, and any flags its consumers need. Part of every library recipe's reference glue.
+_Avoid_: CMake snippet, build recipe
+
+**Setup glue**:
+Reference glue that creates the minimal objects the engine needs to use a library, or a shared interface from the composition's choices. Never game logic.
+_Avoid_: boilerplate, scaffolding, sample code
+
+**Probe harness**:
+The shared interface every composition includes, through which probes record their results for the CLI.
+_Avoid_: test framework, test runner
 
 **Probe**:
 An executable check that glue satisfies one rule, such as "allocator hook installed before first allocation". Probes, not resemblance to reference glue, decide whether glue works.
