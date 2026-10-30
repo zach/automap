@@ -30,6 +30,24 @@ func testbedRepo(t *testing.T) *clitest.Repo {
 	return repo
 }
 
+// logVcpkgErrors logs the tail of every port build's error log in vcpkg's
+// buildtrees, which name the cause when vcpkg install fails.
+func logVcpkgErrors(t *testing.T) {
+	t.Helper()
+	logs, _ := filepath.Glob(filepath.Join(os.Getenv("VCPKG_ROOT"), "buildtrees", "*", "*-err.log"))
+	for _, l := range logs {
+		raw, err := os.ReadFile(l)
+		if err != nil || len(raw) == 0 {
+			continue
+		}
+		lines := strings.Split(string(raw), "\n")
+		if len(lines) > 30 {
+			lines = lines[len(lines)-30:]
+		}
+		t.Logf("%s:\n%s", l, strings.Join(lines, "\n"))
+	}
+}
+
 // The testbed's seeded violations, each with the failure code its probe
 // must report (ADR-0071).
 var testbedSeeds = []struct{ seed, code string }{
@@ -67,6 +85,7 @@ func TestTheTestbedStartsProbed(t *testing.T) {
 
 	if run.Exit != 0 || run.Result.Level != "probed" {
 		run.LogDetails(t)
+		logVcpkgErrors(t)
 		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
 	}
 	e := checkEvidence(t, run, "probed")
