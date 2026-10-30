@@ -2,7 +2,7 @@
 
 Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. A developer's coding agent uses it to add a library to an engine, with seam glue the developer owns and signed evidence that the result works.
 
-This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0081](../adr/0081-eval-suite-runs-claude-code-headless.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
+This spec is what the build team works from. It restates decisions recorded in the ADRs ([ADR-0001](../adr/0001-primary-persona-framework-first-indie.md) to [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md)) and uses the terms defined in [`CONTEXT.md`](../../CONTEXT.md). The JSON Schemas in [`schemas/`](schemas/) and the examples in [`examples/`](examples/) are part of the spec; [`check-examples.py`](check-examples.py) validates every example against its schema and against the rules the schemas can't express. Where this spec fills in a detail no ADR decided, such as a command name or a file path, the detail is listed in §12.3.
 
 ## Contents
 
@@ -443,7 +443,7 @@ map/
 schemas/                             the published JSON Schemas
 ```
 
-A map release is the `map/` tree at a `map-YYYY.MM.DD` tag, published as a release archive with its SHA-256. Releases freeze facts, recipes and probes. Evidence is about exact pins and ages by the day, so the CLI fetches evidence for a lock's pins from the map's main branch, where Automap's CI keeps appending it. Older versions retire when CI stops re-verifying them and their evidence goes stale [ADR-0033](../adr/0033-automap-ci-verifies-declared-edges-latest-and-previous.md).
+A map release is the `map/` tree at a `map-YYYY.MM.DD` tag, published as a release archive with its SHA-256. Releases freeze facts, recipes and probes. Evidence is about exact pins and ages by the day, so the CLI fetches evidence for a lock's pins from the map's main branch, where Automap's CI keeps appending it. Older versions retire when CI stops re-verifying them and their evidence goes stale [ADR-0033](../adr/0033-automap-ci-verifies-declared-edges-latest-and-previous.md), [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md).
 
 Before the first release, in the CLI's tests, and in Automap's CI before a release is cut, the CLI reads the public map from a directory given by `--map <dir>` or `AUTOMAP_MAP`. A clean git checkout is recorded as `map_release: git:<commit>`; anything else as `unreleased`, whose evidence is never signed or known-good [ADR-0079](../adr/0079-map-from-a-directory-before-releases.md).
 
@@ -855,18 +855,17 @@ The order follows the day-one minimum, then upgrade, then adopt [ADR-0010](../ad
 
 ### 12.3 Details this spec fills in
 
-These details are needed to build v1 but no ADR records them. They follow from the ADRs and the spike, and are open to change without a new ADR until the build relies on them:
+These details are needed to build v1 but no ADR records them. They follow from the ADRs and the spike. They are the spec's defaults: the build team may change them without a new ADR until the build relies on them.
 
 1. CLI command names and flags beyond the five jobs (`verify`, `fetch`, `vendor`, `find`, `show`), and exit statuses (§5.4).
 2. File layout in the developer's repo, the map and the build repository (§2.3, §5.3, §10.1).
 3. Identifier conventions: recipe ids with `--`, step names `<owner>:<name>`, rule ids (§4.1).
 4. Fact, choice and failure-code names in the example contracts, including the `allocator-slot`, `logging-slot` and `profiling-slot` choices and the C++20 default.
-5. Fetching evidence for a lock's pins from the main branch rather than from the lock's map release (§5.3).
-6. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
-7. The probe results file (§5.6), the choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
-8. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
-9. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
-10. Map metadata files and the vcpkg baseline they carry (§4.2), the default variant (§4.5), how the CLI obtains vcpkg and the configurable registry location (§5.5), and one build for windowed and headless runs (§5.5).
+5. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
+6. The probe results file (§5.6), the choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
+7. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
+8. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
+9. Map metadata files and the vcpkg baseline they carry (§4.2), the default variant (§4.5), how the CLI obtains vcpkg and the configurable registry location (§5.5), and one build for windowed and headless runs (§5.5).
 
 ### 12.4 ADR index
 
@@ -953,3 +952,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0079](../adr/0079-map-from-a-directory-before-releases.md) | The CLI can read the map from a directory, recorded as a commit or as unreleased |
 | [0080](../adr/0080-the-cli-generates-startup.md) | The CLI generates the composition's startup from its recipes |
 | [0081](../adr/0081-eval-suite-runs-claude-code-headless.md) | The eval suite runs Claude Code headless, under a spending cap |
+| [0082](../adr/0082-evidence-is-read-live-for-exact-pins.md) | Map releases freeze facts, recipes and probes; evidence is read live for exact pins |

@@ -10,7 +10,7 @@ The brief's definition of done (section 6), checked item by item, with the evide
 | 4 | Testbed, starter engine and custom integration each have a worked journey | Done | [SPEC §2.4–2.6](SPEC.md#24-journey-1-testbed-start-then-extend), with example files |
 | 5 | Private libraries supported without special cases, shown with a hypothetical in-house library | Done | Acme's `acme-jobs` and `acme-renderer` ([examples](examples/private-map/)), [SPEC §4.5, §7](SPEC.md#45-libraries); the checker applies the same rules to public and private content |
 | 6 | `CONTEXT.md` defines every term the spec relies on | Done | Glossary scan against SPEC's vocabulary; terms added for journey, reference composition, entry point, NDA platform, ordering constraint, console variant, contribution policy, reference thread pool, set-aside report, fixture map |
-| 7 | Every significant decision has an ADR; `OPEN_QUESTIONS.md` holds only items deferred past v1 | Open: SPEC §12.3 to confirm | ADRs 0001–0077; `OPEN_QUESTIONS.md` holds OQ-008 and OQ-011, both deferred past v1 |
+| 7 | Every significant decision has an ADR; `OPEN_QUESTIONS.md` holds only items deferred past v1 | Done | ADRs 0001–0082; the product owner confirmed SPEC §12.3's details as spec defaults, with evidence lookup recorded as [ADR-0082](../adr/0082-evidence-is-read-live-for-exact-pins.md); `OPEN_QUESTIONS.md` holds OQ-008 and OQ-011, both deferred past v1 |
 | 8 | Research claims are cited and dated | Done | Every note in `docs/research/` states its access date for all sources; SPEC cites the notes |
 
 ## Fresh-agent test
