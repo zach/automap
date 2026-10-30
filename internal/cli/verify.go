@@ -148,14 +148,24 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 			return exitOK
 		}
 	}
-	got := "it reported no failure"
+	got, details := "it reported no failure", ""
 	for _, f := range out.Failures {
 		if f.Rule == "" {
 			got = "the run failed with " + f.Code + " instead"
+			// The scratch copy goes away: keep the failing run's log.
+			if f.DetailsFile != "" {
+				if data, err := os.ReadFile(filepath.Join(scratch, filepath.FromSlash(f.DetailsFile))); err == nil {
+					details = "build/automap/seed-" + strings.NewReplacer(":", "-", "/", "-").Replace(spec) + ".log"
+					os.MkdirAll("build/automap", 0o755)
+					os.WriteFile(filepath.FromSlash(details), data, 0o644)
+				}
+			}
+			break
 		}
 	}
 	r.Summary = fmt.Sprintf("The probe didn't catch the seeded violation of %s.", spec)
 	r.fail("SEED_NOT_CAUGHT("+spec+")", seed.Description+" The probe for "+seed.Rule+" didn't fail: "+got+".")
+	r.Failures[len(r.Failures)-1].DetailsFile = details
 	return exitFailed
 }
 
