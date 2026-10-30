@@ -91,8 +91,26 @@
         "pattern": "^[a-z0-9][a-z0-9-]*$"
       },
       "additionalProperties": {
-        "type": "string",
-        "pattern": "^[a-z0-9][a-z0-9-]*$"
+        "oneOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          {
+            "type": "object",
+            "required": [
+              "default"
+            ],
+            "description": "Per-platform variants: 'default' plus any platform ids that differ.",
+            "propertyNames": {
+              "pattern": "^default$|^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          }
+        ]
       }
     },
     "choices": {

@@ -57,7 +57,7 @@ An immutable, dated release of the public map. Every lock records the map releas
 _Avoid_: snapshot, baseline (a vcpkg term), map version
 
 **Private map**:
-A map with the public map's schema, kept in the developer's repo or another repo they control and layered over the public map by the CLI. It holds in-house and proprietary libraries, private variants (including patched libraries), recipes and evidence, and is never uploaded.
+A map with the public map's schema, kept in the developer's repo or another repo they control and layered over the public map by the CLI. It holds in-house and proprietary libraries, private variants (including patched libraries), recipes and evidence, and is never uploaded. A private map can extend a library from a map beneath it by adding variants, and an NDA platform's private map can also add its platform to a library's supported targets.
 _Avoid_: overlay (a vcpkg term), private registry, fork
 
 **CLI**:
@@ -219,11 +219,11 @@ The file the CLI writes beside the manifest, holding the exact pins the composit
 _Avoid_: lockfile (for a build backend's own), snapshot, baseline
 
 **Pin**:
-The exact resolved identity of one library in a lock: the library, its version (or commit, for libraries without release tags), its variant, the registry it came from at a commit, and a content hash of its source.
+The exact resolved identity of one library in a lock: the library, its version (or commit, for libraries without release tags), its variant, the registry it came from at a commit, and a content hash of its source. A library whose variant differs on some platform has a pin for each such platform.
 _Avoid_: version (a pin is more than a version), reference
 
 **Variant**:
-A named set of build options for a library, such as "Jolt, double precision". Bindings, pairings and evidence are per variant, and every library has at least one.
+A named set of build options for a library, such as "Jolt, double precision", or a build from different source, such as a patched fork or a console port, with its own pin. Bindings, pairings and evidence are per variant, and every library has at least one. A composition chooses each library's variant once or per platform.
 _Avoid_: feature (a vcpkg term), option, configuration, flavor
 
 **Testbed**:

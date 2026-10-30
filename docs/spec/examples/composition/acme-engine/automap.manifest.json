@@ -1,17 +1,25 @@
 {
   "$schema": "https://github.com/zach/automap/schemas/manifest.schema.json",
-  "$comment": "Acme Games is hypothetical. Its in-house scheduler and renderer live in engine/, its private map in automap-private/.",
+  "$comment": "Acme Games and the Nebula console are hypothetical. Acme's in-house scheduler and renderer live in engine/, its private map in automap-private/, and its Nebula map in a separate repo only Nebula-licensed staff can read.",
   "format": "automap-manifest/1",
   "map_release": "map-2026.10.29",
   "build_backend": "vcpkg",
   "platforms": [
     "windows-x64-msvc",
-    "linux-x64-clang"
+    "linux-x64-clang",
+    "nebula-arm64-clang"
   ],
   "private_maps": [
     {
       "id": "acme",
       "location": "automap-private"
+    },
+    {
+      "id": "acme-nebula",
+      "location": "../acme-nebula-map",
+      "platforms": [
+        "nebula-arm64-clang"
+      ]
     }
   ],
   "slots": {
@@ -22,10 +30,16 @@
     "jobs": "acme-jobs"
   },
   "variants": {
-    "sdl3": "acme-patched",
+    "sdl3": {
+      "default": "acme-patched",
+      "nebula-arm64-clang": "nebula"
+    },
     "jolt": "default",
     "acme-jobs": "default",
-    "acme-renderer": "default"
+    "acme-renderer": {
+      "default": "default",
+      "nebula-arm64-clang": "nebula"
+    }
   },
   "choices": {
     "allocation": {

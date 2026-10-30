@@ -101,6 +101,16 @@
           "license": {
             "type": "string",
             "description": "SPDX expression from the map's license fact, carried so a license report is always possible."
+          },
+          "platforms": {
+            "type": "object",
+            "description": "A pin for each platform whose variant differs from the default.",
+            "propertyNames": {
+              "pattern": "^(windows|linux|macos)-(x64|arm64)-(msvc|clang|gcc|appleclang)$|^[a-z0-9-]+$"
+            },
+            "additionalProperties": {
+              "$ref": "#/$defs/pin"
+            }
           }
         }
       }
@@ -131,6 +141,65 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$",
       "description": "SHA-256 of the canonical lock with lock_hash removed."
+    }
+  },
+  "$defs": {
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "variant",
+        "registry",
+        "content_hash",
+        "license"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "variant": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "registry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "commit"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "vcpkg-curated",
+                "automap",
+                "private"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^(sha512|sha256|git):[0-9a-f]+$"
+        },
+        "license": {
+          "type": "string",
+          "description": "SPDX expression from the map's license fact, carried so a license report is always possible."
+        }
+      }
     }
   }
 }

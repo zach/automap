@@ -98,9 +98,10 @@ for p in sorted(EX.glob("*/contracts/*/*.json")):
 contract_rules = {r["id"]: r for c in contracts.values() for r in c["rules"]}
 
 # ---- libraries (public and private maps share one schema) ----
-# A private map's file with the id of a public library extends it: library
-# fields and existing versions must match, and it may only add versions
-# and variants.
+# A private map's file with the id of a library in a map beneath it extends
+# that library (ADR-0075): library fields and existing versions must match,
+# and it may only add versions, variants and platform targets. Maps layer in
+# directory order: map/, then private-map*/ sorted by name.
 libraries = {}
 library_files = sorted(EX.glob("map/libraries/*.json")) + sorted(
     p for p in EX.glob("*/libraries/*.json") if p.parts[-3] != "map")
@@ -117,13 +118,21 @@ for p in library_files:
                 base["versions"].append(v)
                 continue
             for k in set(v) | set(bv):
-                if k != "variants" and v.get(k) != bv.get(k):
+                if k not in ("variants", "facts") and v.get(k) != bv.get(k):
                     fail(p, f"extends {d['id']} {v['version']} but its {k} differs")
-            names = {x["name"] for x in bv["variants"]}
+            new_t = v["facts"].get("platform", {}).get("targets", [])
+            old_t = bv["facts"].get("platform", {}).get("targets", [])
+            strip = lambda f: {**f, "platform": {k: x for k, x in f.get("platform", {}).items() if k != "targets"}}
+            if strip(v["facts"]) != strip(bv["facts"]) or not set(old_t) <= set(new_t):
+                fail(p, f"extends {d['id']} {v['version']}: facts may only gain platform targets")
+            elif new_t:
+                bv["facts"]["platform"]["targets"] = old_t + [t for t in new_t if t not in old_t]
+            existing = {x["name"]: x for x in bv["variants"]}
             for var in v["variants"]:
-                if var["name"] in names:
-                    fail(p, f"variant {var['name']} already exists in the map it extends")
-                bv["variants"].append(var)
+                if var["name"] not in existing:
+                    bv["variants"].append(var)
+                elif var != existing[var["name"]]:
+                    fail(p, f"variant {var['name']} differs from the map it extends")
     else:
         libraries[d["id"]] = (p, d)
     if p.stem != d["id"]:
@@ -225,6 +234,7 @@ for p in sorted(EX.glob("*/recipes/*/*.json")):
                 fail(p, f"ordering step {step} isn't owned by {sorted(owners)}")
 
 # ---- compositions ----
+locks = {}
 for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
     m = validate(m_path, "manifest")
     comp = m_path.parent
@@ -256,29 +266,46 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
     body = {k: v for k, v in lock.items() if k != "lock_hash"}
     if lock["lock_hash"] != "sha256:" + hashlib.sha256(canon(body).encode()).hexdigest():
         fail(lock_path, "lock_hash doesn't match the canonical lock")
+    locks[lock["lock_hash"]] = (raw, used)
     if set(lock["pins"]) != used:
         fail(lock_path, "pins must name exactly the libraries in the manifest's slots")
     if lock["map_release"] != m["map_release"]:
         fail(lock_path, "map_release differs from the manifest")
     if set(lock.get("private_maps", {})) != private:
         fail(lock_path, "private_maps must match the manifest's")
-    for lib, pin in lock["pins"].items():
+    def variant_on(lib, plat):
+        chosen = m["variants"].get(lib)
+        return chosen if isinstance(chosen, str) else chosen.get(plat, chosen["default"])
+
+    def check_pin(lib, pin, where):
         v = library_version(lib, pin["version"], pin["variant"])
         if v is None:
-            fail(lock_path, f"{lib} {pin['version']} ({pin['variant']}) is not in the map")
-            continue
-        if pin["variant"] != m["variants"].get(lib):
-            fail(lock_path, f"{lib}: pinned variant differs from the manifest")
+            fail(lock_path, f"{where}: {lib} {pin['version']} ({pin['variant']}) is not in the map")
+            return None
         expected = (variant_of(v, pin["variant"]).get("pin") or v.get("pin") or {}).get("commit")
         if pin.get("commit") != expected:
-            fail(lock_path, f"{lib}: pinned commit differs from the map")
+            fail(lock_path, f"{where}: {lib}: pinned commit differs from the map")
         if pin["license"] != libraries[lib][1]["license"]["spdx"]:
-            fail(lock_path, f"{lib}: license differs from the map")
+            fail(lock_path, f"{where}: {lib}: license differs from the map")
         if pin["registry"]["kind"] == "private" and pin["registry"].get("id") not in private:
-            fail(lock_path, f"{lib}: private registry {pin['registry'].get('id')} is not a private map of this composition")
+            fail(lock_path, f"{where}: {lib}: private registry {pin['registry'].get('id')} is not a private map of this composition")
+        return v
+
+    for lib, pin in lock["pins"].items():
+        chosen = m["variants"].get(lib)
+        default = chosen if isinstance(chosen, str) else chosen["default"]
+        if pin["variant"] != default:
+            fail(lock_path, f"{lib}: pinned variant differs from the manifest's default")
+        differing = {plat for plat in m["platforms"] if variant_on(lib, plat) != default}
+        if set(pin.get("platforms", {})) != differing:
+            fail(lock_path, f"{lib}: platform pins must be exactly the platforms whose variant differs: {sorted(differing)}")
         for plat in m["platforms"]:
-            if plat not in merged_facts(v, pin["variant"]).get("platform", {}).get("targets", []):
-                fail(m_path, f"{lib} doesn't list {plat} among its targets")
+            ppin = pin.get("platforms", {}).get(plat, pin)
+            if ppin["variant"] != variant_on(lib, plat):
+                fail(lock_path, f"{lib} on {plat}: pinned variant differs from the manifest")
+            v = check_pin(lib, ppin, plat)
+            if v and plat not in merged_facts(v, ppin["variant"]).get("platform", {}).get("targets", []):
+                fail(m_path, f"{lib} ({ppin['variant']}) doesn't list {plat} among its targets")
     for c, ver in lock["contracts"].items():
         if c in contracts and contracts[c]["version"] != ver:
             fail(lock_path, f"contract {c} {ver} differs from the example contract")
@@ -311,8 +338,18 @@ for m_path in sorted(EX.glob("composition/*/automap.manifest.json")):
 for e_path in sorted(p for p in EX.glob("*/evidence/**/*.json") if p.parts[-4] != "composition"):
     e = validate(e_path, "evidence")
     pred = e["predicate"]
-    if pred["verifier"]["kind"] not in ("automap-ci", "nda-holder"):
-        fail(e_path, "a map's evidence comes from Automap's CI or an NDA holder")
+    in_public = e_path.relative_to(EX).parts[0] == "map"
+    if pred["verifier"]["kind"] != ("automap-ci" if in_public else "nda-holder"):
+        fail(e_path, "the public map's evidence comes from Automap's CI; a private map's from the NDA holder")
+    if pred["subject_kind"] == "composition":
+        raw, used = locks.get(pred["subject_detail"]["lock_hash"], (None, set()))
+        if raw is None:
+            fail(e_path, "subject_detail.lock_hash matches no example lock")
+        elif e["subject"][0]["digest"].get("sha256") != hashlib.sha256(raw.encode()).hexdigest():
+            fail(e_path, "subject digest doesn't match the lock file")
+        for r in pred["results"]:
+            if r.get("library") and r["library"] not in used:
+                fail(e_path, f"result names {r['library']}, which isn't in the composition")
     if pred["subject_kind"] == "binding":
         pin, c = pred["subject_detail"]["pin"], pred["subject_detail"]["contract"]
         if not library_version(pin["library"], pin["version"], pin["variant"]):
