@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -67,14 +68,24 @@ func start(a *args, r *result) int {
 	if fails != nil {
 		return failWith(r, fails, "The composition's startup can't be generated.", exitFailed)
 	}
-	registry := os.Getenv("AUTOMAP_REGISTRY")
-	if registry == "" {
-		registry = composition.AutomapRegistryURL(m)
-	}
-	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{Testbed: true, RegistryURL: registry})
+	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{Testbed: true, RegistryURL: registryURL(m)})
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written.", exitFailed)
 	}
+	var pinned []string
+	for _, lib := range man.Libraries() {
+		pin := lock.Pins[lib]
+		pinned = append(pinned, fmt.Sprintf("%s %s %s", lib, pin.Version, pin.Variant))
+	}
+	return writeAndVerify(a, m, man, files, nil, fmt.Sprintf("Started a testbed (%s)", strings.Join(pinned, ", ")), r)
+}
+
+// writeAndVerify adds the agent files to a composition's files, writes
+// them, and ends with verify on the host platform unless --no-verify says
+// otherwise. With keep, a file keep accepts is written only where it
+// doesn't exist yet: the developer owns it once written. done begins the
+// summary.
+func writeAndVerify(a *args, m *mapmodel.Map, man *composition.Manifest, files map[string][]byte, keep func(string) bool, done string, r *result) int {
 	agents, err := agentfiles.Files(".", Version, agentfiles.SectionInput{Slots: man.Slots, Executable: man.Executable.Target})
 	if err != nil {
 		r.Summary = "Reading the repo's agent files failed."
@@ -84,7 +95,18 @@ func start(a *args, r *result) int {
 	for p, data := range agents {
 		files[p] = data
 	}
-	written, err := writeFiles(files)
+	changed := map[string][]byte{}
+	for p, data := range files {
+		existing, err := os.ReadFile(filepath.FromSlash(p))
+		switch {
+		case err != nil:
+			changed[p] = data
+		case keep != nil && keep(p):
+		case !bytes.Equal(existing, data):
+			changed[p] = data
+		}
+	}
+	written, err := writeFiles(changed)
 	r.FilesWritten = append(r.FilesWritten, written...)
 	if err != nil {
 		r.Summary = "Writing the composition failed."
@@ -92,21 +114,15 @@ func start(a *args, r *result) int {
 		return exitFailed
 	}
 
-	var pinned []string
-	for _, lib := range man.Libraries() {
-		pin := lock.Pins[lib]
-		pinned = append(pinned, fmt.Sprintf("%s %s %s", lib, pin.Version, pin.Variant))
-	}
-	started := fmt.Sprintf("Started a testbed (%s)", strings.Join(pinned, ", "))
 	host := verify.HostPlatform()
 	switch {
 	case a.bools["no-verify"]:
 		r.OK = true
-		r.Summary = started + "; it is not verified: run automap verify."
+		r.Summary = done + "; it is not verified: run automap verify."
 		return exitOK
 	case !contains(man.Platforms, host):
 		r.OK = true
-		r.Summary = started + "; it is not verified: it doesn't target this machine's platform, " + host + "."
+		r.Summary = done + "; it is not verified: it doesn't target this machine's platform, " + host + "."
 		return exitOK
 	}
 	// Verify the lock as written, with its lock_hash.
@@ -116,10 +132,21 @@ func start(a *args, r *result) int {
 		r.fail("INTERNAL", err.Error())
 		return exitFailed
 	}
-	status = runVerify(m, man, checked, host, r)
-	r.Summary = started + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
+	status := runVerify(m, man, checked, host, r)
+	r.Summary = done + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
 	return status
 }
+
+// registryURL is the Automap registry's URL: AUTOMAP_REGISTRY, or the
+// public map's.
+func registryURL(m *mapmodel.Map) string {
+	if u := os.Getenv("AUTOMAP_REGISTRY"); u != "" {
+		return u
+	}
+	return composition.AutomapRegistryURL(m)
+}
+
+func sortStrings(s []string) { sort.Strings(s) }
 
 func failWith(r *result, fails []composition.Failure, summary string, status int) int {
 	r.Summary = summary

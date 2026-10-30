@@ -16,11 +16,12 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 | The user wants to | Run |
 | --- | --- |
 | a new testbed with some libraries | `automap start --with <library>[:<variant>]... --json` |
+| to add or swap in a library | `automap extend <library>[:<variant>] [--slot <slot>]... --json` |
 | to know whether the engine is wired correctly | `automap verify --json` |
 | to know which libraries fill a slot | `automap find --slot <slot> --json` |
 | a library's facts, hooks and variants | `automap show library <id> --json` |
 
-`start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`.
+`start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. `extend` adds one library the same way: its slots, build fragment, bindings, setup glue and the glue of any pairing it completes, then re-resolves and verifies; it never overwrites glue already in the repo. A `LICENSE_WARNING(<library>)` warning means the library is copyleft or proprietary: tell the developer why before going on. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`.
 
 ## Reading a verify result
 
