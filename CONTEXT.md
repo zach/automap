@@ -80,6 +80,10 @@ _Avoid_: bot, crawler, monitor
 An agent that updates the public map's facts, recipes and probes. Nothing it writes enters the map without evidence.
 _Avoid_: curator (humans decide coverage), maintainer bot
 
+**Eval suite**:
+Automap's CI suite in which fresh agent sessions carry out the v1 jobs along the worked journeys, on every map release. The source of every success measure.
+_Avoid_: benchmark, test suite, telemetry
+
 **Automap registry**:
 Automap's own vcpkg registry of overlay ports, for variants vcpkg can't express, libraries vcpkg lacks, and fresh commits of libraries vcpkg packages stale.
 _Avoid_: the map (the map describes; the registry builds), overlay, fork
