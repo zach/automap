@@ -170,6 +170,12 @@ jobs:
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/vcpkg-archives"
           echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-archives" >> "$GITHUB_ENV"
+          # Source downloads come from an asset cache kept across runs, so a
+          # slow upstream mirror can't fail a job that builds from source.
+          mkdir -p "$RUNNER_TEMP/vcpkg-assets"
+          assets="$RUNNER_TEMP/vcpkg-assets"
+          [ "$RUNNER_OS" = Windows ] && assets="/$(cygpath -m "$assets")"
+          echo "X_VCPKG_ASSET_SOURCES=clear;x-azurl,file://$assets,,readwrite" >> "$GITHUB_ENV"
       - name: Restore the vcpkg binary cache
         uses: actions/cache/restore@v4
         with:
@@ -178,6 +184,12 @@ jobs:
           restore-keys: |
             public-map-${{ runner.os }}-${{ matrix.group }}-
             public-map-${{ runner.os }}-
+      - name: Restore the vcpkg asset cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-assets
+          key: vcpkg-assets-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: vcpkg-assets-${{ runner.os }}-
       - name: The public map's compositions reach probed, and every seed is caught
         env:
           AUTOMAP_TEST_PUBLIC_MAP: "1"
@@ -189,3 +201,9 @@ jobs:
         with:
           path: ${{ runner.temp }}/vcpkg-archives
           key: public-map-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
+      - name: Save the vcpkg asset cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-assets
+          key: vcpkg-assets-${{ runner.os }}-${{ github.run_id }}
