@@ -182,6 +182,7 @@ func run(args []string) error {
 	jobJSON := fs.String("job", "", "the job, as the plan's matrix gives it")
 	automap := fs.String("automap", "automap", "the automap CLI")
 	out := fs.String("out", "evidence-out", "where to write the edges' evidence, laid out as in the map")
+	require := fs.String("require", "", "fail when an edge's evidence is below this level, such as probed")
 	fs.Parse(args)
 
 	var job Job
@@ -286,6 +287,7 @@ func run(args []string) error {
 	if os.Getenv("GITHUB_WORKFLOW_REF") == "" {
 		verifier = "verifymap"
 	}
+	short := 0
 	for _, e := range job.Edges {
 		s := EdgeEvidence(m, e, comp, lock, lockFile, uncaught, verifier)
 		if s == nil {
@@ -299,12 +301,22 @@ func run(args []string) error {
 			return err
 		}
 		fmt.Printf("%s %s: %s\n", e.Kind, e.ID, s.Predicate.Level)
+		if *require != "" && levels[s.Predicate.Level] < levels[*require] {
+			fmt.Printf("::error::%s %s reached %s on %s, below %s\n", e.Kind, e.ID, s.Predicate.Level, job.Platform, *require)
+			short++
+		}
+	}
+	if short > 0 {
+		return fmt.Errorf("%d edges are below %s", short, *require)
 	}
 	if len(uncaught) > 0 {
 		return fmt.Errorf("%d probes didn't catch their seeded violations", len(uncaught))
 	}
 	return nil
 }
+
+// levels orders the evidence levels (SPEC §6.2).
+var levels = map[string]int{"none": 0, "builds": 1, "smoke": 2, "probed": 3}
 
 // applies reports whether a seed's rule applies in the composition's run:
 // a rule not-applicable there, such as ThreadSanitizer's on Windows, has

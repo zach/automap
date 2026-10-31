@@ -711,6 +711,8 @@ The public map is curated primarily by agents [ADR-0051](../adr/0051-agents-cura
 
 Humans decide only what the map covers (slots, libraries) and contract major versions [ADR-0051](../adr/0051-agents-curate-the-public-map.md), [ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md).
 
+In Automap's CI this is three workflows. `Curate map` runs daily: the watcher (`ci/cmd/watch`) lists each library's upstream releases and tags newer than the map's newest version, by the pattern of that version's pinned tag, with each one's commit, release date and whether its notes name a security fix; for each release without a `curate/<library>-<version>` branch yet, a Claude Code session (at most 80 turns and 40 minutes, with the prompt in `ci/curation/prompt.md`) adds the version, and the workflow opens a pull request labelled `curation` and starts CI and `Verify map` on it, which requires every edge to reach probed. `Cooldown gate` runs every six hours (`ci/cmd/gate`): it merges a curation pull request once every version it adds is at least 7 days old, or a security fix, and CI and `Verify map` passed on its head, then starts `Verify map` on main to publish the evidence; a change that adds a slot, a library or a contract major version is labelled `needs-human` and never merges on its own.
+
 ### 9.2 Contributions
 
 Anyone, including agents and upstream maintainers, can propose map changes as pull requests: facts, recipes, probes or new versions. Contributions pass the same gates as curation agents' changes. Evidence always comes from Automap's CI, never from a contributor's own runs; new slots and libraries still need the human coverage decision [ADR-0052](../adr/0052-open-contributions-same-evidence-gates.md).
