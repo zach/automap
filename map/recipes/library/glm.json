@@ -1,0 +1,27 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "glm"
+  },
+  "applies_to": {
+    "glm": {
+      "versions": [
+        "1.0.3"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "glm/glm.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(glm CONFIG REQUIRED) and links glm::glm; its headers are included as <glm/glm.hpp> and <glm/gtc/quaternion.hpp>.",
+    "GLM_FORCE_* defines change GLM's types and conventions for every translation unit that sees them: a composition that wants one sets it on automap_glue in this fragment, where the adapters see it too."
+  ]
+}

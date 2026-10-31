@@ -3,7 +3,7 @@
   "subject": {
     "library": "jolt",
     "contract": "math-types",
-    "contract_version": "1.0.0"
+    "contract_version": "1.1.0"
   },
   "applies_to": {
     "jolt": {
@@ -15,15 +15,29 @@
       ]
     }
   },
-  "reference_glue": [],
-  "probes": [],
-  "not_applicable": [
+  "reference_glue": [
+    {
+      "path": "jolt--math-types/jolt_math_glm.h",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--math-types/jolt_math_glm_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
     {
       "rule": "math-types.adapters-round-trip",
-      "reason": "The composition has no math library for Jolt's types to convert to."
+      "check": "am_probe_jolt_math(): Vec3, Vec4, Quat and Mat44 sample values (thirds, tiny and huge magnitudes, negative zero) convert to GLM's types and back bit for bit, and each component lands where GLM keeps it (a quaternion's w, a matrix's columns).",
+      "seeded_violation": {
+        "description": "Pass a Jolt quaternion's components to glm::quat in x, y, z, w order, though its constructor takes w first.",
+        "patch": "jolt--math-types/seeded/math-types.adapters-round-trip.patch"
+      }
     }
   ],
   "adaptation_notes": [
-    "Jolt's RVec3 is single precision in the default variant, matching position_precision float; verify judges math-types.precision-agrees from the library facts."
+    "The adapters are inline functions in am::math, to_glm and to_jolt, compiled only when GLM is in the composition (AUTOMAP_LIBRARY_GLM); without a math library the round-trip rule is not-applicable.",
+    "Neither library fixes an up axis, both are right-handed, and both store matrices column-major, so the adapters copy components without converting conventions. A game with its own up axis converts once, at its own boundary.",
+    "Jolt's RVec3 is single precision in the default variant, the same type as Vec3; with JPH_DOUBLE_PRECISION it converts to glm::dvec3. verify judges math-types.precision-agrees from the library facts."
   ]
 }

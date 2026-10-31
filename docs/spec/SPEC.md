@@ -290,7 +290,7 @@ Three of the six slot examples:
 
 ### 4.4 Contracts
 
-A contract states its **facts** (each with a JSON Schema the libraries' values must satisfy), its **choices** (each with a schema and a default), its **rules** and its **shared interface** (a list of glue source files, or `null`). The lifecycle contract also lists the phases. A probed rule has a failure code and may have a `procedure` (how a rule that isn't checked inside the composition, such as the ThreadSanitizer run, is checked) and `platforms` [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md).
+A contract states its **facts** (each with a JSON Schema the libraries' values must satisfy), its **choices** (each with a schema and a default), its **rules** and its **shared interface** (a list of glue source files, or `null`). The lifecycle contract also lists the phases. A probed rule has a failure code and may have a `procedure` (how a rule that isn't checked inside the composition, such as the ThreadSanitizer run, is checked), `platforms` [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md), and a `slot` it is about, such as the math slot for adapters to the composition's math library: while that slot is empty the rule's result is not-applicable. A fact may be marked `"required": false`, for libraries it doesn't describe, such as `position_precision` for a library with no world positions.
 
 The example contracts are allocation, jobs, lifecycle, diagnostics, build flags, platform and math types. The jobs contract's ThreadSanitizer rule shows a procedure and platform limits:
 

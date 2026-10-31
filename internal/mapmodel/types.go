@@ -53,6 +53,7 @@ type Rule struct {
 	FailureCode     string   `json:"failure_code,omitempty"`
 	Procedure       string   `json:"procedure,omitempty"`
 	Platforms       []string `json:"platforms,omitempty"`
+	Slot            string   `json:"slot,omitempty"`
 	SeededViolation *Seed    `json:"seeded_violation,omitempty"`
 }
 

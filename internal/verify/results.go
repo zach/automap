@@ -36,10 +36,17 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 			if rule.Kind != "probed" {
 				continue
 			}
+			emptySlot := ""
+			if rule.Slot != "" && man.Slots[rule.Slot] == "" {
+				emptySlot = "The composition has no library in the " + rule.Slot + " slot."
+			}
 			if rule.AppliesTo != "library" {
-				e := Expected{Rule: rule, Platforms: rule.Platforms}
-				if rule.ID == "build-flags.abi-defines-match" && !declaresABIDefines(m, man) {
+				e := Expected{Rule: rule, Platforms: rule.Platforms, NotApplicable: emptySlot}
+				switch {
+				case rule.ID == "build-flags.abi-defines-match" && !declaresABIDefines(m, man):
 					e.NotApplicable = "No library in the composition declares an ABI-affecting define."
+				case rule.ID == "math-types.precision-agrees" && len(Precisions(m, man)) == 0:
+					e.NotApplicable = "No library in the composition exposes world positions."
 				}
 				out = append(out, e)
 				continue
@@ -53,6 +60,9 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 								e.NotApplicable = na.Reason
 							}
 						}
+					}
+					if emptySlot != "" {
+						e.NotApplicable = emptySlot
 					}
 					out = append(out, e)
 				}

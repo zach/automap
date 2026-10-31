@@ -1,8 +1,10 @@
 package main_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -65,16 +67,47 @@ var testbedSeeds = []struct{ seed, code string }{
 }
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
+	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds); patches != covered {
+		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
+	}
+}
+
+// seedPatches counts the seed patches a map's recipes and contracts carry.
+// A contract's older versions keep their seeds for compositions locked to
+// them; only each contract's newest counts.
+func seedPatches(t *testing.T, root string) int {
+	t.Helper()
 	var patches int
-	filepath.WalkDir(filepath.Join(clitest.Root(t), "map"), func(p string, d os.DirEntry, err error) error {
-		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) {
+	filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		rel, _ := filepath.Rel(root, p)
+		parts := strings.Split(filepath.ToSlash(rel), "/")
+		if err == nil && d.IsDir() && len(parts) == 3 && parts[0] == "contracts" && parts[2] != newestContract(t, filepath.Dir(p)) {
+			return filepath.SkipDir
+		}
+		if err == nil && slices.Contains(parts, "seeded") && !d.IsDir() {
 			patches++
 		}
 		return nil
 	})
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds); patches != covered {
-		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
+	return patches
+}
+
+// newestContract is the newest version among a contract's directories.
+func newestContract(t *testing.T, dir string) string {
+	t.Helper()
+	entries, _ := os.ReadDir(dir)
+	newest, best := "", [3]int{-1}
+	for _, e := range entries {
+		var v [3]int
+		if !e.IsDir() {
+			continue
+		}
+		if _, err := fmt.Sscanf(e.Name(), "%d.%d.%d", &v[0], &v[1], &v[2]); err == nil && slices.Compare(v[:], best[:]) > 0 {
+			newest, best = e.Name(), v
+		}
 	}
+	return newest
 }
 
 func TestTheTestbedStartsProbed(t *testing.T) {
@@ -93,6 +126,14 @@ func TestTheTestbedStartsProbed(t *testing.T) {
 		if r.Rule == "diagnostics.routed-through-facade" && r.Library == "dear-imgui" &&
 			(r.Status != "not-applicable" || !strings.Contains(r.Reason, "no runtime log or assert hook")) {
 			t.Errorf("Dear ImGui's diagnostics result %+v, want not-applicable with the binding's reason", r)
+		}
+		// No library in the testbed exposes world positions, and no math
+		// library fills the math slot.
+		if r.Rule == "math-types.precision-agrees" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, "world positions")) {
+			t.Errorf("math-types.precision-agrees %+v in the testbed, want not-applicable: nothing exposes world positions", r)
+		}
+		if r.Rule == "math-types.adapters-round-trip" && (r.Status != "not-applicable" || !strings.Contains(r.Reason, "math slot")) {
+			t.Errorf("math-types.adapters-round-trip %+v in the testbed, want not-applicable: the math slot is empty", r)
 		}
 	}
 	if _, err := os.Stat(filepath.Join(repo.Dir, "imgui.ini")); err == nil {
@@ -331,6 +372,58 @@ func TestTheTestbedExtendsWithSpdlogAndTracyProbed(t *testing.T) {
 	}
 
 	for _, c := range diagnosticsBackendSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds GLM's arrival adds: Jolt's and Dear ImGui's adapters to it.
+var glmSeeds = []struct{ seed, code string }{
+	{"math-types.adapters-round-trip:jolt", "ADAPTER_LOSSY(jolt)"},
+	{"math-types.adapters-round-trip:dear-imgui", "ADAPTER_LOSSY(dear-imgui)"},
+}
+
+// GLM fills the math slot of a composition with Jolt and Dear ImGui, whose
+// math-types bindings convert their types to GLM's and back.
+func TestTheTestbedExtendsWithJoltAndGLMProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "jolt", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "glm", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if strings.HasPrefix(r.Rule, "math-types.") && r.Status == "pass" {
+			passed[r.Rule+":"+r.Library] = true
+		}
+	}
+	for _, want := range []string{"math-types.adapters-round-trip:jolt", "math-types.adapters-round-trip:dear-imgui", "math-types.precision-agrees:"} {
+		if !passed[want] {
+			t.Errorf("math-types results passed: %v; want %s", passed, want)
+		}
+	}
+
+	seeds := append(slices.Clone(glmSeeds), struct{ seed, code string }{"math-types.precision-agrees", "PRECISION_MISMATCH(jolt)"})
+	for _, c := range seeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

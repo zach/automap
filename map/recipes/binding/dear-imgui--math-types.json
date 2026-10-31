@@ -1,0 +1,43 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "dear-imgui",
+    "contract": "math-types",
+    "contract_version": "1.1.0"
+  },
+  "applies_to": {
+    "dear-imgui": {
+      "versions": [
+        "1.93.0"
+      ],
+      "variants": [
+        "docking"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "dear-imgui--math-types/imgui_math_glm.h",
+      "role": "glue"
+    },
+    {
+      "path": "dear-imgui--math-types/imgui_math_glm_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "math-types.adapters-round-trip",
+      "check": "am_probe_imgui_math(): ImVec2 and ImVec4 sample values (thirds, tiny and huge magnitudes, negative zero) convert to glm::vec2 and glm::vec4 and back bit for bit.",
+      "seeded_violation": {
+        "description": "Convert an ImVec4 to glm::vec4 with w set to 1, as if every ImVec4 were an opaque color.",
+        "patch": "dear-imgui--math-types/seeded/math-types.adapters-round-trip.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The adapters are inline functions in am::math, to_glm and to_imgui, compiled only when GLM is in the composition (AUTOMAP_LIBRARY_GLM); without a math library the round-trip rule is not-applicable.",
+    "ImGui's vectors are screen pixels, origin top left, y down; the adapters copy components and leave the convention to the caller. A game that prefers implicit conversions defines IM_VEC2_CLASS_EXTRA and IM_VEC4_CLASS_EXTRA in its ImGui config to call these, which no probe checks.",
+    "Dear ImGui exposes no world positions, so it states no position_precision."
+  ]
+}

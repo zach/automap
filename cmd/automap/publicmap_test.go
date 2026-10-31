@@ -152,3 +152,25 @@ func TestExtendingWithDiagnosticsBackendsFillsTheirSlots(t *testing.T) {
 		}
 	}
 }
+
+// GLM fills the math slot; Jolt's and Dear ImGui's math-types bindings carry
+// their adapters to it.
+func TestExtendingWithGLMFillsTheMathSlot(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "jolt", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "glm", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct{ Slots map[string]string }
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["math"] != "glm" {
+		t.Errorf("slots %v, want GLM in the math slot", man.Slots)
+	}
+	for _, f := range []string{"glue/jolt/jolt_math_glm.h", "glue/dear-imgui/imgui_math_glm.h"} {
+		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
+			t.Errorf("an adapter to GLM wasn't written: %v", err)
+		}
+	}
+}

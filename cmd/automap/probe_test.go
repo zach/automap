@@ -52,13 +52,7 @@ func TestEverySeedInTheFixtureMapIsTested(t *testing.T) {
 	run.ExpectExit(t, 2)
 	// The fixture map's seeds, found the way verify finds them: by the
 	// patch files its recipes and contracts carry.
-	var patches int
-	filepath.WalkDir(filepath.Join(repo.Dir, "map"), func(p string, d os.DirEntry, err error) error {
-		if err == nil && strings.Contains(p, string(filepath.Separator)+"seeded"+string(filepath.Separator)) {
-			patches++
-		}
-		return nil
-	})
+	patches := seedPatches(t, filepath.Join(repo.Dir, "map"))
 	if covered := len(fixtureSeeds) + len(physicsSeeds); patches != covered {
 		t.Errorf("the fixture map carries %d seed patches but the tests cover %d", patches, covered)
 	}

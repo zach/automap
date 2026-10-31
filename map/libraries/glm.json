@@ -1,0 +1,114 @@
+{
+  "id": "glm",
+  "name": "GLM",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/g-truc/glm"
+  },
+  "slots": [
+    "math"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/g-truc/glm"
+  },
+  "versions": [
+    {
+      "version": "1.0.3",
+      "released": "2025-12-31",
+      "pin": {
+        "tag": "1.0.3",
+        "commit": "8d1fd52e5ab5590e2c81768ace50c72bae28f2ed",
+        "content_hash": "sha512:0a490f0c79cd4a8ba54f37358f8917cef961dab9e61417c84ae0959c61bc860e5b83f4fb7f27169fb3d08eef1d84131bddde23d60876922310205c901b1273aa"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "glm",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "glm",
+        "targets": [
+          "glm::glm"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "GLM as the glm port builds it: the headers and the static glm library, with GLM's defaults (right-handed, clip depth -1 to 1, no forced alignment or SIMD)."
+        }
+      ],
+      "facts": {
+        "math-types": {
+          "types": [
+            {
+              "name": "glm::vec2",
+              "scalar": "float"
+            },
+            {
+              "name": "glm::vec3",
+              "scalar": "float"
+            },
+            {
+              "name": "glm::vec4",
+              "scalar": "float"
+            },
+            {
+              "name": "glm::quat",
+              "scalar": "float"
+            },
+            {
+              "name": "glm::mat4",
+              "scalar": "float"
+            },
+            {
+              "name": "glm::dvec3",
+              "scalar": "double"
+            }
+          ],
+          "handedness": "right-handed by default (GLM_FORCE_LEFT_HANDED changes it); matrices are column-major; glm::quat's constructor takes w first"
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": true
+        },
+        "build-flags": {
+          "abi_defines": [
+            "GLM_FORCE_LEFT_HANDED",
+            "GLM_FORCE_DEPTH_ZERO_TO_ONE",
+            "GLM_FORCE_DEFAULT_ALIGNED_GENTYPES",
+            "GLM_FORCE_ALIGNED_GENTYPES",
+            "GLM_FORCE_INTRINSICS",
+            "GLM_FORCE_XYZW_ONLY",
+            "GLM_FORCE_SIZE_T_LENGTH",
+            "GLM_FORCE_PRECISION_HIGHP_FLOAT",
+            "GLM_FORCE_PRECISION_MEDIUMP_FLOAT",
+            "GLM_FORCE_PRECISION_LOWP_FLOAT"
+          ],
+          "self_check": null,
+          "min_language_standard": "C++11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "GLM is configured by GLM_FORCE_* defines that change type layout or conventions; every translation unit that includes GLM must see the same ones, which nothing checks. Define them on the target, not before an #include."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}
