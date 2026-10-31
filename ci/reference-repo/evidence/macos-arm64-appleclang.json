@@ -5,13 +5,13 @@
       "build_type": "Debug",
       "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
       "environment": {},
-      "runner_image": "macos26 20261013.0424.1",
+      "runner_image": "macos26 20261021.0445.8",
       "sanitizers": {}
     },
     "level": "probed",
     "map_release": "map-2026.10.31",
     "platform": "macos-arm64-appleclang",
-    "produced_at": "2026-10-31T10:55:09Z",
+    "produced_at": "2026-10-31T13:22:40Z",
     "results": [
       {
         "rule": "allocation.hooks-before-first-allocation",
