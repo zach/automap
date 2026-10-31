@@ -16,7 +16,7 @@ Automap has a CLI ([ADR-0064](0064-cli-is-written-in-go.md)), a public map with 
 
 ## Decision
 
-Option 1. Automap is built in this one repository. The CLI, the public map, the eval suite and the docs live on the main branch. The Automap registry is published to its own branch. CLI releases and map releases get separate tags, such as `cli-v0.1.0` and `map-2026.11.01`.
+Option 1. Automap is built in this one repository. The CLI, the public map, the eval suite and the docs live on the main branch. The Automap registry is published to its own branch. CLI releases and map releases get separate tags, such as `cli-v0.1.0` and `map-2026.11.01`. CLI versions follow semver, and the first release is 0.1.0.
 
 ## Consequences
 
