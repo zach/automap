@@ -68,7 +68,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -424,6 +424,57 @@ func TestTheTestbedExtendsWithJoltAndGLMProbed(t *testing.T) {
 
 	seeds := append(slices.Clone(glmSeeds), struct{ seed, code string }{"math-types.precision-agrees", "PRECISION_MISMATCH(jolt)"})
 	for _, c := range seeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds miniaudio adds to the testbed.
+var miniaudioSeeds = []struct{ seed, code string }{
+	{"allocation.hooks-before-first-allocation:miniaudio", "ALLOC_HOOK_LATE(miniaudio)"},
+	{"allocation.routed-through-facade:miniaudio", "ALLOC_NOT_ROUTED(miniaudio)"},
+	{"diagnostics.routed-through-facade:miniaudio", "DIAG_NOT_ROUTED(miniaudio)"},
+}
+
+// miniaudio joins the testbed and runs on its null backend, so the
+// composition reaches probed on a runner without an audio device.
+func TestTheTestbedExtendsWithMiniaudioProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "miniaudio", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Library == "miniaudio" && r.Status == "pass" {
+			passed[r.Rule] = true
+		}
+	}
+	for _, rule := range []string{"allocation.hooks-before-first-allocation", "allocation.routed-through-facade", "diagnostics.routed-through-facade"} {
+		if !passed[rule] {
+			t.Errorf("miniaudio's results passed: %v; want %s", passed, rule)
+		}
+	}
+
+	for _, c := range miniaudioSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

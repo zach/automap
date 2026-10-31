@@ -1,0 +1,7 @@
+{
+  "id": "audio",
+  "description": "Sound playback and mixing: the audio engine that plays the game's sounds on the platform's audio device.",
+  "examples": [
+    "miniaudio"
+  ]
+}
