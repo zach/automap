@@ -1,0 +1,11 @@
+--- a/stb_image_allocation.cpp
++++ b/stb_image_allocation.cpp
+@@ -5,8 +5,5 @@
+ // SPDX-License-Identifier: MIT-0
+ #include "automap/alloc.h"
+ 
+-#define STBI_MALLOC(size) am::alloc::allocate("stb-image", size)
+-#define STBI_REALLOC(block, size) am::alloc::reallocate("stb-image", block, size)
+-#define STBI_FREE(block) am::alloc::release("stb-image", block)
+ #define STB_IMAGE_IMPLEMENTATION
+ #include <stb_image.h>

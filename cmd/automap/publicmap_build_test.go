@@ -68,7 +68,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -475,6 +475,60 @@ func TestTheTestbedExtendsWithMiniaudioProbed(t *testing.T) {
 	}
 
 	for _, c := range miniaudioSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds fastgltf and stb_image add, with the assets contract.
+var assetsSeeds = []struct{ seed, code string }{
+	{"assets.reads-through-interface:fastgltf", "ASSET_READ_BYPASSED(fastgltf)"},
+	{"assets.output-identical:fastgltf", "ASSET_OUTPUT_DIFFERS(fastgltf)"},
+	{"assets.reads-through-interface:stb-image", "ASSET_READ_BYPASSED(stb-image)"},
+	{"assets.output-identical:stb-image", "ASSET_OUTPUT_DIFFERS(stb-image)"},
+	{"allocation.routed-through-facade:stb-image", "ALLOC_NOT_ROUTED(stb-image)"},
+}
+
+// fastgltf imports a model and stb_image decodes an image, both reading
+// files only through the assets interface.
+func TestTheTestbedExtendsWithAssetLibrariesProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	if hostPlatform != "windows-x64-msvc" {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "fastgltf", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "stb-image", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Status == "pass" {
+			passed[r.Rule+":"+r.Library] = true
+		}
+	}
+	for _, want := range []string{"assets.reads-through-interface:fastgltf", "assets.output-identical:fastgltf",
+		"assets.reads-through-interface:stb-image", "assets.output-identical:stb-image", "allocation.routed-through-facade:stb-image"} {
+		if !passed[want] {
+			t.Errorf("%s didn't pass", want)
+		}
+	}
+
+	for _, c := range assetsSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

@@ -1,0 +1,27 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "stb-image"
+  },
+  "applies_to": {
+    "stb-image": {
+      "versions": [
+        "2026-08-02"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "stb-image/stb-image.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The stb port installs the stb headers and a FindStb module but no imported target: the build fragment calls find_package(Stb REQUIRED) and defines stb::image from Stb_INCLUDE_DIR.",
+    "The allocation binding's glue compiles stb_image's implementation, so no other translation unit defines STB_IMAGE_IMPLEMENTATION; game code includes <stb_image.h> for the declarations and loads files with am_stb_image_load()."
+  ]
+}

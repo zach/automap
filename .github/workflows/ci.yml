@@ -167,7 +167,7 @@ jobs:
         env:
           AUTOMAP_TEST_PUBLIC_MAP: "1"
           AUTOMAP_TEST_BUILDS: "1"
-        run: go test ./cmd/automap -run 'TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedExtendsWithMiniaudioProbed' -v -timeout 110m
+        run: go test ./cmd/automap -run 'TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed' -v -timeout 110m
       - name: Save the vcpkg binary cache
         if: always()
         uses: actions/cache/save@v4

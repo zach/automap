@@ -1,0 +1,55 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "fastgltf",
+    "contract": "assets",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "fastgltf": {
+      "versions": [
+        "0.9.1"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "fastgltf--assets/fastgltf_assets.h",
+      "role": "glue"
+    },
+    {
+      "path": "fastgltf--assets/fastgltf_assets.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "fastgltf--assets/fastgltf_assets_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "assets.reads-through-interface",
+      "check": "am_probe_fastgltf_assets(): loading a sample glTF with an external buffer reads exactly two files, both through the assets interface.",
+      "seeded_violation": {
+        "description": "Let fastgltf load external buffers itself with Options::LoadExternalBuffers.",
+        "patch": "fastgltf--assets/seeded/assets.reads-through-interface.patch"
+      }
+    },
+    {
+      "rule": "assets.output-identical",
+      "check": "am_probe_fastgltf_assets(): loading the sample twice gives the same meshes, nodes, accessors and buffer bytes.",
+      "seeded_violation": {
+        "description": "Name each unnamed mesh after its address, so tools can tell meshes apart.",
+        "patch": "fastgltf--assets/seeded/assets.output-identical.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_fastgltf_load() reads the glTF or GLB file through the assets interface into a GltfDataBuffer, parses it without Options::LoadExternalBuffers, so fastgltf opens no file itself, then reads each buffer with a relative URI through the interface into a sources::Array.",
+    "Images keep their sources::URI: the image decoder loads them through the interface when the game asks.",
+    "The parser takes the extensions the game passes; extensions and options change what an import produces, so a cooker records them with its output."
+  ]
+}
