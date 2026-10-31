@@ -31,7 +31,7 @@ func TestReleaseNotesThatNameASecurityFix(t *testing.T) {
 	for notes, want := range map[string]bool{
 		"Fixes CVE-2026-1234 in the parser.": true,
 		"Security: fix a heap overflow.":     true,
-		"New features and bug fixes.":         false,
+		"New features and bug fixes.":        false,
 	} {
 		if got := securityFix(notes); got != want {
 			t.Errorf("securityFix(%q) = %v, want %v", notes, got, want)
