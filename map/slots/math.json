@@ -1,0 +1,7 @@
+{
+  "id": "math",
+  "description": "The engine's math library: the vector, quaternion and matrix types game code uses, which other libraries' math types convert to at their boundaries.",
+  "examples": [
+    "glm"
+  ]
+}

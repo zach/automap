@@ -59,6 +59,19 @@
           "install_before": "ImGui::CreateContext()",
           "query": "ImGui::GetAllocatorFunctions"
         },
+        "math-types": {
+          "types": [
+            {
+              "name": "ImVec2",
+              "scalar": "float"
+            },
+            {
+              "name": "ImVec4",
+              "scalar": "float"
+            }
+          ],
+          "handedness": "screen space: origin at the top left, y down"
+        },
         "diagnostics": {
           "log_hook": null,
           "assert_hook": "compile-time IM_ASSERT only",

@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "glm",
+    "contract": "math-types",
+    "contract_version": "1.1.0"
+  },
+  "applies_to": {
+    "glm": {
+      "versions": [
+        "1.0.3"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "math-types.adapters-round-trip",
+      "reason": "GLM is the math library in the math slot: the other libraries' adapters convert to its types."
+    }
+  ],
+  "adaptation_notes": [
+    "GLM exposes no world positions of its own, so it states no position_precision: game code picks glm::vec3 or glm::dvec3 to match the composition's choice, and the adapters of libraries that expose world positions convert to the matching one."
+  ]
+}

@@ -175,6 +175,11 @@
           },
           "description": "Probed rules only: the platforms the probe can run on. On any other platform the result is not-applicable, with the reason."
         },
+        "slot": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Probed rules only: the slot the rule is about, such as the math slot for adapters to the composition's math library. While the composition leaves that slot empty the result is not-applicable, with the reason."
+        },
         "seeded_violation": {
           "$ref": "#/$defs/seeded_violation",
           "description": "For a probed composition rule whose mistake belongs in a file the contract owns (a shared interface) or in the manifest. Other composition rules are seeded by the recipes whose files the mistake belongs in."
