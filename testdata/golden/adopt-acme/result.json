@@ -1,0 +1,32 @@
+{
+  "command": "adopt",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "Adopted acme_game (acme-jobs 1.0.0 default, acme-renderer 1.0.0 default, stub-physics 1.0.0 default, stub-window 1.0.0 default); it is not verified: run automap verify.",
+  "warnings": [],
+  "failures": [],
+  "files_written": [
+    ".claude/skills/automap/SKILL.md",
+    "AGENTS.md",
+    "automap.lock.json",
+    "automap.manifest.json",
+    "cmake/automap/acme-jobs.cmake",
+    "cmake/automap/acme-renderer.cmake",
+    "cmake/automap/automap.cmake",
+    "cmake/automap/stub-physics.cmake",
+    "cmake/automap/stub-window.cmake",
+    "engine/glue/automap/alloc.cpp",
+    "engine/glue/automap/alloc.h",
+    "engine/glue/automap/choices.h",
+    "engine/glue/automap/diag.cpp",
+    "engine/glue/automap/diag.h",
+    "engine/glue/automap/jobs.cpp",
+    "engine/glue/automap/jobs.h",
+    "engine/glue/automap/lifecycle.cpp",
+    "engine/glue/automap/lifecycle.h",
+    "engine/glue/automap/probe.cpp",
+    "engine/glue/automap/probe.h",
+    "vcpkg-configuration.json",
+    "vcpkg.json"
+  ]
+}

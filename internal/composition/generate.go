@@ -181,7 +181,7 @@ func StartupSource(plan *StartupPlan) string {
 // includes each library's build fragment. The developer's CMakeLists.txt
 // includes it once. The glue target is an object library, so every probe's
 // registration links into the executable.
-func AutomapCMake(man *Manifest, lock *Lock, sources []string, cxxStandard string) string {
+func AutomapCMake(m *mapmodel.Map, man *Manifest, lock *Lock, sources []string, cxxStandard string) string {
 	var b strings.Builder
 	b.WriteString("# " + generatedNote + "\n")
 	b.WriteString("# The developer's CMakeLists.txt includes this file once.\n\n")
@@ -221,7 +221,12 @@ func AutomapCMake(man *Manifest, lock *Lock, sources []string, cxxStandard strin
 	// before the build fragments that link them.
 	for _, lib := range man.Libraries() {
 		if p := lock.Pins[lib].Path; p != "" {
-			fmt.Fprintf(&b, "add_subdirectory(${AUTOMAP_ROOT}/%s ${CMAKE_BINARY_DIR}/automap-in-repo/%s)\n", p, lib)
+			// An adopted engine may add the directory itself.
+			if targets := m.Libraries[lib].Newest().CMake.Targets; len(targets) > 0 {
+				fmt.Fprintf(&b, "if(NOT TARGET %s)\n    add_subdirectory(${AUTOMAP_ROOT}/%s ${CMAKE_BINARY_DIR}/automap-in-repo/%s)\nendif()\n", targets[0], p, lib)
+			} else {
+				fmt.Fprintf(&b, "add_subdirectory(${AUTOMAP_ROOT}/%s ${CMAKE_BINARY_DIR}/automap-in-repo/%s)\n", p, lib)
+			}
 		}
 	}
 	for _, lib := range man.Libraries() {

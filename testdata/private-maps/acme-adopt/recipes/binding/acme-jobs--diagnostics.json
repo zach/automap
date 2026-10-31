@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "acme-jobs",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "acme-jobs": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "reason": "Acme Jobs doesn't log."
+    }
+  ],
+  "adaptation_notes": [
+    "Acme Jobs has no log or assert hook."
+  ]
+}
