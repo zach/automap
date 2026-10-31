@@ -1,0 +1,56 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/nothings/stb@2026-08-02",
+      "digest": {
+        "gitCommit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+        "sha512": "93db78589d836b5a8924ed0e980c6fd8d1dbc7e2d0489bc5a0fa4dedd73ed94332e5c814adc2976e89fab3f4cd96b5c46beae7b5dd55bc8374a91390d774b2b0"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "allocation",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+        "content_hash": "sha512:93db78589d836b5a8924ed0e980c6fd8d1dbc7e2d0489bc5a0fa4dedd73ed94332e5c814adc2976e89fab3f4cd96b5c46beae7b5dd55bc8374a91390d774b2b0",
+        "library": "stb-image",
+        "variant": "default",
+        "version": "2026-08-02"
+      }
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T08:25:11Z",
+    "map_release": "git:c8a114d3348570e33304eb537b11f0e2075402e3",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "stb-image",
+        "status": "not-applicable",
+        "reason": "stb_image's hooks are compile-time macros in its implementation: no stb_image code runs without them."
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "stb-image",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/spnda/fastgltf@v0.9.1",
+      "digest": {
+        "gitCommit": "705564d4d54500ae88befb0db9e361e447923655",
+        "sha512": "e7af2eeefe6d4bca6d466f1fce1ff3d000b97fb84a6609cb8a20eab218b0f557e67acee31809e5e05d521c5330b8a97734536ebce24d0135954e07d9d6bd3807"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "assets",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "705564d4d54500ae88befb0db9e361e447923655",
+        "content_hash": "sha512:e7af2eeefe6d4bca6d466f1fce1ff3d000b97fb84a6609cb8a20eab218b0f557e67acee31809e5e05d521c5330b8a97734536ebce24d0135954e07d9d6bd3807",
+        "library": "fastgltf",
+        "variant": "default",
+        "version": "0.9.1"
+      }
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-31T08:13:20Z",
+    "map_release": "git:c8a114d3348570e33304eb537b11f0e2075402e3",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {},
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "assets.reads-through-interface",
+        "library": "fastgltf",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.output-identical",
+        "library": "fastgltf",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
