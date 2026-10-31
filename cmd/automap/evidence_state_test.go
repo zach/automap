@@ -52,8 +52,8 @@ func publishedEvidence(kind, rule, status string, age time.Duration) string {
 func stubUIEvidence() map[string]string {
 	day := 24 * time.Hour
 	return map[string]string{
-		"evidence/binding/stub-ui--allocation/stub-ui-1.0.0-default/linux-x64-clang.json":  publishedEvidence("binding", "allocation.routed-through-facade", "pass", day),
-		"evidence/binding/stub-ui--diagnostics/stub-ui-1.0.0-default/linux-x64-clang.json": publishedEvidence("binding", "diagnostics.routed-through-facade", "pass", 40*day),
+		"evidence/binding/stub-ui--allocation/stub-ui-1.0.0-default/linux-x64-clang.json":                            publishedEvidence("binding", "allocation.routed-through-facade", "pass", day),
+		"evidence/binding/stub-ui--diagnostics/stub-ui-1.0.0-default/linux-x64-clang.json":                           publishedEvidence("binding", "diagnostics.routed-through-facade", "pass", 40*day),
 		"evidence/pairing/stub-ui--stub-window/stub-ui-1.0.0-default+stub-window-1.0.0-default/linux-x64-clang.json": publishedEvidence("pairing", "stub-ui--stub-window.input-forwarded", "fail", day),
 	}
 }
