@@ -1,0 +1,56 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/microsoft/mimalloc@v3.5.3",
+      "digest": {
+        "gitCommit": "d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45",
+        "sha512": "ef24d926153eb81c95e6c79c335eed12c6e14523a2dd817faddc3f666909a244eab5f4be43cc01a6d8c8d62b5695d29fb535b3762128cdef50a7ee55302b2886"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "allocation",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45",
+        "content_hash": "sha512:ef24d926153eb81c95e6c79c335eed12c6e14523a2dd817faddc3f666909a244eab5f4be43cc01a6d8c8d62b5695d29fb535b3762128cdef50a7ee55302b2886",
+        "library": "mimalloc",
+        "variant": "default",
+        "version": "3.5.3"
+      }
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T04:52:07Z",
+    "map_release": "git:c813501ad10e473a695c0528a1710fdbf4d6c927",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "mimalloc",
+        "status": "not-applicable",
+        "reason": "mimalloc has no allocator hooks: it is the allocator behind the facade, and serves only the blocks the facade asks for."
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "mimalloc",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
