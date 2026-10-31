@@ -133,6 +133,9 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 		if pin.Path != l.Source.Path {
 			return fmt.Sprintf("%s is pinned at path %q, but the map says %q", l.ID, pin.Path, l.Source.Path)
 		}
+		if hash, err := SourceHash(l.Source.Path); err != nil || hash != pin.ContentHash {
+			return fmt.Sprintf("%s's source in %s has changed since the lock pinned it; re-resolve with automap upgrade %s", l.ID, l.Source.Path, l.ID)
+		}
 		return ""
 	}
 	src := v.Pin
@@ -144,6 +147,13 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 	}
 	if pin.Registry != nil && pin.Registry.Kind == "vcpkg-curated" && pin.Registry.Commit != vcpkgBaseline(m) {
 		return fmt.Sprintf("%s's curated registry commit differs from the map's vcpkg baseline", l.ID)
+	}
+	if pin.Registry != nil && pin.Registry.Kind == "private" {
+		for _, meta := range m.Maps[1:] {
+			if meta.ID == pin.Registry.ID && meta.Commit != pin.Registry.Commit {
+				return fmt.Sprintf("private map %s has changed since the lock pinned %s from it; re-resolve with automap upgrade %s", meta.ID, l.ID, l.ID)
+			}
+		}
 	}
 	return ""
 }

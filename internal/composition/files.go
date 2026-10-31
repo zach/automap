@@ -115,7 +115,7 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 	if v, ok := man.Choices["build-flags"]["cxx_standard"]; ok {
 		cxx = fmt.Sprint(v)
 	}
-	add("cmake/automap/automap.cmake", []byte(AutomapCMake(man, sources, cxx)), "the include file")
+	add("cmake/automap/automap.cmake", []byte(AutomapCMake(man, lock, sources, cxx)), "the include file")
 	if len(fails) > 0 {
 		return nil, fails
 	}

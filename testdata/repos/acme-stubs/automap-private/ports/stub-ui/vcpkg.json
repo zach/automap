@@ -1,0 +1,6 @@
+{
+  "name": "stub-ui",
+  "version": "1.0.0",
+  "description": "A tiny immediate-mode UI library for Automap's fixture map.",
+  "license": "MIT-0"
+}

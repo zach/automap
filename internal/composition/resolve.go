@@ -1,8 +1,14 @@
 package composition
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"io/fs"
+	"os"
 	"path"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
@@ -293,6 +299,16 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 		} `json:"vcpkg"`
 	}
 	json.Unmarshal(m.Maps[0].BuildBackend, &buildBackend)
+	for _, meta := range m.Maps[1:] {
+		if meta.Commit == "" {
+			fails = append(fails, failure("MANIFEST_INVALID", "private map %s at %s has no commit: the lock pins each private map at the last commit that changed it, so commit it to git", meta.ID, meta.Dir))
+			continue
+		}
+		if lock.PrivateMaps == nil {
+			lock.PrivateMaps = map[string]PrivateMapPin{}
+		}
+		lock.PrivateMaps[meta.ID] = PrivateMapPin{Commit: meta.Commit}
+	}
 
 	pinFor := func(lib *mapmodel.Library, v *mapmodel.Version, variantName string) (Pin, bool) {
 		variant := v.Variant(variantName)
@@ -302,7 +318,12 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 		}
 		pin := Pin{Version: v.Version, Variant: variantName, License: lib.License.SPDX}
 		if lib.Source != nil && lib.Source.Kind == "path" {
-			pin.Path = lib.Source.Path
+			hash, err := SourceHash(lib.Source.Path)
+			if err != nil {
+				fails = append(fails, failure("SOURCE_MISSING("+lib.ID+")", "%s's source is the directory %s in this repo, which can't be read: %v", lib.ID, lib.Source.Path, err))
+				return Pin{}, false
+			}
+			pin.Path, pin.ContentHash = lib.Source.Path, hash
 			return pin, true
 		}
 		src := v.Pin
@@ -323,8 +344,13 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 				return Pin{}, false
 			}
 			pin.Registry = &Registry{Kind: "automap", Commit: buildBackend.Vcpkg.AutomapRegistry.Commit}
+		case "private":
+			// The variant's port is an overlay port in the private map that
+			// adds the variant, pinned at that map's commit.
+			meta := m.MapFor([2]string{"variant", lib.ID + ":" + v.Version + ":" + variantName})
+			pin.Registry = &Registry{Kind: "private", ID: meta.ID, Commit: meta.Commit}
 		default:
-			fails = append(fails, failure("UNSUPPORTED("+lib.ID+")", "%s comes from a private registry, which start doesn't support yet.", lib.ID))
+			fails = append(fails, failure("UNSUPPORTED("+lib.ID+")", "%s comes from registry %q, which the CLI doesn't know.", lib.ID, kind))
 			return Pin{}, false
 		}
 		return pin, true
@@ -384,4 +410,43 @@ func GlueEntryFor(man *Manifest, r *mapmodel.Recipe) GlueEntry {
 	default:
 		return man.Glue.Setup[r.Subject.Library]
 	}
+}
+
+// SourceHash is the content hash of an in-repo library's directory: the
+// SHA-256 of each file's path and SHA-256 in path order, skipping .git, so
+// it changes whenever a file in it does.
+func SourceHash(dir string) (string, error) {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return "", err
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("not a directory")
+	}
+	var lines []string
+	err = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if d.Name() == ".git" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(dir, p)
+		sum := sha256.Sum256(data)
+		lines = append(lines, filepath.ToSlash(rel)+"\x00"+hex.EncodeToString(sum[:]))
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	sort.Strings(lines)
+	sum := sha256.Sum256([]byte(strings.Join(lines, "\n")))
+	return "sha256:" + hex.EncodeToString(sum[:]), nil
 }

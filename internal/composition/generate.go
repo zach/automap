@@ -3,6 +3,8 @@ package composition
 import (
 	"encoding/json"
 	"fmt"
+	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -174,10 +176,11 @@ func StartupSource(plan *StartupPlan) string {
 }
 
 // AutomapCMake is cmake/automap/automap.cmake: it defines the glue target
-// from every glue source and includes each library's build fragment. The
-// developer's CMakeLists.txt includes it once. The glue target is an object
-// library, so every probe's registration links into the executable.
-func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
+// from every glue source, adds each in-repo library's directory, and
+// includes each library's build fragment. The developer's CMakeLists.txt
+// includes it once. The glue target is an object library, so every probe's
+// registration links into the executable.
+func AutomapCMake(man *Manifest, lock *Lock, sources []string, cxxStandard string) string {
 	var b strings.Builder
 	b.WriteString("# " + generatedNote + "\n")
 	b.WriteString("# The developer's CMakeLists.txt includes this file once.\n\n")
@@ -201,6 +204,13 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 		fmt.Fprintf(&b, " AUTOMAP_LIBRARY_%s=1", macroName(lib))
 	}
 	b.WriteString(")\n\n")
+	// In-repo libraries join the build as the developer's own CMake targets,
+	// before the build fragments that link them.
+	for _, lib := range man.Libraries() {
+		if p := lock.Pins[lib].Path; p != "" {
+			fmt.Fprintf(&b, "add_subdirectory(${AUTOMAP_ROOT}/%s ${CMAKE_BINARY_DIR}/automap-in-repo/%s)\n", p, lib)
+		}
+	}
 	for _, lib := range man.Libraries() {
 		fmt.Fprintf(&b, "include(${CMAKE_CURRENT_LIST_DIR}/%s.cmake)\n", lib)
 	}
@@ -267,7 +277,8 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 }
 
 // VcpkgConfiguration is vcpkg-configuration.json: the Automap registry at
-// its commit for the ports it supplies.
+// its commit for the ports it supplies, and the overlay ports of each
+// private map a variant comes from.
 func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL string) []byte {
 	type registry struct {
 		Kind       string   `json:"kind"`
@@ -279,6 +290,7 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 	var doc struct {
 		DefaultRegistry *struct{}  `json:"default-registry"`
 		Registries      []registry `json:"registries"`
+		OverlayPorts    []string   `json:"overlay-ports,omitempty"`
 	}
 	doc.Registries = []registry{}
 	var automapPorts []string
@@ -290,6 +302,24 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 			commit = pin.Registry.Commit
 		}
 	}
+	// A private variant's port is an overlay port in the private map that
+	// adds it (ADR-0047).
+	for _, meta := range m.Maps[1:] {
+		uses := false
+		for _, lib := range man.Libraries() {
+			pin := lock.Pins[lib]
+			pins := []Pin{pin}
+			for _, pp := range pin.Platforms {
+				pins = append(pins, pp)
+			}
+			for _, p := range pins {
+				uses = uses || p.Registry != nil && p.Registry.Kind == "private" && p.Registry.ID == meta.ID
+			}
+		}
+		if uses {
+			doc.OverlayPorts = append(doc.OverlayPorts, path.Join(filepath.ToSlash(meta.Dir), "ports"))
+		}
+	}
 	if len(automapPorts) > 0 {
 		doc.Registries = append(doc.Registries, registry{Kind: "git", Repository: registryURL, Reference: "registry", Baseline: commit, Packages: automapPorts})
 	}
@@ -297,8 +327,9 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 		// vcpkg's curated registry stays the default registry, at the
 		// baseline vcpkg.json names.
 		raw := indentJSON(struct {
-			Registries []registry `json:"registries"`
-		}{doc.Registries})
+			Registries   []registry `json:"registries"`
+			OverlayPorts []string   `json:"overlay-ports,omitempty"`
+		}{doc.Registries, doc.OverlayPorts})
 		return raw
 	}
 	return indentJSON(doc)
