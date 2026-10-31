@@ -492,23 +492,30 @@ func CuratedPort(vcpkgRoot, baseline string, p PlannedPort, dst string) error {
 		if version != p.Version {
 			continue
 		}
-		cmd := git("archive", "--format=tar", v.GitTree)
-		out, err := cmd.StdoutPipe()
-		if err != nil {
-			return err
-		}
-		if err := cmd.Start(); err != nil {
-			return err
-		}
-		if err := os.MkdirAll(dst, 0o755); err != nil {
-			return err
-		}
-		extractErr := extract(tar.NewReader(out), dst)
-		io.Copy(io.Discard, out)
-		if err := cmd.Wait(); err != nil {
-			return fmt.Errorf("git archive %s: %v", v.GitTree, err)
-		}
-		return extractErr
+		return ArchiveTree(git("archive", "--format=tar", v.GitTree), dst)
 	}
 	return fmt.Errorf("the curated registry at %s has no %s %s", baseline, p.Name, p.Version)
+}
+
+// ArchiveTree runs cmd, a git archive of a tree in tar format, and
+// extracts what it writes into dst.
+func ArchiveTree(cmd *exec.Cmd, dst string) error {
+	out, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		return err
+	}
+	extractErr := extract(tar.NewReader(out), dst)
+	io.Copy(io.Discard, out)
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("git archive: %v: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return extractErr
 }
