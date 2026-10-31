@@ -1,0 +1,60 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "flecs",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs--allocation/flecs_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--allocation/flecs_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_flecs_allocation",
+      "steps": [
+        "flecs:os_api.memory"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "After the world is gone, the facade's probe-build block tracking shows flecs released no block the facade didn't allocate; one it did fails the rule as ALLOC_HOOK_LATE(flecs).",
+      "seeded_violation": {
+        "description": "Allocate a block with flecs's default allocator before setting the facade's, then free it through the facade's.",
+        "patch": "flecs--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_flecs_allocation(): the installed OS API has the facade's malloc_ and free_, and the facade served flecs during the run.",
+      "seeded_violation": {
+        "description": "Leave flecs's default allocation functions in the OS API.",
+        "patch": "flecs--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "flecs reads malloc_, calloc_, realloc_ and free_ from its OS API table: the binding sets them in the table setup glue installs with ecs_os_set_api before ecs_init, so the world never allocates without them.",
+    "flecs asks for no particular alignment; calloc_ maps to the facade's zeroed allocation."
+  ]
+}

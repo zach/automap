@@ -1,0 +1,52 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "flecs",
+    "contract": "jobs",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs--jobs/flecs_jobs.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--jobs/flecs_jobs_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "jobs",
+      "when": "init",
+      "call": "am_bind_flecs_jobs",
+      "steps": [
+        "flecs:os_api.task"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "jobs.routed-through-interface",
+      "check": "am_probe_flecs_jobs(): the world uses task threads, and a frame (ecs_progress) submits its worker stages through the jobs interface.",
+      "seeded_violation": {
+        "description": "Leave flecs's default task functions, which start OS threads, in the OS API.",
+        "patch": "flecs--jobs/seeded/jobs.routed-through-interface.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "task_new_ submits a worker stage as a job and task_join_ waits for it: flecs makes and joins its worker tasks each frame, after setup glue's ecs_set_task_threads.",
+    "A flecs worker task blocks until the main thread releases it, which the jobs contract's guidance warns against; it is safe only while every stage's task has a worker to itself, which setup glue keeps by asking for no more stages than the jobs interface has workers."
+  ]
+}

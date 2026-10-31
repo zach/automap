@@ -1,0 +1,10 @@
+--- a/flecs_diagnostics.cpp
++++ b/flecs_diagnostics.cpp
+@@ -45,7 +45,6 @@
+ // facade. Runs in the diagnostics phase.
+ bool am_bind_flecs_diagnostics(am::Context&) {
+     ecs_os_api_t& api = am_flecs_os_api();
+-    api.log_ = &am_flecs_log;
+     api.abort_ = &am_flecs_abort;
+     api.perf_trace_push_ = &am_flecs_perf_trace_push;
+     api.perf_trace_pop_ = &am_flecs_perf_trace_pop;
