@@ -1,0 +1,158 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "541296c221c439314f6dfee877c259da9516a061a55a18aadce56d1aa5ac80de"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:dfde4895468325bbf1390e99f67e6c4b72792e8bca646b2d909bf5936cab93f0"
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T14:00:13Z",
+    "map_release": "git:f18e13a3be5e1a8a12736961ab3d19a13484a654",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "determinism.flags-set",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "determinism.replay-hash-matches",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "handles.bits-preserved",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "glm",
+        "status": "not-applicable",
+        "reason": "GLM is the math library in the math slot: the other libraries' adapters convert to its types."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

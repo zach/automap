@@ -80,8 +80,12 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 	}
 	add(man.Glue.ChoicesHeader, []byte(ChoicesHeader(m, man, lock)), "the choices header")
 	add(path.Join(man.Glue.Interfaces, "context.h"), []byte(ContextHeader(plan)), "the context")
-	add(path.Join(man.Glue.Interfaces, "startup.h"), []byte(StartupHeader()), "the startup")
-	add(path.Join(man.Glue.Interfaces, "startup.cpp"), []byte(StartupSource(plan)), "the startup")
+	// An engine that keeps its own startup code gets none generated
+	// (ADR-0080).
+	if man.Glue.Startup.DeveloperOwned == nil {
+		add(path.Join(man.Glue.Interfaces, "startup.h"), []byte(StartupHeader()), "the startup")
+		add(path.Join(man.Glue.Interfaces, "startup.cpp"), []byte(StartupSource(plan)), "the startup")
+	}
 
 	for _, rid := range Recipes(m, man) {
 		r := m.Recipes[rid]
@@ -118,7 +122,7 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 	if v, ok := man.Choices["build-flags"]["cxx_standard"]; ok {
 		cxx = fmt.Sprint(v)
 	}
-	add("cmake/automap/automap.cmake", []byte(AutomapCMake(man, lock, sources, cxx)), "the include file")
+	add("cmake/automap/automap.cmake", []byte(AutomapCMake(m, man, lock, sources, cxx)), "the include file")
 	if len(fails) > 0 {
 		return nil, fails
 	}

@@ -1,0 +1,6 @@
+{
+  "dependencies": [
+    "stub-physics",
+    "stub-window"
+  ]
+}

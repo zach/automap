@@ -20,6 +20,16 @@ import (
 // maps the manifest in the current directory names, if there is one. On
 // failure it records why in r and returns a nil map and the exit status.
 func loadMap(a *args, r *result) (*mapmodel.Map, int) {
+	privates, ok := manifestPrivateMaps(r)
+	if !ok {
+		return nil, exitUsage
+	}
+	return loadMapWith(a, privates, r)
+}
+
+// loadMapWith loads the public map as loadMap does, with privates layered
+// over it.
+func loadMapWith(a *args, privates []mapmodel.PrivateMap, r *result) (*mapmodel.Map, int) {
 	dir := a.value("map")
 	if dir == "" {
 		dir = os.Getenv("AUTOMAP_MAP")
@@ -29,10 +39,6 @@ func loadMap(a *args, r *result) (*mapmodel.Map, int) {
 		if dir, ok = releaseDir(r); !ok {
 			return nil, exitUsage
 		}
-	}
-	privates, ok := manifestPrivateMaps(r)
-	if !ok {
-		return nil, exitUsage
 	}
 	m, ok := loadMapAt(dir, privates, r)
 	if !ok {

@@ -1,0 +1,26 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "acme-jobs"
+  },
+  "applies_to": {
+    "acme-jobs": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-jobs/acme-jobs.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "acme-jobs is in the repo: automap.cmake adds its directory unless the project already has, and the fragment links its target."
+  ]
+}
