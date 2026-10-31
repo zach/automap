@@ -311,6 +311,25 @@ func (r *Run) ExpectExit(t *testing.T, want int) {
 // ExpectGolden compares stdout with testdata/golden/<name>/result.json, and
 // the repo after the run with the repo before it overlaid by
 // testdata/golden/<name>/files/.
+// ExpectGoldenResult compares stdout alone with
+// testdata/golden/<name>/result.json, for runs whose files name something
+// that differs between machines, such as a registry a test builds.
+func (r *Run) ExpectGoldenResult(t *testing.T, name string) {
+	t.Helper()
+	file := filepath.Join(Root(t), "testdata", "golden", name, "result.json")
+	if *update {
+		writeFile(t, file, r.Stdout)
+		return
+	}
+	want, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatalf("golden result: %v (run with -update to create it)", err)
+	}
+	if !bytes.Equal(r.Stdout, want) {
+		t.Errorf("stdout differs from %s\ngot:\n%s\nwant:\n%s", rel(t, filepath.Dir(file), "result.json"), r.Stdout, want)
+	}
+}
+
 func (r *Run) ExpectGolden(t *testing.T, name string) {
 	t.Helper()
 	golden := filepath.Join(Root(t), "testdata", "golden", name)

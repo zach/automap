@@ -149,6 +149,11 @@ func TestUpgradeEndsWithVerifyAndNamesFailingRules(t *testing.T) {
 	run.ExpectExit(t, 1)
 	run.ExpectFailure(t, "ALLOC_NOT_ROUTED(stub-ui)", "")
 	if hostPlatform == "linux-x64-clang" { // the result names the platform
-		run.ExpectGolden(t, "upgrade-failing-probe")
+		// The lock names the registry the test builds, whose commit
+		// differs between machines.
+		run.ExpectGoldenResult(t, "upgrade-failing-probe")
+	}
+	if !strings.Contains(clitest.Read(t, repo, "glue/stub-ui/stub_ui_allocation.cpp"), "(void)(&allocator)") {
+		t.Error("upgrade didn't apply the new release's reference glue")
 	}
 }
