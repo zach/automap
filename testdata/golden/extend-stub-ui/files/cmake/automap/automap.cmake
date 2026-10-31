@@ -29,6 +29,7 @@ if(AUTOMAP_PROBE)
     target_compile_definitions(automap_glue PUBLIC AUTOMAP_PROBE)
 endif()
 target_compile_definitions(automap_glue PUBLIC AUTOMAP_LIBRARY_STUB_UI=1 AUTOMAP_LIBRARY_STUB_WINDOW=1)
+target_compile_definitions(automap_glue PUBLIC AUTOMAP_VARIANT_STUB_UI="default" AUTOMAP_VARIANT_STUB_WINDOW="default")
 
 include(${CMAKE_CURRENT_LIST_DIR}/stub-ui.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/stub-window.cmake)

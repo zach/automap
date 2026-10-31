@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -215,5 +216,52 @@ func TestExtendingWithAssetLibrariesBringsTheAssetsInterface(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
 			t.Errorf("the assets interface or its glue wasn't written: %v", err)
 		}
+	}
+}
+
+// Jolt's registry variants come from the Automap registry: the lock pins
+// the registry at the public map's commit, vcpkg-configuration.json takes
+// joltphysics from it, and vcpkg.json leaves the port version to it.
+func TestJoltsRegistryVariantsResolveThroughTheAutomapRegistry(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "jolt:deterministic", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var mapJSON struct {
+		BuildBackend struct {
+			Vcpkg struct {
+				AutomapRegistry struct{ URL, Commit string } `json:"automap_registry"`
+			}
+		} `json:"build_backend"`
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "map/map.json")), &mapJSON)
+	registry := mapJSON.BuildBackend.Vcpkg.AutomapRegistry
+	var lock struct {
+		Pins map[string]struct {
+			Variant  string
+			Registry struct{ Kind, Commit string }
+		}
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.lock.json")), &lock)
+	if pin := lock.Pins["jolt"]; pin.Variant != "deterministic" || pin.Registry.Kind != "automap" || pin.Registry.Commit != registry.Commit {
+		t.Errorf("jolt pinned as %+v, want deterministic from the Automap registry at %s", pin, registry.Commit)
+	}
+	var config struct {
+		Registries []struct {
+			Repository, Baseline string
+			Packages             []string
+		}
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg-configuration.json")), &config)
+	if len(config.Registries) != 1 || config.Registries[0].Repository != registry.URL || config.Registries[0].Baseline != registry.Commit ||
+		!slices.Equal(config.Registries[0].Packages, []string{"joltphysics"}) {
+		t.Errorf("vcpkg-configuration.json registries %+v, want joltphysics from %s at %s", config.Registries, registry.URL, registry.Commit)
+	}
+	if vcpkg := clitest.Read(t, repo, "vcpkg.json"); strings.Contains(vcpkg, `"name": "joltphysics",
+      "version": "5.6.0",
+      "port-version"`) {
+		t.Errorf("vcpkg.json pins the curated port version for the registry's joltphysics:\n%s", vcpkg)
 	}
 }

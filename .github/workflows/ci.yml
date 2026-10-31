@@ -102,10 +102,13 @@ jobs:
       - run: python3 docs/spec/check-examples.py
 
   public-map:
-    name: Public map (${{ matrix.name }})
+    name: Public map (${{ matrix.name }}, ${{ matrix.group }})
     strategy:
       fail-fast: false
       matrix:
+        name: [Linux, Windows, macOS]
+        # The public map's compositions, in groups that each fit a job.
+        group: [core, slots, media]
         include:
           - name: Linux
             os: ubuntu-latest
@@ -113,6 +116,12 @@ jobs:
             os: windows-latest
           - name: macOS
             os: macos-latest
+          - group: core
+            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed
+          - group: slots
+            tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
+          - group: media
+            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     defaults:
@@ -161,16 +170,18 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/vcpkg-archives
-          key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
-          restore-keys: public-map-${{ runner.os }}-
-      - name: The testbed starts probed, extends with Jolt probed, and every seed is caught
+          key: public-map-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
+          restore-keys: |
+            public-map-${{ runner.os }}-${{ matrix.group }}-
+            public-map-${{ runner.os }}-
+      - name: The public map's compositions reach probed, and every seed is caught
         env:
           AUTOMAP_TEST_PUBLIC_MAP: "1"
           AUTOMAP_TEST_BUILDS: "1"
-        run: go test ./cmd/automap -run 'TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed' -v -timeout 110m
+        run: go test ./cmd/automap -run '${{ matrix.tests }}' -v -timeout 110m
       - name: Save the vcpkg binary cache
         if: always()
         uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/vcpkg-archives
-          key: public-map-${{ runner.os }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}
+          key: public-map-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('map/map.json', 'map/libraries/**') }}-${{ github.run_id }}

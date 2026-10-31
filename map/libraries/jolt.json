@@ -43,6 +43,55 @@
           "name": "default",
           "build_options": {},
           "description": "Jolt as the joltphysics port builds it: single precision, assertions and profiling in Debug, custom allocator hooks enabled."
+        },
+        {
+          "name": "double-precision",
+          "build_options": {
+            "vcpkg_features": "double-precision"
+          },
+          "description": "Jolt with double precision world positions (DOUBLE_PRECISION, JPH_DOUBLE_PRECISION): RVec3 is a DVec3. From the Automap registry's joltphysics port, which builds Jolt's external profile hooks too.",
+          "registry": "automap",
+          "facts": {
+            "math-types": {
+              "types": [
+                {
+                  "name": "JPH::Vec3",
+                  "scalar": "float"
+                },
+                {
+                  "name": "JPH::RVec3",
+                  "scalar": "double"
+                },
+                {
+                  "name": "JPH::Quat",
+                  "scalar": "float"
+                },
+                {
+                  "name": "JPH::Mat44",
+                  "scalar": "float"
+                }
+              ],
+              "position_precision": "double",
+              "handedness": "right-handed; no fixed up axis (gravity is a setting)"
+            }
+          }
+        },
+        {
+          "name": "deterministic",
+          "build_options": {
+            "vcpkg_features": "deterministic"
+          },
+          "description": "Jolt built for cross-platform determinism (CROSS_PLATFORM_DETERMINISTIC, JPH_CROSS_PLATFORM_DETERMINISTIC): the same simulation gives the same state on every platform, at some cost in speed. From the Automap registry's joltphysics port, which builds Jolt's external profile hooks too.",
+          "registry": "automap",
+          "facts": {
+            "determinism": {
+              "deterministic": true,
+              "defines": [
+                "JPH_CROSS_PLATFORM_DETERMINISTIC"
+              ],
+              "conditions": "Jolt gives the same results only for the same API calls in the same order, with the same defines on every platform; broad-phase query and contact listener callback order aren't deterministic."
+            }
+          }
         }
       ],
       "facts": {
@@ -80,7 +129,7 @@
           "provides_scheduler": false
         },
         "diagnostics": {
-          "log_hook": "JPH::Trace",
+          "log_hook": "JPH::Trace; and in builds with JPH_EXTERNAL_PROFILE (the Automap registry's), its profile scopes through JPH::ExternalProfileMeasurement",
           "assert_hook": "JPH::AssertFailed at runtime, only when JPH_ENABLE_ASSERTS (Debug builds)",
           "query": "read the same global function pointers"
         },
@@ -153,6 +202,29 @@
           ],
           "position_precision": "float",
           "handedness": "right-handed; no fixed up axis (gravity is a setting)"
+        },
+        "handles": {
+          "types": [
+            {
+              "name": "JPH::BodyID",
+              "bits": 32,
+              "layout": "23-bit body index, 8-bit sequence number, and the top bit reserved for broad-phase use (cBroadPhaseBit); GetIndexAndSequenceNumber() is the whole 32-bit value"
+            }
+          ]
+        },
+        "serialization": {
+          "produces": [
+            "physics state from PhysicsSystem::SaveState (StateRecorder)",
+            "shapes and physics settings from SaveBinaryState"
+          ],
+          "version_source": "JPH_VERSION_ID, which packs Jolt's version and its ABI-affecting defines, with AUTOMAP_VARIANT_JOLT"
+        },
+        "determinism": {
+          "deterministic": false,
+          "defines": [
+            "JPH_CROSS_PLATFORM_DETERMINISTIC"
+          ],
+          "conditions": "Jolt gives the same results only for the same API calls in the same order, with the same defines on every platform; broad-phase query and contact listener callback order aren't deterministic."
         },
         "build-flags": {
           "abi_defines": [

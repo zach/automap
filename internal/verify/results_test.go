@@ -192,3 +192,15 @@ func TestAComputedResultCountsWhenNoProbeRan(t *testing.T) {
 		t.Errorf("results %+v, want the link-time failure and the other rule unverifiable", got)
 	}
 }
+
+// With the determinism profile on, every library that has determinism
+// facts must be in a deterministic build.
+func TestCheckDeterminism(t *testing.T) {
+	if r := verify.CheckDeterminism(map[string]bool{"jolt": true, "flecs": true}); r.Status != "pass" || r.Rule != "determinism.flags-set" {
+		t.Errorf("deterministic builds: %+v, want a pass", r)
+	}
+	r := verify.CheckDeterminism(map[string]bool{"jolt": false, "flecs": true})
+	if r.Status != "fail" || r.FailureCode != "DETERMINISM_FLAGS_MISSING(jolt)" || !strings.Contains(r.Reason, "jolt") {
+		t.Errorf("jolt not deterministic: %+v, want DETERMINISM_FLAGS_MISSING(jolt)", r)
+	}
+}

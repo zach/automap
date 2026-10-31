@@ -1,0 +1,47 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "serialization",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default",
+        "double-precision",
+        "deterministic"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--serialization/jolt_serialization.h",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--serialization/jolt_serialization.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--serialization/jolt_serialization_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "serialization.rebuild-key-complete",
+      "check": "am_probe_jolt_serialization(): am_jolt_rebuild_key() names Jolt's version, the composition's variant (AUTOMAP_VARIANT_JOLT) and JPH_VERSION_ID.",
+      "seeded_violation": {
+        "description": "Key Jolt's data by its version alone.",
+        "patch": "jolt--serialization/seeded/serialization.rebuild-key-complete.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_jolt_rebuild_key() is the key for anything Jolt writes that outlives a run: PhysicsSystem::SaveState snapshots and shapes and settings saved with SaveBinaryState. JPH_VERSION_ID packs Jolt's version with its ABI-affecting defines (double precision, determinism, object layer bits), so a double-precision build never reads single-precision data."
+  ]
+}

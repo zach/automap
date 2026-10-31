@@ -1,10 +1,10 @@
 --- a/jolt_diagnostics.cpp
 +++ b/jolt_diagnostics.cpp
-@@ -28,7 +28,6 @@
- // its assertions through the diagnostics facade. Runs in the diagnostics
- // phase.
+@@ -62,7 +62,6 @@
+ // assertions, and in builds with JPH_EXTERNAL_PROFILE its profile scopes
+ // through the diagnostics facade. Runs in the diagnostics phase.
  bool am_bind_jolt_diagnostics(am::Context&) {
 -    JPH::Trace = &am_jolt_trace;
      JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = &am_jolt_assert_failed;)
-     am::lifecycle::init_step("jolt:Trace+AssertFailed");
-     return true;
+ #if defined(JPH_EXTERNAL_PROFILE) && defined(JPH_SHARED_LIBRARY)
+     JPH::ProfileStartMeasurement = &am_jolt_profile_start;

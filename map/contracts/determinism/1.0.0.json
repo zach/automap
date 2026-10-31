@@ -1,0 +1,78 @@
+{
+  "contract": "determinism",
+  "version": "1.0.0",
+  "description": "Lockstep and replay: when the composition chooses the determinism profile, libraries that simulate run deterministic builds, glue compiles without floating-point contraction, and a fixed simulation gives the same result on every platform.",
+  "facts": {
+    "deterministic": {
+      "description": "Whether this build of the library gives the same results on every platform for the same inputs and call order.",
+      "schema": {
+        "type": "boolean"
+      }
+    },
+    "defines": {
+      "description": "The defines a deterministic build sets.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "conditions": {
+      "required": false,
+      "description": "What else determinism depends on, such as call order or thread count.",
+      "schema": {
+        "type": "string"
+      }
+    }
+  },
+  "choices": {
+    "profile": {
+      "description": "Whether the composition is deterministic: off, or on for lockstep networking and replays.",
+      "schema": {
+        "enum": [
+          "off",
+          "on"
+        ]
+      },
+      "default": "off"
+    }
+  },
+  "rules": [
+    {
+      "id": "determinism.flags-set",
+      "kind": "probed",
+      "applies_to": "composition",
+      "when": {
+        "profile": "on"
+      },
+      "text": "Every library with determinism facts is in a deterministic build, and glue compiles without floating-point contraction (-ffp-contract=off; MSVC /fp:precise).",
+      "failure_code": "DETERMINISM_FLAGS_MISSING(<library>)",
+      "procedure": "verify reads each library's determinism facts in its chosen variant; the CLI writes the floating-point options into automap.cmake when the profile is on.",
+      "seeded_violation": {
+        "description": "Choose the determinism profile while Jolt's variant isn't a deterministic build.",
+        "patch": "1.0.0/seeded/determinism.flags-set.json-patch"
+      }
+    },
+    {
+      "id": "determinism.replay-hash-matches",
+      "kind": "probed",
+      "applies_to": "library",
+      "when": {
+        "profile": "on"
+      },
+      "text": "A fixed simulation the library's binding runs from fixed inputs gives the replay hash its recipe records, on every platform.",
+      "failure_code": "REPLAY_MISMATCH(<library>)"
+    },
+    {
+      "id": "determinism.inputs-ordered",
+      "kind": "guidance",
+      "applies_to": "composition",
+      "when": {
+        "profile": "on"
+      },
+      "text": "Game code applies inputs and creates objects in the same order on every peer; deterministic libraries promise the same result only for the same calls in the same order."
+    }
+  ],
+  "shared_interface": null
+}

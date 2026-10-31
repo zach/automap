@@ -169,14 +169,9 @@ func upgradeTarget(a *args, r *result) (string, bool) {
 // how many copied files were updated, and the diverged ones. It reads the
 // repo's files; the decision is otherwise a pure function.
 func upgradeFiles(man *composition.Manifest, before, after map[string][]byte) (write map[string][]byte, updated int, diverged []string) {
-	generated := map[string]bool{
-		composition.ManifestFile: true, composition.LockFile: true, "vcpkg.json": true, "vcpkg-configuration.json": true,
-		"cmake/automap/automap.cmake": true, man.Glue.ChoicesHeader: true,
-	}
-	if man.Glue.Startup.DeveloperOwned == nil {
-		for _, f := range []string{"context.h", "startup.h", "startup.cpp"} {
-			generated[path.Join(man.Glue.Interfaces, f)] = true
-		}
+	generated := map[string]bool{}
+	for _, p := range generatedFiles(man) {
+		generated[p] = true
 	}
 	write = map[string][]byte{}
 	paths := make([]string, 0, len(after))
@@ -245,4 +240,17 @@ func readComposition(r *result) (*composition.Manifest, *composition.Lock, int) 
 		return nil, nil, exitRefused
 	}
 	return &man, lock, exitOK
+}
+
+// generatedFiles lists the files the CLI generates from the manifest and
+// the lock, which it rewrites rather than merges.
+func generatedFiles(man *composition.Manifest) []string {
+	out := []string{composition.ManifestFile, composition.LockFile, "vcpkg.json", "vcpkg-configuration.json",
+		"cmake/automap/automap.cmake", man.Glue.ChoicesHeader}
+	if man.Glue.Startup.DeveloperOwned == nil {
+		for _, f := range []string{"context.h", "startup.h", "startup.cpp"} {
+			out = append(out, path.Join(man.Glue.Interfaces, f))
+		}
+	}
+	return out
 }
