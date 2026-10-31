@@ -1,0 +1,143 @@
+name: Automap verify
+
+# The reference CI workflow for a developer's composition (SPEC §2.4,
+# ADR-0032): verifies it on Windows, Linux and macOS with automap verify,
+# signs each platform's evidence with the repository's GitHub identity
+# through artifact attestations, and commits the evidence and its bundle
+# beside the lock. A developer's repo calls it; the router skill has the
+# caller.
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: "The composition's directory in the repo"
+        type: string
+        default: "."
+      automap-ref:
+        description: "The automap version to install: a tag, branch or commit of zach/automap"
+        type: string
+        default: "main"
+      publish:
+        description: "Commit the evidence beside the lock"
+        type: boolean
+        default: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - name: System packages (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # What the v1 catalog's libraries need on Linux (their
+          # system_dependencies facts), and clang with its ThreadSanitizer
+          # runtime.
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang pkg-config autoconf autoconf-archive automake libtool libltdl-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
+            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
+            mesa-vulkan-drivers libvulkan1
+          sudo apt-get install -y "libclang-rt-$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p')-dev"
+      - name: MSVC developer environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Ninja
+        if: runner.os != 'Linux'
+        run: if [ "$RUNNER_OS" = Windows ]; then choco install -y ninja; else brew install ninja; fi
+      - name: vcpkg
+        run: |
+          # Pinned port versions are read from vcpkg's history.
+          filter=--filter=blob:none
+          [ "$RUNNER_OS" = Windows ] && filter=
+          git clone -q $filter https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          if [ "$RUNNER_OS" = Windows ]; then
+            cmd //c "$(cygpath -w "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat")" -disableMetrics
+          else
+            "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/vcpkg-archives"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$RUNNER_TEMP/vcpkg-archives" >> "$GITHUB_ENV"
+      - name: vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-archives
+          key: automap-vcpkg-${{ runner.os }}-${{ hashFiles(format('{0}/automap.lock.json', inputs.working-directory)) }}
+          restore-keys: automap-vcpkg-${{ runner.os }}-
+      - name: automap
+        run: |
+          GOBIN="$RUNNER_TEMP/bin" go install "github.com/zach/automap/cmd/automap@${{ inputs.automap-ref }}"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Verify
+        id: verify
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          automap verify --json | tee "$RUNNER_TEMP/verify.json"
+          echo "evidence=$(jq -r '.evidence_file // empty' "$RUNNER_TEMP/verify.json")" >> "$GITHUB_OUTPUT"
+      - name: Sign the evidence
+        id: attest
+        if: always() && steps.verify.outputs.evidence != ''
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ inputs.working-directory }}/${{ steps.verify.outputs.evidence }}
+      - name: Keep the evidence and its bundle
+        if: always() && steps.attest.outcome == 'success'
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/evidence"
+          f="${{ inputs.working-directory }}/${{ steps.verify.outputs.evidence }}"
+          cp "$f" "$RUNNER_TEMP/out/evidence/"
+          cp "${{ steps.attest.outputs.bundle-path }}" "$RUNNER_TEMP/out/evidence/$(basename "${f%.json}").sigstore.json"
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.attest.outcome == 'success'
+        with:
+          name: automap-evidence-${{ matrix.os }}
+          path: ${{ runner.temp }}/out
+
+  publish:
+    name: Commit the evidence
+    needs: verify
+    if: always() && inputs.publish && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: automap-evidence-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/out
+      - name: Commit and push
+        run: |
+          [ -d "$RUNNER_TEMP/out/evidence" ] || { echo "no evidence"; exit 0; }
+          mkdir -p "${{ inputs.working-directory }}/evidence"
+          cp "$RUNNER_TEMP"/out/evidence/* "${{ inputs.working-directory }}/evidence/"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${{ inputs.working-directory }}/evidence"
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -q -m "Automap evidence from run ${{ github.run_id }}"
+          for attempt in 1 2 3 4; do
+            git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            sleep $((attempt * 5))
+            git pull -q --rebase origin "${{ github.ref_name }}"
+          done
+          exit 1

@@ -1,0 +1,41 @@
+{
+  "dependencies": [
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "sdl3-binding",
+        "sdlgpu3-binding"
+      ]
+    },
+    {
+      "name": "sdl3",
+      "default-features": false,
+      "features": [
+        {
+          "name": "vulkan",
+          "platform": "linux"
+        },
+        {
+          "name": "x11",
+          "platform": "linux"
+        },
+        {
+          "name": "wayland",
+          "platform": "linux"
+        }
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "name": "imgui",
+      "version": "1.93.0"
+    },
+    {
+      "name": "sdl3",
+      "version": "3.4.18"
+    }
+  ],
+  "builtin-baseline": "d186940b2f0c4e8e5b4ff804af57d2a26fbfa091"
+}

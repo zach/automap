@@ -67,7 +67,7 @@ func main() {
 	reportPath := flag.String("report", "eval-report.json", "where to write the report")
 	model := flag.String("model", "opus", "the Claude model to ask for; the report names the model that answered")
 	automap := flag.String("automap", "automap", "the automap binary the agent uses")
-	mapDir := flag.String("map", "map", "the public map directory")
+	mapDir := flag.String("map", "", "a public map directory to read instead of the newest published map release")
 	flag.Parse()
 
 	root, _ := os.Getwd()
@@ -80,7 +80,10 @@ func main() {
 	if entries, err := os.ReadDir(cache); err == nil && len(entries) > 0 {
 		report.Cache = "warm"
 	}
-	absMap, _ := filepath.Abs(*mapDir)
+	absMap := ""
+	if *mapDir != "" {
+		absMap, _ = filepath.Abs(*mapDir)
+	}
 	absCLI, err := exec.LookPath(*automap)
 	if err != nil {
 		fail(err)
@@ -197,9 +200,13 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	env := append(os.Environ(),
 		"HOME="+home,
 		"PATH="+filepath.Dir(automap)+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"AUTOMAP_MAP="+mapDir,
 		"VCPKG_DEFAULT_BINARY_CACHE="+cache,
 	)
+	// Without a map directory, the CLI reads the newest published map
+	// release, as a developer's does.
+	if mapDir != "" {
+		env = append(env, "AUTOMAP_MAP="+mapDir)
+	}
 	for _, args := range t.Setup {
 		setup := exec.Command(automap, args...)
 		setup.Dir, setup.Env = repo, env
