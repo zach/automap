@@ -33,8 +33,8 @@ func withoutCaches(t *testing.T, repo *clitest.Repo) {
 	repo.Setenv("VCPKG_BINARY_SOURCES", "clear")
 }
 
-// clone copies the repo's files, as a fresh clone of it would have them:
-// everything but build output.
+// clone copies the repo's files with their modes, as a fresh clone of it
+// would have them: everything but build output.
 func clone(t *testing.T, repo *clitest.Repo) *clitest.Repo {
 	t.Helper()
 	c := clitest.NewRepo(t, "no-manifest")
@@ -53,7 +53,11 @@ func clone(t *testing.T, repo *clitest.Repo) *clitest.Repo {
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(filepath.Join(c.Dir, rel), data, 0o644)
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(filepath.Join(c.Dir, rel), data, info.Mode().Perm())
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -193,6 +197,7 @@ func TestTheTestbedVerifiesOfflineAfterFetch(t *testing.T) {
 	repo := testbedRepo(t)
 	repo.Setenv("VCPKG_BINARY_SOURCES", "clear") // build from the fetched sources
 	repo.Automap(t, "start", "--with", "sdl3", "--with", "jolt:double-precision", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.EditJSON(t, "automap.manifest.json", set("choices/math-types/position_precision", "double"))
 	if run := repo.Automap(t, "fetch", "--map", "map", "--json"); run.Exit != 0 {
 		run.LogDetails(t)
 		t.Fatalf("fetch: exit %d\n%s", run.Exit, run.Stdout)

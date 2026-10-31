@@ -397,8 +397,10 @@ func copyFile(from, to string) error {
 // into dst. A vcpkg with a ports tree of its own reads the curated
 // registry from it, and its install plan names no source for those ports.
 func CuratedPort(vcpkgRoot, baseline string, p PlannedPort, dst string) error {
+	// The port's files as committed: a patch with its line endings
+	// converted no longer applies.
 	git := func(args ...string) *exec.Cmd {
-		return exec.Command("git", append([]string{"-C", vcpkgRoot}, args...)...)
+		return exec.Command("git", append([]string{"-C", vcpkgRoot, "-c", "core.autocrlf=false", "-c", "core.eol=lf"}, args...)...)
 	}
 	raw, err := git("show", baseline+":versions/"+p.Name[:1]+"-/"+p.Name+".json").Output()
 	if err != nil {

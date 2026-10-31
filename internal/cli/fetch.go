@@ -20,7 +20,8 @@ import (
 // the host platform without the network (ADR-0038): the map release it
 // records, the published evidence for its bindings and pairings, the vcpkg
 // tool when VCPKG_ROOT isn't set, the registries' ports, and every port's
-// source downloads.
+// source downloads, by installing them: some ports acquire tools, such as
+// pkgconf from MSYS2 on Windows, only once they build.
 func fetchCmd(a *args, r *result) int {
 	m, man, lock, status := loadForFetch(a, r)
 	if m == nil {
@@ -40,7 +41,7 @@ func fetchCmd(a *args, r *result) int {
 		return exitFailed
 	}
 	log, installRoot := logFile("fetch-"+platform+".log"), filepath.Join("build", "automap", platform, "vcpkg_installed")
-	if _, err := verify.Vcpkg(vcpkg, ".", abs(installRoot), log, nil, "install", "--only-downloads"); err != nil {
+	if _, err := verify.Vcpkg(vcpkg, ".", abs(installRoot), log, nil, "install"); err != nil {
 		r.Summary = "vcpkg couldn't download what the composition needs."
 		r.fail("FETCH_FAILED", err.Error()+"; the log has the details.")
 		r.Failures[len(r.Failures)-1].DetailsFile = filepath.ToSlash(log)
@@ -118,7 +119,10 @@ func vendorCmd(a *args, r *result) int {
 		}
 		written = append(written, listFiles(dst)...)
 	}
-	if _, err := verify.Vcpkg(vcpkg, ".", installRoot, log, env, "install", "--only-downloads"); err != nil {
+	// Every port builds, without binary caching, so its downloads, and the
+	// tools a port acquires only once it builds, land where vendor copies
+	// them.
+	if _, err := verify.Vcpkg(vcpkg, ".", installRoot, log, env, "install", "--binarysource=clear"); err != nil {
 		return vendorFailed(err, log)
 	}
 	entries, _ := os.ReadDir(downloads)
@@ -212,8 +216,13 @@ func copyDir(src, dst string) error {
 	})
 }
 
-// copyPath copies a file, creating its directory.
+// copyPath copies a file with its mode, so a port's scripts stay
+// executable, creating its directory.
 func copyPath(src, dst string) error {
+	info, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
 	data, err := os.ReadFile(src)
 	if err != nil {
 		return err
@@ -221,7 +230,8 @@ func copyPath(src, dst string) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(dst, data, 0o644)
+	os.Remove(dst)
+	return os.WriteFile(dst, data, info.Mode().Perm()|0o644)
 }
 
 // listFiles lists the files under dir, slash-separated.
