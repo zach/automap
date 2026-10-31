@@ -8,4 +8,5 @@
 
 - [ ] The registry branch is a valid vcpkg git registry, and compositions that use it record it at a commit in their pins.
 - [ ] Jolt's double-precision and deterministic variants reach probed on all three platforms; the deterministic variant passes a replay-hash check under the determinism profile.
+- [ ] Jolt's builds from the registry use Jolt's external profile hooks (`JPH_USE_EXTERNAL_PROFILE`), and Jolt's diagnostics binding routes them to the facade's zones, so they reach the profiling slot; the curated joltphysics port builds Jolt's own profiler instead.
 - [ ] Handles and serialization probes fail their seeded violations for Jolt (and flecs once present).

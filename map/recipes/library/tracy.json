@@ -1,0 +1,37 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "tracy"
+  },
+  "applies_to": {
+    "tracy": {
+      "versions": [
+        "0.14.1"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "tracy/tracy.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "build-flags.abi-defines-match",
+      "check": "Tracy's own link-time check: code compiled with other TRACY_* options than the client references tracy::GetProfiler and tracy::GetToken under other names, the link fails, and verify reads the missing symbol from the build log as ABI_DEFINE_MISMATCH(tracy).",
+      "seeded_violation": {
+        "description": "Define TRACY_ON_DEMAND for the glue in Tracy's build fragment, while the tracy port builds the client without it.",
+        "patch": "tracy/seeded/build-flags.abi-defines-match.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The build fragment calls find_package(Tracy CONFIG REQUIRED) and links Tracy::TracyClient; its headers are included as <tracy/Tracy.hpp>.",
+    "The client starts with the process and, not being on-demand, keeps what it records in memory until a profiler connects: a long run with no profiler attached grows without bound. A composition that wants profiling only while connected builds the tracy port's on-demand feature, and every translation unit gets TRACY_ON_DEMAND from Tracy::TracyClient.",
+    "Game code may use Tracy's own macros (ZoneScoped, FrameMark) alongside the facade's zones; both reach the same client."
+  ]
+}

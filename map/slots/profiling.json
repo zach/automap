@@ -1,0 +1,7 @@
+{
+  "id": "profiling",
+  "description": "The profiler behind the diagnostics facade: where every library's profile zones go.",
+  "examples": [
+    "tracy"
+  ]
+}

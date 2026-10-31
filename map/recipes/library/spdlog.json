@@ -1,0 +1,27 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "spdlog"
+  },
+  "applies_to": {
+    "spdlog": {
+      "versions": [
+        "1.17.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "spdlog/spdlog.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(spdlog CONFIG REQUIRED) and links spdlog::spdlog, the compiled library, which brings vcpkg's fmt::fmt with it.",
+    "Game code that logs through spdlog directly uses am_spdlog_logger(), the logger the diagnostics facade writes to, so its messages and the libraries' share one set of sinks."
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "spdlog",
+  "name": "spdlog",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/gabime/spdlog"
+  },
+  "slots": [
+    "logging"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/gabime/spdlog"
+  },
+  "versions": [
+    {
+      "version": "1.17.0",
+      "released": "2026-01-04",
+      "pin": {
+        "tag": "v1.17.0",
+        "commit": "79524ddd08a4ec981b7fea76afd08ee05f83755d",
+        "content_hash": "sha512:8df117055d19ff21c9c9951881c7bdf27cc0866ea3a4aa0614b2c3939cedceab94ac9abaa63dc4312b51562b27d708cb2f014c68c603fd1c1051d3ed5c1c3087"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "spdlog",
+          "registry": "curated",
+          "port_version": 1
+        }
+      },
+      "cmake": {
+        "package": "spdlog",
+        "targets": [
+          "spdlog::spdlog"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "spdlog as the spdlog port builds it with its default features: compiled, formatting with vcpkg's fmt port rather than its bundled copy (the port removes the bundled fmt and records SPDLOG_FMT_EXTERNAL in tweakme.h)."
+        }
+      ],
+      "facts": {
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": null,
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "diagnostics",
+              "step": "spdlog:logger"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "diagnostics",
+              "step": "spdlog:flush"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "SPDLOG_FMT_EXTERNAL",
+            "SPDLOG_USE_STD_FORMAT",
+            "SPDLOG_COMPILED_LIB",
+            "SPDLOG_WCHAR_TO_UTF8_SUPPORT",
+            "SPDLOG_WCHAR_FILENAMES",
+            "SPDLOG_NO_TZ_OFFSET"
+          ],
+          "self_check": null,
+          "min_language_standard": "C++11",
+          "exceptions": "thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "spdlog's fmt is vcpkg's fmt port, not the bundled copy: SPDLOG_FMT_EXTERNAL comes from tweakme.h, which the port edits, and spdlog::spdlog links fmt::fmt; nothing checks a translation unit that defines SPDLOG_USE_STD_FORMAT or includes another fmt."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}

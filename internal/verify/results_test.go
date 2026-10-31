@@ -161,6 +161,29 @@ LINK : fatal error LNK1319: 1 mismatches detected`
 	}
 }
 
+// Tracy encodes its build options in the names of its symbols, so glue
+// built with other options than the library fails to link; each platform's
+// linker names the missing symbol its own way.
+func TestLinkMismatchFromConfigMangledSymbols(t *testing.T) {
+	logs := map[string]string{
+		"ld.lld": "ld.lld: error: undefined symbol: tracy::GetProfiler_CFG_E1_OD1_DI0_ML0_F0_DHT0_TF0_PH0()\n>>> referenced by tracy_diagnostics.cpp",
+		"GNU ld": "tracy_diagnostics.cpp:(.text+0x1a): undefined reference to `tracy::GetProfiler_CFG_E1_OD1_DI0_ML0_F0_DHT0_TF0_PH0()'",
+		"Apple ld": `Undefined symbols for architecture arm64:
+  "tracy::GetProfiler_CFG_E1_OD1_DI1_ML0_F0_DHT0_TF0_PH0()", referenced from:`,
+		"MSVC": `tracy_diagnostics.cpp.obj : error LNK2019: unresolved external symbol "class tracy::Profiler & __cdecl tracy::GetProfiler_CFG_E1_OD1_DI0_ML0_F0_DHT0_TF0_PH0(void)" (?GetProfiler_CFG_E1_OD1_DI0_ML0_F0_DHT0_TF0_PH0@tracy@@YAAEAVProfiler@1@XZ) referenced in function`,
+	}
+	for linker, log := range logs {
+		r := verify.LinkMismatch(log)
+		if r == nil || r.Rule != "build-flags.abi-defines-match" || r.Status != "fail" || r.FailureCode != "ABI_DEFINE_MISMATCH(tracy)" {
+			t.Errorf("%s: got %+v, want the ABI rule failed with ABI_DEFINE_MISMATCH(tracy)", linker, r)
+			continue
+		}
+		if !strings.Contains(r.Reason, "GetProfiler_CFG_E1_OD1") {
+			t.Errorf("%s: reason %q doesn't name the missing symbol", linker, r.Reason)
+		}
+	}
+}
+
 func TestAComputedResultCountsWhenNoProbeRan(t *testing.T) {
 	expected := []verify.Expected{{Rule: mapmodel.Rule{ID: "build-flags.abi-defines-match"}}, {Rule: mapmodel.Rule{ID: "lifecycle.init-order"}}}
 	link := verify.Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(X)"}

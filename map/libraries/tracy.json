@@ -1,0 +1,90 @@
+{
+  "id": "tracy",
+  "name": "Tracy",
+  "license": {
+    "spdx": "BSD-3-Clause",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/wolfpld/tracy"
+  },
+  "slots": [
+    "profiling"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/wolfpld/tracy"
+  },
+  "versions": [
+    {
+      "version": "0.14.1",
+      "released": "2026-08-22",
+      "pin": {
+        "tag": "v0.14.1",
+        "commit": "30997d5ca6bb632cc10807a1da8a6d3de0aeeb3c",
+        "content_hash": "sha512:53912d7563e595812b37bc55fd40508cfd8e5c42d48d957a73b6b7d18bf1287b3f795c10c9a986bf7b906d5b5bebe13b02216e563e794d0a82b2783e8ce5510b"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "tracy",
+          "registry": "curated",
+          "port_version": 1
+        }
+      },
+      "cmake": {
+        "package": "Tracy",
+        "targets": [
+          "Tracy::TracyClient"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "The Tracy client as the tracy port builds it with its default features: TRACY_ENABLE on, the crash handler on, not on-demand, so the client records from startup and holds what it records until a profiler connects."
+        }
+      ],
+      "facts": {
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": null,
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "TRACY_ENABLE",
+            "TRACY_ON_DEMAND",
+            "TRACY_DELAYED_INIT",
+            "TRACY_MANUAL_LIFETIME",
+            "TRACY_FIBERS",
+            "TRACY_DISALLOW_HW_TIMER",
+            "TRACY_TIMER_FALLBACK",
+            "TRACY_PLATFORM_HEADER",
+            "TRACY_NO_CALLSTACK",
+            "TRACY_NO_CRASH_HANDLER"
+          ],
+          "self_check": "link time: TracyMangle.hpp encodes TRACY_ENABLE, TRACY_ON_DEMAND, TRACY_DELAYED_INIT, TRACY_MANUAL_LIFETIME, TRACY_FIBERS, TRACY_DISALLOW_HW_TIMER, TRACY_TIMER_FALLBACK and TRACY_PLATFORM_HEADER in the names of tracy::GetProfiler and tracy::GetToken, so code compiled with other values fails to link",
+          "min_language_standard": "C++11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "Tracy::TracyClient's interface defines the options the client was built with (TRACY_ENABLE among them) for every consumer. A translation unit that leaves TRACY_ENABLE undefined compiles Tracy's macros away, which the link-time check can't see."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}
