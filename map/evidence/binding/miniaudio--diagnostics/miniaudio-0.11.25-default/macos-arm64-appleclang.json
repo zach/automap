@@ -1,0 +1,52 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/mackron/miniaudio@0.11.25",
+      "digest": {
+        "gitCommit": "9634bedb5b5a2ca38c1ee7108a9358a4e233f14d",
+        "sha512": "8cdfe5cd66dd84628430a24026b307c21158b4776492eec234c2ce3cf0da3ae26fe8162f3ed285502f6002fdf252ccb660f7c216e044e3c306b75b0997700b45"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "diagnostics",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "9634bedb5b5a2ca38c1ee7108a9358a4e233f14d",
+        "content_hash": "sha512:8cdfe5cd66dd84628430a24026b307c21158b4776492eec234c2ce3cf0da3ae26fe8162f3ed285502f6002fdf252ccb660f7c216e044e3c306b75b0997700b45",
+        "library": "miniaudio",
+        "variant": "default",
+        "version": "0.11.25"
+      }
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T07:43:50Z",
+    "map_release": "git:8dac01b8171925aa50d9dd154a30e035589646f2",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {
+        "AUTOMAP_MINIAUDIO_BACKEND": "null"
+      },
+      "runner_image": "macos26 20261021.0445.8",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "miniaudio",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

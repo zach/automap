@@ -25,8 +25,8 @@
     },
     "platform": "windows-x64-msvc",
     "level": "smoke",
-    "produced_at": "2026-10-31T06:39:32Z",
-    "map_release": "git:95c2e9bcc10da2b78d96f9aa595df5424f86d54a",
+    "produced_at": "2026-10-31T07:35:59Z",
+    "map_release": "git:8dac01b8171925aa50d9dd154a30e035589646f2",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
