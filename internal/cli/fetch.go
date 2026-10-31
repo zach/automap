@@ -122,7 +122,12 @@ func vendorCmd(a *args, r *result) int {
 	// Every port builds, without binary caching, so its downloads, and the
 	// tools a port acquires only once it builds, land where vendor copies
 	// them.
-	buildtrees := abs(filepath.Join(scratch, "buildtrees"))
+	// Builds keep to a short path: Windows limits a path's length.
+	buildtrees, err := os.MkdirTemp("", "amv")
+	if err != nil {
+		return vendorFailed(err, "")
+	}
+	defer os.RemoveAll(buildtrees)
 	if _, err := verify.Vcpkg(vcpkg, ".", installRoot, log, env, "install", "--binarysource=clear", "--x-buildtrees-root="+buildtrees); err != nil {
 		return vendorFailed(err, log)
 	}
