@@ -208,8 +208,8 @@ func AutomapCMake(man *Manifest, sources []string, cxxStandard string) string {
 }
 
 // VcpkgJSON is the vcpkg manifest: each library's port with the features
-// its variant enables, an override pinning its version, and the curated
-// registry's baseline.
+// its variant enables, an override pinning its version and port version,
+// and the curated registry's baseline.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
 		Name            string `json:"name"`
@@ -217,8 +217,9 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		Features        []any  `json:"features,omitempty"`
 	}
 	type override struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
+		Name        string `json:"name"`
+		Version     string `json:"version"`
+		PortVersion int    `json:"port-version,omitempty"`
 	}
 	var doc struct {
 		Dependencies    []dependency `json:"dependencies"`
@@ -256,7 +257,11 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 			}
 		}
 		doc.Dependencies = append(doc.Dependencies, dep)
-		doc.Overrides = append(doc.Overrides, override{Name: port, Version: v.Version})
+		o := override{Name: port, Version: v.Version}
+		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil {
+			o.PortVersion = *pv
+		}
+		doc.Overrides = append(doc.Overrides, o)
 	}
 	return indentJSON(doc)
 }

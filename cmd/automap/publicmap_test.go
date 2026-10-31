@@ -139,6 +139,13 @@ func TestExtendingWithDiagnosticsBackendsFillsTheirSlots(t *testing.T) {
 	if !strings.Contains(choices, "AUTOMAP_DIAGNOSTICS_LOG_LOGGING_SLOT") || !strings.Contains(choices, "AUTOMAP_DIAGNOSTICS_PROFILER_PROFILING_SLOT") {
 		t.Error("the choices header doesn't select the logging and profiling slots")
 	}
+	// The tracy port enables TRACY_ENABLE from its port version 1: the
+	// override pins the port version along with the version.
+	if !strings.Contains(clitest.Read(t, repo, "vcpkg.json"), `"name": "tracy",
+      "version": "0.14.1",
+      "port-version": 1`) {
+		t.Errorf("vcpkg.json doesn't pin tracy 0.14.1 at port version 1:\n%s", clitest.Read(t, repo, "vcpkg.json"))
+	}
 	for _, f := range []string{"glue/spdlog/spdlog_diagnostics.cpp", "glue/tracy/tracy_diagnostics.cpp"} {
 		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
 			t.Errorf("a diagnostics backend wasn't written: %v", err)
