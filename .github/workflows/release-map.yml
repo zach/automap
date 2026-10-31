@@ -1,6 +1,6 @@
 name: Release map
 
-# Tagging map-YYYY.MM.DD publishes the map/ tree at that tag as an
+# Tagging map-YYYY.MM.DD, or map-YYYY.MM.DD.N for a day's later releases, publishes the map/ tree at that tag as an
 # immutable release: a reproducible archive and its SHA-256 (ADR-0053,
 # SPEC §5.3). The CLI resolves start against the newest release. Run on
 # demand with a release name, it tags the commit it runs on and publishes
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: "The release to tag and publish, map-YYYY.MM.DD"
+        description: "The release to tag and publish: map-YYYY.MM.DD, or map-YYYY.MM.DD.N for a day's later releases"
         required: true
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           go-version-file: go.mod
       - name: Check the tag and the map
         run: |
-          [[ "$RELEASE" =~ ^map-[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]] || { echo "::error::$RELEASE isn't map-YYYY.MM.DD"; exit 1; }
+          [[ "$RELEASE" =~ ^map-[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[1-9][0-9]*)?$ ]] || { echo "::error::$RELEASE isn't map-YYYY.MM.DD or map-YYYY.MM.DD.N"; exit 1; }
           go run ./cmd/automap find --map map --json > /dev/null
       - name: Archive the map with its SHA-256
         run: |

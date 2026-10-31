@@ -239,3 +239,20 @@ func TestTheLocksReleaseDownloadsWithoutTheReleasesAPI(t *testing.T) {
 
 	fresh.Automap(t, "show", "library", "stub-window", "--json").ExpectExit(t, 0)
 }
+
+// A day can have more than one release, map-YYYY.MM.DD.N; releases order
+// by date, then by their counter, numerically.
+func TestReleasesOrderByDateThenCounter(t *testing.T) {
+	s := newReleaseServer(t)
+	mapDir := fixtureMapDir(t)
+	for _, tag := range []string{"map-2026.10.01", "map-2026.10.01.2", "map-2026.10.01.10", "map-2026.09.30.11"} {
+		s.publish(t, tag, mapDir, nil)
+	}
+	repo := releaseRepo(t, s, t.TempDir())
+
+	repo.Automap(t, startWindowFromRelease...).ExpectExit(t, 0)
+
+	if got := lockRelease(t, repo); got != "map-2026.10.01.10" {
+		t.Errorf("the lock records map release %q, want the day's tenth, map-2026.10.01.10", got)
+	}
+}

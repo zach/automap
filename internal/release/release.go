@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -34,8 +35,33 @@ const DefaultSource = "https://api.github.com/repos/zach/automap"
 // repository's main branch, where Automap's CI adds it.
 const DefaultEvidence = "https://raw.githubusercontent.com/zach/automap/main/map"
 
-// Tag matches a map release's tag, map-YYYY.MM.DD.
-var Tag = regexp.MustCompile(`^map-\d{4}\.\d{2}\.\d{2}$`)
+// Tag matches a map release's tag, map-YYYY.MM.DD or, for a day's later
+// releases, map-YYYY.MM.DD.N with N counting from 1.
+var Tag = regexp.MustCompile(`^map-\d{4}\.\d{2}\.\d{2}(\.[1-9]\d*)?$`)
+
+// Newer reports whether release a is newer than release b: a later date,
+// or the same date and a higher counter, where none is 0. It is a pure
+// function.
+func Newer(a, b string) bool {
+	parts := func(tag string) []int {
+		var out []int
+		for _, f := range strings.Split(strings.TrimPrefix(tag, "map-"), ".") {
+			n, _ := strconv.Atoi(f)
+			out = append(out, n)
+		}
+		for len(out) < 4 {
+			out = append(out, 0)
+		}
+		return out
+	}
+	pa, pb := parts(a), parts(b)
+	for i := range pa {
+		if pa[i] != pb[i] {
+			return pa[i] > pb[i]
+		}
+	}
+	return false
+}
 
 var client = &http.Client{Timeout: 30 * time.Second}
 
@@ -104,7 +130,7 @@ func Cached() []string {
 			tags = append(tags, e.Name())
 		}
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(tags)))
+	sort.Slice(tags, func(i, j int) bool { return Newer(tags[i], tags[j]) })
 	return tags
 }
 
@@ -147,7 +173,7 @@ func releases() ([]listed, error) {
 			out = append(out, r)
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Tag > out[j].Tag })
+	sort.Slice(out, func(i, j int) bool { return Newer(out[i].Tag, out[j].Tag) })
 	return out, nil
 }
 

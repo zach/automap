@@ -144,7 +144,7 @@ func upgradeTarget(a *args, r *result) (string, bool) {
 	var err error
 	if tag := a.value("map-release"); tag != "" {
 		if !release.Tag.MatchString(tag) {
-			r.Summary = "Usage error: --map-release takes map-YYYY.MM.DD."
+			r.Summary = "Usage error: --map-release takes map-YYYY.MM.DD or map-YYYY.MM.DD.N."
 			r.fail("USAGE", tag+" isn't a map release name")
 			return "", false
 		}
