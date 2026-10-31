@@ -28,9 +28,9 @@
   "probes": [
     {
       "rule": "allocation.routed-through-facade",
-      "check": "am_probe_mimalloc_allocation(): blocks the facade serves, plain, zeroed, reallocated and aligned, are in mimalloc's heap (mi_is_in_heap_region).",
+      "check": "am_probe_mimalloc_allocation(): blocks the facade serves, plain, zeroed, reallocated and aligned, were served by mimalloc (a probe-build count in the binding) and are in its heap (mi_is_in_heap_region).",
       "seeded_violation": {
-        "description": "Serve requests that need no more than the default alignment from the system allocator instead of mimalloc.",
+        "description": "Serve every request from the system allocator instead of mimalloc.",
         "patch": "mimalloc--allocation/seeded/allocation.routed-through-facade.patch"
       }
     }
