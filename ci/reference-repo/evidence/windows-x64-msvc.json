@@ -11,7 +11,7 @@
     "level": "probed",
     "map_release": "map-2026.10.31",
     "platform": "windows-x64-msvc",
-    "produced_at": "2026-10-31T09:42:14Z",
+    "produced_at": "2026-10-31T10:35:25Z",
     "results": [
       {
         "rule": "allocation.hooks-before-first-allocation",
