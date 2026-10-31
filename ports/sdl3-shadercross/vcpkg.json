@@ -1,6 +1,7 @@
 {
   "name": "sdl3-shadercross",
   "version": "3.0.0-preview2",
+  "port-version": 1,
   "description": "This is a library for translating shaders to different formats, intended for use with SDL's GPU API. It takes SPIRV or HLSL as the source and outputs DXBC, DXIL, SPIRV, MSL, or HLSL. Automap's build of the port: DXC, which vcpkg's directx-dxc port doesn't support on macOS, is a dependency only where it builds; elsewhere SDL_shadercross is built without HLSL-to-DXIL compilation, which only Direct3D 12 needs.",
   "homepage": "https://www.libsdl.org",
   "license": "Zlib",
