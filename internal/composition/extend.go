@@ -68,6 +68,27 @@ func Extend(m *mapmodel.Map, base *Manifest, req ExtendRequest) (*Manifest, []Fa
 		man.Slots[slot] = req.Library
 	}
 	man.Variants[req.Library] = VariantChoice{Default: variant}
+	addDefaults(m, man)
+	return man, nil
+}
+
+// Upgrade moves a composition to another map release: the manifest records
+// the release, any contract the composition starts using brings its choice
+// defaults, and any recipe the composition gains has its glue laid out.
+// The developer's slots, variants, choices and glue entries stay as they
+// are. m is the new release's map, with the libraries that don't move held
+// at their versions. It is a pure function.
+func Upgrade(m *mapmodel.Map, base *Manifest, mapRelease string) *Manifest {
+	man := copyManifest(base)
+	man.MapRelease = mapRelease
+	addDefaults(m, man)
+	return man
+}
+
+// addDefaults adds the choice defaults of every contract the composition
+// uses that it has no choice for yet, and lays out the glue of every
+// recipe it has no glue entry for.
+func addDefaults(m *mapmodel.Map, man *Manifest) {
 	for _, cid := range Contracts(m, man) {
 		c := m.LatestContract(cid)
 		for id, ch := range c.Choices {
@@ -98,7 +119,6 @@ func Extend(m *mapmodel.Map, base *Manifest, req ExtendRequest) (*Manifest, []Fa
 			man.Glue.Setup[key] = entry
 		}
 	}
-	return man, nil
 }
 
 // copyManifest deep-copies a manifest through JSON.

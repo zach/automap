@@ -1,0 +1,23 @@
+{
+  "command": "upgrade",
+  "cli_version": "0.0.0-dev",
+  "ok": false,
+  "summary": "Upgraded to map-2026.10.01; 1 file updated, 0 diverged; the composition is smoke on linux-x64-clang: 1 probed rule failed.",
+  "level": "smoke",
+  "warnings": [],
+  "failures": [
+    {
+      "code": "ALLOC_NOT_ROUTED(stub-ui)",
+      "rule": "allocation.routed-through-facade",
+      "library": "stub-ui",
+      "message": "Each library's installed hooks are the facade's, and the facade observes allocations from that library during a smoke run.",
+      "details_file": "build/automap/probe-linux-x64-clang.log"
+    }
+  ],
+  "files_written": [
+    "automap.lock.json",
+    "automap.manifest.json",
+    "glue/stub-ui/stub_ui_allocation.cpp"
+  ],
+  "evidence_file": "evidence/linux-x64-clang.json"
+}

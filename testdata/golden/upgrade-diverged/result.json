@@ -1,0 +1,18 @@
+{
+  "command": "upgrade",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "Upgraded to map-2026.10.01; 0 files updated, 1 diverged; it is not verified: run automap verify.",
+  "warnings": [
+    {
+      "code": "GLUE_DIVERGED(glue/stub-ui/stub_ui_allocation.cpp)",
+      "message": "glue/stub-ui/stub_ui_allocation.cpp differs from map-2026.09.01's reference, so upgrade left it as it is; map-2026.10.01's reference is beside it at glue/stub-ui/stub_ui_allocation.cpp.reference. Carry over what applies, using the recipe's adaptation notes (automap show recipe \u003cid\u003e)."
+    }
+  ],
+  "failures": [],
+  "files_written": [
+    "automap.lock.json",
+    "automap.manifest.json",
+    "glue/stub-ui/stub_ui_allocation.cpp.reference"
+  ]
+}
