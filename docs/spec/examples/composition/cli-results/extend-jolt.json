@@ -1,6 +1,6 @@
 {
   "command": "extend",
-  "cli_version": "1.0.0",
+  "cli_version": "0.1.0",
   "ok": true,
   "summary": "Added jolt 5.6.0 (default) to physics-3d; the composition is probed on linux-x64-clang.",
   "level": "probed",

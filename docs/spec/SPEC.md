@@ -117,7 +117,7 @@ $ automap start --with sdl3 --with dear-imgui:docking --json
 The CLI resolves the libraries against the newest map release, assigns SDL3 to every slot it fills (windowing, input, gpu) and Dear ImGui to tools-ui, and writes the files in §2.3: the manifest and lock, the vcpkg files, the build fragments, the shared interfaces and probe harness, SDL3's and Dear ImGui's bindings and setup glue, the `dear-imgui--sdl3` pairing glue, the choices header, the startup, a testbed `main.cpp`, the `AGENTS.md` section and the router skill. It then runs `automap verify` for the host platform. The JSON result is:
 
 ```json
-{ "command": "start", "cli_version": "1.0.0", "ok": true, "level": "probed",
+{ "command": "start", "cli_version": "0.1.0", "ok": true, "level": "probed",
   "summary": "Started a testbed (sdl3 3.4.18, dear-imgui 1.93.0 docking); the composition is probed on linux-x64-clang.",
   "failures": [], "evidence_file": "evidence/linux-x64-clang.json" }
 ```
@@ -722,7 +722,7 @@ Anyone, including agents and upstream maintainers, can propose map changes as pu
 
 | Thing | Scheme |
 | --- | --- |
-| CLI | semver, tags `cli-v<semver>` [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
+| CLI | semver, starting at 0.1.0; tags `cli-v<semver>` [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
 | Map releases | immutable, dated, tags `map-YYYY.MM.DD`; recorded in every lock [ADR-0053](../adr/0053-map-releases-are-immutable-and-recorded-in-locks.md) |
 | Contracts | semver each, independently; bindings and shared interfaces name the version they target [ADR-0024](../adr/0024-contracts-are-versioned-independently.md) |
 | Formats | `automap-manifest/1`, `automap-lock/1`, predicate type `https://github.com/zach/automap/evidence/v1`; a breaking change is a new number |
@@ -833,7 +833,7 @@ Human checkpoints exist only for any new or changed ADR; what the map covers and
 | M5 Starter engine | The rest of the v1 catalog and contracts; the `sdl-shadercross--sdl3` pairing; the starter-engine reference composition | §8.4–8.6 acceptance tests; journey 2 evals |
 | M6 Adopt and private maps | `automap adopt`; private maps and their layering; private variants; per-platform variants; NDA evidence signing | `custom-adopt`, `custom-variant` and `custom-nda` evals |
 | M7 Eject and offline | `automap eject`, `fetch`, `vendor` | `custom-eject` eval; ejected journey compositions build without Automap |
-| v1 release | All four measures met [ADR-0063](../adr/0063-v1-success-measures.md) | human checkpoint [ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md) |
+| v1 release (CLI 0.1.0) | All four measures met [ADR-0063](../adr/0063-v1-success-measures.md) | human checkpoint [ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md) |
 
 The order follows the day-one minimum, then upgrade, then adopt [ADR-0010](../adr/0010-day-one-minimum-start-then-extend-once.md).
 
