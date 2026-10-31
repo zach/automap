@@ -13,7 +13,7 @@
     "level": "probed",
     "map_release": "map-2026.10.31",
     "platform": "linux-x64-clang",
-    "produced_at": "2026-10-31T06:01:09Z",
+    "produced_at": "2026-10-31T06:35:03Z",
     "results": [
       {
         "rule": "allocation.hooks-before-first-allocation",
