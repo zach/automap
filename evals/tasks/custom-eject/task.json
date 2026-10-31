@@ -1,0 +1,13 @@
+{
+  "id": "custom-eject",
+  "request": "We're leaving Automap: eject this engine so it builds as a plain CMake and vcpkg project.",
+  "repo": "../custom-adopt/repo",
+  "overlay": "../custom-variant/files",
+  "setup": [
+    ["adopt", "--json"]
+  ],
+  "pass": {
+    "ejected": true
+  },
+  "timeout_minutes": 60
+}

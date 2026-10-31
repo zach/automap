@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -200,7 +201,9 @@ func buildableAcme(t *testing.T) *clitest.Repo {
 
 // The custom-adopt eval's engine can be adopted: with the private map the
 // custom-variant eval starts from, it reaches probed on the public map.
-func TestTheCustomAdoptEvalsEngineCanBeAdopted(t *testing.T) {
+// Ejected then, as the custom-eject eval asks, it builds and passes its
+// smoke test without Automap.
+func TestTheCustomAdoptEvalsEngineCanBeAdoptedAndEjected(t *testing.T) {
 	requirePublicMapBuilds(t)
 	if hostPlatform != "windows-x64-msvc" {
 		requireTSan(t)
@@ -216,4 +219,12 @@ func TestTheCustomAdoptEvalsEngineCanBeAdopted(t *testing.T) {
 		logVcpkgErrors(t)
 	}
 	expectProbed(t, run)
+
+	repo.Automap(t, "eject", "--map", "map", "--json").ExpectExit(t, 0)
+	os.RemoveAll(filepath.Join(repo.Dir, "map"))
+	var headless []string
+	if runtime.GOOS == "linux" {
+		headless = append(headless, "SDL_VIDEO_DRIVER=offscreen")
+	}
+	buildWithoutAutomap(t, repo, "acme_game", headless...)
 }

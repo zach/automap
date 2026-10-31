@@ -18,8 +18,8 @@ func TestEveryTaskLoads(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if task.ID != id || task.Request == "" || task.Pass.Level == "" {
-			t.Errorf("task %s: %+v needs its id, a request and the level it must reach", id, task)
+		if task.ID != id || task.Request == "" || task.Pass.Level == "" && !task.Pass.Ejected {
+			t.Errorf("task %s: %+v needs its id, a request and the level it must reach, or to be an eject task", id, task)
 		}
 		if task.Repo != "" {
 			if _, err := os.Stat("../../tasks/" + id + "/" + task.Repo); err != nil {
@@ -88,5 +88,34 @@ func TestGradeChecksLibrariesAndPrivateVariants(t *testing.T) {
 		if status, _ := grade(&task, c.o); (status == "pass") != c.pass {
 			t.Errorf("%s: grade %s, want pass %v", c.name, status, c.pass)
 		}
+	}
+}
+
+func TestGradeAnEjectTask(t *testing.T) {
+	var task Task
+	task.Pass.Ejected = true
+	for _, c := range []struct {
+		name string
+		o    outcome
+		pass bool
+	}{
+		{"ejected and builds", outcome{Ejected: true}, true},
+		{"the lock is still there", outcome{Ejected: false}, false},
+		{"ejected but the smoke run fails", outcome{Ejected: true, Plain: "the smoke run: exit status 1"}, false},
+	} {
+		if status, _ := grade(&task, c.o); (status == "pass") != c.pass {
+			t.Errorf("%s: grade %s, want pass %v", c.name, status, c.pass)
+		}
+	}
+}
+
+func TestEjectMeasure(t *testing.T) {
+	yes, no := true, false
+	if m := ejectMeasure([]TaskResult{{ID: "a"}, {ID: "b", Status: "fail"}}); m != nil {
+		t.Errorf("eject measure %+v with nothing ejected, want none", m)
+	}
+	m := ejectMeasure([]TaskResult{{ID: "a", Ejected: &yes}, {ID: "b", Ejected: &no}, {ID: "c", Ejected: &yes}, {ID: "d"}})
+	if m == nil || m.Ejected != 3 || m.Built != 2 {
+		t.Fatalf("eject measure %+v, want 2 of 3", m)
 	}
 }
