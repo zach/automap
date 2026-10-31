@@ -40,6 +40,11 @@ type result struct {
 // entry is one map entry in a find or show result.
 type entry map[string]any
 
+// warn records a warning.
+func (r *result) warn(code, message string) {
+	r.Warnings = append(r.Warnings, warning{Code: code, Message: message})
+}
+
 type warning struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`

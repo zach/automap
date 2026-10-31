@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
@@ -65,6 +66,7 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 			r.Warnings = append(r.Warnings, warning{Code: code, Message: res.Reason})
 		}
 	}
+	warnEvidence(r, compositionEvidence(m, man, lock, time.Now()))
 	r.OK = len(r.Failures) == 0
 	switch {
 	case !r.OK:
