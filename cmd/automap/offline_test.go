@@ -131,7 +131,10 @@ func TestAVendoredCompositionVerifiesFromAFreshCloneOffline(t *testing.T) {
 
 	run := repo.Automap(t, "vendor", "--json")
 
-	run.ExpectExit(t, 0)
+	if run.Exit != 0 {
+		run.LogDetails(t)
+		t.Fatalf("vendor: exit %d\n%s", run.Exit, run.Stdout)
+	}
 	for _, f := range []string{
 		"vendor/automap/ports/stub-window/portfile.cmake",
 		"vendor/automap/ports/stub-ui/portfile.cmake",
