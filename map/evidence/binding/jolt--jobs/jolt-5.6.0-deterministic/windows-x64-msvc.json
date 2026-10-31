@@ -25,13 +25,13 @@
     },
     "platform": "windows-x64-msvc",
     "level": "none",
-    "produced_at": "2026-10-31T10:52:50Z",
-    "map_release": "git:6d0e49b04de0f6d0b769e1bb29984b217d352770",
+    "produced_at": "2026-10-31T13:47:18Z",
+    "map_release": "git:f18e13a3be5e1a8a12736961ab3d19a13484a654",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
       "environment": {},
-      "runner_image": "win25-vs2026 20261021.278.1",
+      "runner_image": "win25-vs2026 20261030.294.1",
       "sanitizers": {}
     },
     "results": [
