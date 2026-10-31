@@ -237,11 +237,17 @@ func contains(xs []string, x string) bool {
 // the manifest takes effect when the composition is verified. It returns
 // the files it wrote.
 func regenerate(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, root string) ([]string, []composition.Failure) {
+	return regenerateWith(m, man, lock, root, composition.ReadVendoredPorts(root))
+}
+
+// regenerateWith regenerates as regenerate does, with vendored as the
+// ports vendored into the repo.
+func regenerateWith(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, root string, vendored map[string]string) ([]string, []composition.Failure) {
 	plan, fails := composition.PlanStartup(m, man)
 	if fails != nil {
 		return nil, fails
 	}
-	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{RegistryURL: registryURL(m)})
+	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{RegistryURL: registryURL(m), Vendored: vendored})
 	if fails != nil {
 		return nil, fails
 	}

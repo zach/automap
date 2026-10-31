@@ -3,6 +3,7 @@ package composition
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -229,6 +230,33 @@ func AutomapCMake(man *Manifest, lock *Lock, sources []string, cxxStandard strin
 	return b.String()
 }
 
+// vcpkgOverride pins a port's version and port version in vcpkg.json.
+type vcpkgOverride struct {
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	PortVersion int    `json:"port-version,omitempty"`
+}
+
+// vcpkgOverrides pins each library's port at its version and, for the
+// curated port, its port version: a variant from another registry has that
+// registry's own.
+func vcpkgOverrides(m *mapmodel.Map, man *Manifest, lock *Lock) []vcpkgOverride {
+	var out []vcpkgOverride
+	for _, lib := range man.Libraries() {
+		v := m.Libraries[lib].Newest()
+		if v.BuildBackend == nil {
+			continue
+		}
+		variant := v.Variant(lock.Pins[lib].Variant)
+		o := vcpkgOverride{Name: v.BuildBackend.Vcpkg.Port, Version: v.Version}
+		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil && (variant == nil || variant.Registry == "" || variant.Registry == v.BuildBackend.Vcpkg.Registry) {
+			o.PortVersion = *pv
+		}
+		out = append(out, o)
+	}
+	return out
+}
+
 // VcpkgJSON is the vcpkg manifest: each library's port with the features
 // its variant enables, an override pinning its version and port version,
 // and the curated registry's baseline.
@@ -238,29 +266,21 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		DefaultFeatures *bool  `json:"default-features,omitempty"`
 		Features        []any  `json:"features,omitempty"`
 	}
-	type override struct {
-		Name        string `json:"name"`
-		Version     string `json:"version"`
-		PortVersion int    `json:"port-version,omitempty"`
-	}
 	var doc struct {
-		Dependencies    []dependency `json:"dependencies"`
-		Overrides       []override   `json:"overrides"`
-		BuiltinBaseline string       `json:"builtin-baseline,omitempty"`
+		Dependencies    []dependency    `json:"dependencies"`
+		Overrides       []vcpkgOverride `json:"overrides"`
+		BuiltinBaseline string          `json:"builtin-baseline,omitempty"`
 	}
 	if usesCurated(lock) {
 		doc.BuiltinBaseline = vcpkgBaseline(m)
 	}
 	for _, lib := range man.Libraries() {
-		l := m.Libraries[lib]
-		v := l.Newest()
+		v := m.Libraries[lib].Newest()
 		if v.BuildBackend == nil {
 			continue
 		}
-		port := v.BuildBackend.Vcpkg.Port
-		dep := dependency{Name: port}
-		variant := v.Variant(lock.Pins[lib].Variant)
-		if variant != nil {
+		dep := dependency{Name: v.BuildBackend.Vcpkg.Port}
+		if variant := v.Variant(lock.Pins[lib].Variant); variant != nil {
 			// A feature may name its platforms as a vcpkg platform
 			// expression in brackets, such as "x11[linux]".
 			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
@@ -280,21 +300,51 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 			}
 		}
 		doc.Dependencies = append(doc.Dependencies, dep)
-		o := override{Name: port, Version: v.Version}
-		// The port version is the curated port's: a variant from another
-		// registry has that registry's own.
-		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil && (variant == nil || variant.Registry == "" || variant.Registry == v.BuildBackend.Vcpkg.Registry) {
-			o.PortVersion = *pv
-		}
-		doc.Overrides = append(doc.Overrides, o)
 	}
+	doc.Overrides = vcpkgOverrides(m, man, lock)
 	return indentJSON(doc)
 }
 
+// VendoredPorts is where `automap vendor` copies a composition's ports.
+const VendoredPorts = "vendor/automap/ports"
+
+// ReadVendoredPorts lists the ports vendored into the repo at root, each
+// with its version and #port-version when it has one.
+func ReadVendoredPorts(root string) map[string]string {
+	entries, err := os.ReadDir(filepath.Join(root, filepath.FromSlash(VendoredPorts)))
+	if err != nil {
+		return nil
+	}
+	out := map[string]string{}
+	for _, e := range entries {
+		raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(VendoredPorts), e.Name(), "vcpkg.json"))
+		if err != nil {
+			continue
+		}
+		var doc struct {
+			Version     string `json:"version"`
+			Semver      string `json:"version-semver"`
+			Date        string `json:"version-date"`
+			String      string `json:"version-string"`
+			PortVersion int    `json:"port-version"`
+		}
+		json.Unmarshal(raw, &doc)
+		v := doc.Version + doc.Semver + doc.Date + doc.String
+		if doc.PortVersion != 0 {
+			v += fmt.Sprintf("#%d", doc.PortVersion)
+		}
+		out[e.Name()] = v
+	}
+	return out
+}
+
 // VcpkgConfiguration is vcpkg-configuration.json: the Automap registry at
-// its commit for the ports it supplies, and the overlay ports of each
-// private map a variant comes from.
-func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL string) []byte {
+// its commit for the ports it supplies, the ports vendored into the repo
+// as overlay ports, and the overlay ports of each private map a variant
+// comes from. A vendored port the composition pins at another version is
+// left out, so the registries supply that version until it is vendored
+// again.
+func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL string, vendored map[string]string) []byte {
 	type registry struct {
 		Kind       string   `json:"kind"`
 		Repository string   `json:"repository"`
@@ -308,6 +358,18 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 		OverlayPorts    []string   `json:"overlay-ports,omitempty"`
 	}
 	doc.Registries = []registry{}
+	pinned := map[string]string{}
+	for _, o := range vcpkgOverrides(m, man, lock) {
+		pinned[o.Name] = o.Version
+		if o.PortVersion != 0 {
+			pinned[o.Name] += fmt.Sprintf("#%d", o.PortVersion)
+		}
+	}
+	for _, port := range sortedKeys(vendored) {
+		if want, ok := pinned[port]; !ok || want == vendored[port] {
+			doc.OverlayPorts = append(doc.OverlayPorts, path.Join(VendoredPorts, port))
+		}
+	}
 	var automapPorts []string
 	var commit string
 	for _, lib := range man.Libraries() {
