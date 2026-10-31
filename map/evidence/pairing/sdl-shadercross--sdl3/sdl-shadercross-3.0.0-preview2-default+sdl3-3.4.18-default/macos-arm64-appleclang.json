@@ -1,0 +1,67 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/libsdl-org/SDL_shadercross@3.0.0-preview2",
+      "digest": {
+        "gitCommit": "1ca46e0ef7a9e50c706e7be6ef73ce467bac3b2e",
+        "sha512": "61feb70137b1a8e9037b0f9113a28b1f59578d6604423ef2a66173d9772b15a001f661cb4b53b0f3be941c0178d3562b0ae4d7a7f35404b137204bdce95f537f"
+      }
+    },
+    {
+      "name": "pkg:github/libsdl-org/SDL@release-3.4.18",
+      "digest": {
+        "gitCommit": "829a65d769d935c4852f8159e964312c0957260a",
+        "sha512": "12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "pairing",
+    "subject_detail": {
+      "pins": [
+        {
+          "commit": "1ca46e0ef7a9e50c706e7be6ef73ce467bac3b2e",
+          "content_hash": "sha512:61feb70137b1a8e9037b0f9113a28b1f59578d6604423ef2a66173d9772b15a001f661cb4b53b0f3be941c0178d3562b0ae4d7a7f35404b137204bdce95f537f",
+          "library": "sdl-shadercross",
+          "variant": "default",
+          "version": "3.0.0-preview2"
+        },
+        {
+          "commit": "829a65d769d935c4852f8159e964312c0957260a",
+          "content_hash": "sha512:12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50",
+          "library": "sdl3",
+          "variant": "default",
+          "version": "3.4.18"
+        }
+      ]
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T11:22:35Z",
+    "map_release": "git:6d0e49b04de0f6d0b769e1bb29984b217d352770",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "sdl-shadercross--sdl3.formats-match-backend",
+        "status": "pass"
+      },
+      {
+        "rule": "sdl-shadercross--sdl3.reflection-matches",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

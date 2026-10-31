@@ -1,0 +1,52 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/SanderMertens/flecs@v4.1.6",
+      "digest": {
+        "gitCommit": "fb55f3c25660425cfe1bc4cf5e6bff8b3f18a9b8",
+        "sha512": "a2843d72a4a7f7577e047eac60d492c8a6677dae404d9ec6a23a498f5d37f745897a0892a3a5ef7b66de5c5f862e55cf9ae6b50dc33d0bd7a674707ca93f2b30"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "serialization",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "fb55f3c25660425cfe1bc4cf5e6bff8b3f18a9b8",
+        "content_hash": "sha512:a2843d72a4a7f7577e047eac60d492c8a6677dae404d9ec6a23a498f5d37f745897a0892a3a5ef7b66de5c5f862e55cf9ae6b50dc33d0bd7a674707ca93f2b30",
+        "library": "flecs",
+        "variant": "default",
+        "version": "4.1.6"
+      }
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-31T10:59:12Z",
+    "map_release": "git:6d0e49b04de0f6d0b769e1bb29984b217d352770",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {},
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "flecs",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
