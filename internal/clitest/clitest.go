@@ -458,8 +458,15 @@ func readTree(t *testing.T, root string) map[string][]byte {
 	t.Helper()
 	tree := map[string][]byte{}
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
+		switch {
+		case err != nil:
 			return err
+		case d.IsDir() && d.Name() == ".git":
+			// Git's own files aren't the repo's content, and git can change
+			// them in the background.
+			return filepath.SkipDir
+		case d.IsDir():
+			return nil
 		}
 		data, err := os.ReadFile(path)
 		if err != nil {
