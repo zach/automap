@@ -86,7 +86,7 @@ func upgrade(a *args, r *result) int {
 	newMap = newMap.Hold(hold)
 
 	opts := func(m *mapmodel.Map) composition.FileOptions {
-		return composition.FileOptions{Testbed: base.Executable.Target == composition.TestbedTarget, RegistryURL: registryURL(m)}
+		return composition.FileOptions{Testbed: base.Executable.Target == composition.TestbedTarget, RegistryURL: registryURL(m), Vendored: composition.ReadVendoredPorts(".")}
 	}
 	oldPlan, fails := composition.PlanStartup(oldMap, base)
 	if fails != nil {

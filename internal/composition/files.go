@@ -16,6 +16,9 @@ import (
 type FileOptions struct {
 	Testbed     bool   // write the map's testbed template: CMakeLists.txt and main.cpp
 	RegistryURL string // the Automap registry's URL for vcpkg-configuration.json
+	// Vendored is the ports vendored into the repo, by name, each with its
+	// version (and #port-version when it has one), from VendoredPorts.
+	Vendored map[string]string
 }
 
 // TestbedTarget is the CMake target of the testbed template's executable.
@@ -52,7 +55,7 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 	}
 	add(LockFile, lockBytes, "the lock")
 	add("vcpkg.json", VcpkgJSON(m, man, lock), "the vcpkg manifest")
-	add("vcpkg-configuration.json", VcpkgConfiguration(m, man, lock, opts.RegistryURL), "the vcpkg configuration")
+	add("vcpkg-configuration.json", VcpkgConfiguration(m, man, lock, opts.RegistryURL, opts.Vendored), "the vcpkg configuration")
 
 	if opts.Testbed {
 		dir := filepath.Join(m.PublicDir(), "testbed")

@@ -198,9 +198,9 @@ func writeFiles(files map[string][]byte) ([]string, error) {
 // commit when it is a clean git checkout, and unreleased otherwise
 // (ADR-0079).
 func mapRelease(dir string) string {
-	// A map read from the release cache is that release.
+	// A map read from the release cache, or vendored, is that release.
 	if abs, err := filepath.Abs(dir); err == nil {
-		if tag := filepath.Base(abs); release.Tag.MatchString(tag) && abs == release.Dir(tag) {
+		if tag := filepath.Base(abs); release.Tag.MatchString(tag) && (abs == release.Dir(tag) || abs == release.VendoredDir(tag)) {
 			return tag
 		}
 	}

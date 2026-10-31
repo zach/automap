@@ -4,8 +4,8 @@
 
 **Blocked by:** [16: Map releases, fetch and cache, and evidence states](16-map-releases-and-evidence-states.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] After `fetch`, `verify` succeeds with the network disabled.
-- [ ] After `vendor`, a fresh clone builds and verifies with the network disabled and no caches.
-- [ ] With `VCPKG_ROOT` unset, the CLI bootstraps the vcpkg tool release the public map's `map.json` names into its cache, and `fetch` fills it (SPEC §5.5).
+- [x] After `fetch`, `verify` succeeds with the network disabled.
+- [x] After `vendor`, a fresh clone builds and verifies with the network disabled and no caches.
+- [x] With `VCPKG_ROOT` unset, the CLI bootstraps the vcpkg tool release the public map's `map.json` names into its cache, and `fetch` fills it (SPEC §5.5).

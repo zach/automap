@@ -82,6 +82,19 @@ func CacheDir() string {
 // Dir is where a cached release's map is.
 func Dir(tag string) string { return filepath.Join(CacheDir(), "maps", tag) }
 
+// Vendored is where `automap vendor` copies what a composition needs into
+// its repo, relative to the repo's root, where the CLI runs: its map
+// release in maps/<tag> and its published evidence in evidence/, read
+// when neither the cache nor the network has them (ADR-0038).
+const Vendored = "vendor/automap"
+
+// VendoredDir is where a release vendored into the current directory's
+// repo is.
+func VendoredDir(tag string) string {
+	dir, _ := filepath.Abs(filepath.Join(filepath.FromSlash(Vendored), "maps", tag))
+	return dir
+}
+
 // Cached lists the releases in the cache, newest first.
 func Cached() []string {
 	entries, _ := os.ReadDir(filepath.Join(CacheDir(), "maps"))
@@ -169,6 +182,9 @@ func Newest() (tag, dir string, err error) {
 func Open(tag string) (string, error) {
 	if _, err := os.Stat(Dir(tag)); err == nil {
 		return Dir(tag), nil
+	}
+	if _, err := os.Stat(VendoredDir(tag)); err == nil {
+		return VendoredDir(tag), nil
 	}
 	// A known release downloads straight from its files, without the API.
 	direct := listed{Tag: tag, Assets: []asset{
@@ -304,7 +320,8 @@ func unpack(archive []byte, dir string) error {
 // Evidence reads one piece of published evidence, by its path in the map
 // (evidence/<kind>/<id>/<pins>/<platform>.json), from the evidence source,
 // keeping a copy in the cache. Without the network it reads the cached
-// copy. It returns nil when none is published.
+// copy, or else the copy vendored into the repo. It returns nil when none
+// is published.
 func Evidence(rel string) ([]byte, error) {
 	cached := filepath.Join(CacheDir(), "evidence", filepath.FromSlash(rel))
 	resp, err := client.Get(EvidenceSource() + "/" + rel)
@@ -327,7 +344,20 @@ func Evidence(rel string) ([]byte, error) {
 	if data, err := os.ReadFile(cached); err == nil {
 		return data, nil
 	}
+	if data, err := os.ReadFile(filepath.Join(filepath.FromSlash(Vendored), filepath.FromSlash(rel))); err == nil {
+		return data, nil
+	}
 	return nil, nil
+}
+
+// CachedEvidence is the cached copy of a piece of published evidence, by
+// its path in the map, or "" when there is none.
+func CachedEvidence(rel string) string {
+	p := filepath.Join(CacheDir(), "evidence", filepath.FromSlash(rel))
+	if exists(p) {
+		return p
+	}
+	return ""
 }
 
 // MaxAge is how long evidence stays current (ADR-0031).
