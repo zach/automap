@@ -2,18 +2,27 @@ name: Release map
 
 # Tagging map-YYYY.MM.DD publishes the map/ tree at that tag as an
 # immutable release: a reproducible archive and its SHA-256 (ADR-0053,
-# SPEC §5.3). The CLI resolves start against the newest release.
+# SPEC §5.3). The CLI resolves start against the newest release. Run on
+# demand with a release name, it tags the commit it runs on and publishes
+# that.
 on:
   push:
     tags: ["map-*"]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "The release to tag and publish, map-YYYY.MM.DD"
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   release:
-    name: Publish ${{ github.ref_name }}
+    name: Publish ${{ inputs.release || github.ref_name }}
     runs-on: ubuntu-latest
+    env:
+      RELEASE: ${{ inputs.release || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -21,17 +30,17 @@ jobs:
           go-version-file: go.mod
       - name: Check the tag and the map
         run: |
-          [[ "$GITHUB_REF_NAME" =~ ^map-[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]] || { echo "::error::$GITHUB_REF_NAME isn't map-YYYY.MM.DD"; exit 1; }
+          [[ "$RELEASE" =~ ^map-[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]] || { echo "::error::$RELEASE isn't map-YYYY.MM.DD"; exit 1; }
           go run ./cmd/automap find --map map --json > /dev/null
       - name: Archive the map with its SHA-256
         run: |
-          tar --sort=name --mtime='2026-01-01 00:00Z' --owner=0 --group=0 --numeric-owner -C map -cf - . | gzip -n > "$GITHUB_REF_NAME.tar.gz"
-          sha256sum "$GITHUB_REF_NAME.tar.gz" > "$GITHUB_REF_NAME.tar.gz.sha256"
-          cat "$GITHUB_REF_NAME.tar.gz.sha256"
+          tar --sort=name --mtime='2026-01-01 00:00Z' --owner=0 --group=0 --numeric-owner -C map -cf - . | gzip -n > "$RELEASE.tar.gz"
+          sha256sum "$RELEASE.tar.gz" > "$RELEASE.tar.gz.sha256"
+          cat "$RELEASE.tar.gz.sha256"
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "$GITHUB_REF_NAME.tar.gz" "$GITHUB_REF_NAME.tar.gz.sha256" \
-            --title "$GITHUB_REF_NAME" \
-            --notes "The public map at $GITHUB_REF_NAME. Its SHA-256 is in $GITHUB_REF_NAME.tar.gz.sha256. Evidence for exact pins is read from the map on main."
+          gh release create "$RELEASE" "$RELEASE.tar.gz" "$RELEASE.tar.gz.sha256" --target "$GITHUB_SHA" \
+            --title "$RELEASE" \
+            --notes "The public map at $RELEASE. Its SHA-256 is in $RELEASE.tar.gz.sha256. Evidence for exact pins is read from the map on main."
