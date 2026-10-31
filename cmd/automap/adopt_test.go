@@ -197,3 +197,23 @@ func buildableAcme(t *testing.T) *clitest.Repo {
 	repo.EditJSON(t, "map/map.json", set("build_backend/vcpkg/automap_registry", map[string]any{"url": url, "commit": commit}))
 	return repo
 }
+
+// The custom-adopt eval's engine can be adopted: with the private map the
+// custom-variant eval starts from, it reaches probed on the public map.
+func TestTheCustomAdoptEvalsEngineCanBeAdopted(t *testing.T) {
+	requirePublicMapBuilds(t)
+	if hostPlatform != "windows-x64-msvc" {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Copy(t, "evals/tasks/custom-adopt/repo", ".")
+	repo.Copy(t, "evals/tasks/custom-variant/files/automap-private", "automap-private")
+	commitRepo(t, repo)
+
+	run := repo.Automap(t, "adopt", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		logVcpkgErrors(t)
+	}
+	expectProbed(t, run)
+}

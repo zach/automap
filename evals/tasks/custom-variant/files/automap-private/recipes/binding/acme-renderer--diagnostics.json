@@ -1,0 +1,29 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "acme-renderer",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "acme-renderer": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [],
+  "probes": [],
+  "not_applicable": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "reason": "Acme Renderer doesn't log."
+    }
+  ],
+  "adaptation_notes": [
+    "Acme Renderer has no log or assert hook."
+  ]
+}
