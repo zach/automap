@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,4 +60,31 @@ func TestEverySourceThePublicMapShipsIsMIT0(t *testing.T) {
 		}
 		return nil
 	})
+}
+
+// Filling the jobs slot switches the jobs interface to the slot's
+// library: extend sets jobs.scheduler to jobs-slot, and the composition
+// gets the library's implementation of the interface (SPEC §2.5).
+func TestExtendingWithASchedulerFillsTheJobsSlot(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "jolt", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "enkits", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct {
+		Slots   map[string]string
+		Choices map[string]map[string]any
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["jobs"] != "enkits" || man.Choices["jobs"]["scheduler"] != "jobs-slot" {
+		t.Errorf("slots %v, jobs choices %v; want enkits in the jobs slot and scheduler jobs-slot", man.Slots, man.Choices["jobs"])
+	}
+	if !strings.Contains(clitest.Read(t, repo, "glue/automap/choices.h"), "AUTOMAP_JOBS_SCHEDULER_JOBS_SLOT") {
+		t.Error("the choices header doesn't select the jobs slot")
+	}
+	if _, err := os.Stat(filepath.Join(repo.Dir, "glue/enkits/enkits_jobs.cpp")); err != nil {
+		t.Errorf("enkiTS's implementation of the jobs interface wasn't written: %v", err)
+	}
 }

@@ -1,0 +1,60 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "enkits",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "enkits": {
+      "versions": [
+        "1.12"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "enkits--allocation/enkits_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "enkits--allocation/enkits_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_enkits_allocation",
+      "steps": [
+        "enkits:customAllocator"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "After the scheduler shuts down, the facade's probe-build block tracking shows enkiTS released no block the facade didn't allocate; one it did fails the rule as ALLOC_HOOK_LATE(enkits).",
+      "seeded_violation": {
+        "description": "Allocate a block with enkiTS's default allocator before installing the facade's, then free it through the facade's.",
+        "patch": "enkits--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_enkits_allocation(): the scheduler's configuration has the two enkits trampolines as its custom allocator, and the facade served enkiTS during the run.",
+      "seeded_violation": {
+        "description": "Remove the custom allocator assignments from am_bind_enkits_allocation().",
+        "patch": "enkits--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "enkiTS takes its allocator in enki::TaskSchedulerConfig::customAllocator, read once by TaskScheduler::Initialize: set it before the jobs phase, in the config setup glue owns.",
+    "enkiTS passes the alignment and size to alloc and the size to free; the facade's aligned functions need only the alignment."
+  ]
+}

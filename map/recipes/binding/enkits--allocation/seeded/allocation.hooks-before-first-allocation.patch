@@ -1,0 +1,13 @@
+--- a/enkits_allocation.cpp
++++ b/enkits_allocation.cpp
+@@ -14,8 +14,10 @@
+ // Routes enkiTS's allocations through the allocation facade. Runs in the
+ // memory phase, before the jobs phase initializes the scheduler.
+ bool am_bind_enkits_allocation(am::Context&) {
++    void* early = enki::DefaultAllocFunc(16, 64, nullptr, __FILE__, __LINE__); // from enkiTS's default allocator
+     am_enkits_config().customAllocator.alloc = &am_enkits_alloc;
+     am_enkits_config().customAllocator.free = &am_enkits_free;
++    am_enkits_free(early, 64, nullptr, __FILE__, __LINE__);
+     am::lifecycle::init_step("enkits:customAllocator");
+     return true;
+ }

@@ -103,6 +103,7 @@ func addDefaults(m *mapmodel.Map, man *Manifest) {
 			man.Choices[cid][id] = value
 		}
 	}
+	slotChoices(m, man)
 	fresh := defaultGlue(m, man)
 	for key, entry := range fresh.Bindings {
 		if _, kept := man.Glue.Bindings[key]; !kept {
