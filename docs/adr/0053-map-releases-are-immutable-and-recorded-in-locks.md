@@ -16,7 +16,7 @@ The public map changes continuously as curation agents and contributors update i
 
 ## Decision
 
-Option 2. The public map is published as immutable, dated **map releases**. Every lock records which map release it was resolved against. Moving to a newer map release is part of the upgrade job.
+Option 2. The public map is published as immutable, dated **map releases**. Every lock records which map release it was resolved against. Moving to a newer map release is part of the upgrade job. A release is named by its date, `map-YYYY.MM.DD`; a later release the same day, such as a security fix, adds a counter from 1, `map-YYYY.MM.DD.N`. Releases order by date, then by counter.
 
 ## Consequences
 

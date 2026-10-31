@@ -132,7 +132,7 @@ The eight schemas and their examples are the contract between modules; they are 
 - Nothing from Automap is a runtime dependency; shared interfaces are glue source under MIT-0.
 - Only fetching needs the network; private maps are never uploaded; no telemetry; no MCP server.
 - The CLI is Go, one static binary per platform; the router skill is embedded in it.
-- One repository; the registry on its own branch; tags `cli-v<semver>` and `map-YYYY.MM.DD`.
+- One repository; the registry on its own branch; tags `cli-v<semver>` and `map-YYYY.MM.DD` (`map-YYYY.MM.DD.N` for a day's later releases).
 
 ### Specific interactions
 
