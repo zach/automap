@@ -1,0 +1,50 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/gabime/spdlog@v1.17.0",
+      "digest": {
+        "gitCommit": "79524ddd08a4ec981b7fea76afd08ee05f83755d",
+        "sha512": "8df117055d19ff21c9c9951881c7bdf27cc0866ea3a4aa0614b2c3939cedceab94ac9abaa63dc4312b51562b27d708cb2f014c68c603fd1c1051d3ed5c1c3087"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "diagnostics",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "79524ddd08a4ec981b7fea76afd08ee05f83755d",
+        "content_hash": "sha512:8df117055d19ff21c9c9951881c7bdf27cc0866ea3a4aa0614b2c3939cedceab94ac9abaa63dc4312b51562b27d708cb2f014c68c603fd1c1051d3ed5c1c3087",
+        "library": "spdlog",
+        "variant": "default",
+        "version": "1.17.0"
+      }
+    },
+    "platform": "windows-x64-msvc",
+    "level": "probed",
+    "produced_at": "2026-10-31T06:03:46Z",
+    "map_release": "git:79c34fb0d47f0d49c41b44e184ea05a8f788db05",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+      "environment": {},
+      "runner_image": "win25-vs2026 20261021.278.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "spdlog",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
