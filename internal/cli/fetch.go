@@ -122,22 +122,44 @@ func vendorCmd(a *args, r *result) int {
 	// Every port builds, without binary caching, so its downloads, and the
 	// tools a port acquires only once it builds, land where vendor copies
 	// them.
-	if _, err := verify.Vcpkg(vcpkg, ".", installRoot, log, env, "install", "--binarysource=clear"); err != nil {
+	buildtrees := abs(filepath.Join(scratch, "buildtrees"))
+	if _, err := verify.Vcpkg(vcpkg, ".", installRoot, log, env, "install", "--binarysource=clear", "--x-buildtrees-root="+buildtrees); err != nil {
 		return vendorFailed(err, log)
 	}
-	entries, _ := os.ReadDir(downloads)
+	// vcpkg's downloads, with the tools it extracted from them, but not
+	// its scratch space.
 	var sources int
-	for _, e := range entries {
-		if e.IsDir() || strings.HasSuffix(e.Name(), ".part") {
-			continue
+	err = filepath.WalkDir(downloads, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-		dst := filepath.Join(filepath.FromSlash(release.Vendored), "downloads", e.Name())
-		if err := copyPath(filepath.Join(downloads, e.Name()), dst); err != nil {
-			return vendorFailed(err, "")
+		rel, _ := filepath.Rel(downloads, p)
+		switch {
+		case d.IsDir() && rel == "temp":
+			return filepath.SkipDir
+		case d.IsDir() || strings.HasSuffix(d.Name(), ".part"):
+			return nil
+		}
+		dst := filepath.Join(filepath.FromSlash(release.Vendored), "downloads", rel)
+		if err := copyPath(p, dst); err != nil {
+			return err
 		}
 		written = append(written, filepath.ToSlash(dst))
-		sources++
+		if !strings.Contains(rel, string(filepath.Separator)) {
+			sources++
+		}
+		return nil
+	})
+	if err != nil {
+		return vendorFailed(err, "")
 	}
+	// The Python packages a port installs into its build's virtual
+	// environment come from PyPI: keep each one's wheel or source.
+	python, err := verify.VendorPythonPackages(buildtrees, filepath.Join(filepath.FromSlash(release.Vendored), "python"), log)
+	if err != nil {
+		return vendorFailed(err, log)
+	}
+	written = append(written, python...)
 	// The map release the lock records, and its published evidence, as
 	// fetching left them in the cache.
 	if tag := mapRelease(m.PublicDir()); release.Tag.MatchString(tag) {

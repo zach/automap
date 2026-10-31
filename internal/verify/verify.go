@@ -299,7 +299,7 @@ func build(vcpkg, root, buildDir, logFile, platform, target string, extra ...str
 		"-DCMAKE_BUILD_TYPE=Debug",
 		"-DCMAKE_TOOLCHAIN_FILE=" + filepath.Join(vcpkg, "scripts", "buildsystems", "vcpkg.cmake")}
 	configure = append(configure, extra...)
-	cmdEnv := append(os.Environ(), "VCPKG_ROOT="+vcpkg)
+	cmdEnv := append(append(os.Environ(), "VCPKG_ROOT="+vcpkg), PythonEnv(root)...)
 	switch {
 	case strings.HasSuffix(platform, "-clang"):
 		configure = append(configure, "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++")

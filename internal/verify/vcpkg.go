@@ -331,6 +331,69 @@ func ParsePlan(out string) []PlannedPort {
 // its repo: ports, source downloads, the map release and its evidence.
 const Vendored = release.Vendored
 
+// VendorPythonPackages downloads, into dst, every package installed in
+// the Python virtual environments ports created under buildtrees, with the
+// environment's own Python, and returns the files it wrote.
+func VendorPythonPackages(buildtrees, dst, logFile string) ([]string, error) {
+	venvs, _ := filepath.Glob(filepath.Join(buildtrees, "*", "*-venv"))
+	for _, venv := range venvs {
+		python := filepath.Join(venv, "bin", "python")
+		if runtime.GOOS == "windows" {
+			python = filepath.Join(venv, "Scripts", "python.exe")
+		}
+		if _, err := os.Stat(python); err != nil {
+			continue
+		}
+		run := func(args ...string) (string, error) {
+			out, err := exec.Command(python, append([]string{"-I", "-m", "pip"}, args...)...).CombinedOutput()
+			if f, ferr := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); ferr == nil {
+				fmt.Fprintf(f, "$ %s -m pip %s\n%s", python, strings.Join(args, " "), out)
+				f.Close()
+			}
+			return string(out), err
+		}
+		frozen, err := run("freeze")
+		if err != nil {
+			return nil, fmt.Errorf("listing the Python packages in %s: %v", venv, err)
+		}
+		var reqs []string
+		for _, line := range strings.Split(frozen, "\n") {
+			if line = strings.TrimSpace(line); line != "" && !strings.HasPrefix(line, "#") {
+				reqs = append(reqs, line)
+			}
+		}
+		if len(reqs) == 0 {
+			continue
+		}
+		if _, err := run(append([]string{"download", "--no-deps", "-d", dst}, reqs...)...); err != nil {
+			return nil, fmt.Errorf("downloading the Python packages in %s: %v", venv, err)
+		}
+	}
+	var files []string
+	entries, _ := os.ReadDir(dst)
+	for _, e := range entries {
+		files = append(files, filepath.ToSlash(filepath.Join(dst, e.Name())))
+	}
+	return files, nil
+}
+
+// PythonEnv points pip at a vendored composition's Python packages, and
+// nowhere else, for ports that install them as they build.
+func PythonEnv(root string) []string {
+	dir, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(Vendored), "python"))
+	if err != nil {
+		return nil
+	}
+	if _, err := os.Stat(dir); err != nil {
+		return nil
+	}
+	keep := "PIP_NO_INDEX;PIP_FIND_LINKS"
+	if k := os.Getenv("VCPKG_KEEP_ENV_VARS"); k != "" {
+		keep = k + ";" + keep
+	}
+	return []string{"PIP_NO_INDEX=1", "PIP_FIND_LINKS=" + dir, "VCPKG_KEEP_ENV_VARS=" + keep}
+}
+
 // DownloadsDir is where vcpkg keeps its downloads: VCPKG_DOWNLOADS, or
 // downloads in its root.
 func DownloadsDir(vcpkgRoot string) string {
@@ -340,31 +403,29 @@ func DownloadsDir(vcpkgRoot string) string {
 	return filepath.Join(vcpkgRoot, "downloads")
 }
 
-// SeedDownloads copies a vendored composition's downloads into vcpkg's
-// downloads, where vcpkg finds them without the network.
+// SeedDownloads copies a vendored composition's downloads, and the tools
+// vcpkg extracted from them, into vcpkg's downloads, where vcpkg finds
+// them without the network.
 func SeedDownloads(vcpkgRoot, root string) error {
 	src := filepath.Join(root, filepath.FromSlash(Vendored), "downloads")
-	entries, err := os.ReadDir(src)
-	if err != nil {
+	if _, err := os.Stat(src); err != nil {
 		return nil
 	}
 	dst := DownloadsDir(vcpkgRoot)
-	if err := os.MkdirAll(dst, 0o755); err != nil {
-		return err
-	}
-	for _, e := range entries {
-		target := filepath.Join(dst, e.Name())
-		if e.IsDir() {
-			continue
-		}
-		if _, err := os.Stat(target); err == nil {
-			continue
-		}
-		if err := copyFile(filepath.Join(src, e.Name()), target); err != nil {
+	return filepath.WalkDir(src, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
 			return err
 		}
-	}
-	return nil
+		rel, _ := filepath.Rel(src, p)
+		target := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		if _, err := os.Stat(target); err == nil {
+			return nil
+		}
+		return copyFile(p, target)
+	})
 }
 
 // copyFile copies a file, through a temporary file beside the target so
@@ -382,6 +443,10 @@ func copyFile(from, to string) error {
 	_, err = io.Copy(tmp, in)
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
+	}
+	// Extracted tools keep their executable bits.
+	if info, serr := in.Stat(); err == nil && serr == nil {
+		err = os.Chmod(tmp.Name(), info.Mode().Perm()|0o644)
 	}
 	if err == nil {
 		err = os.Rename(tmp.Name(), to)
