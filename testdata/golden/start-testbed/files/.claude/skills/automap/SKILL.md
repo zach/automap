@@ -21,7 +21,7 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 | to know which libraries fill a slot | `automap find --slot <slot> --json` |
 | a library's facts, hooks and variants | `automap show library <id> --json` |
 
-`start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. `extend` adds one library the same way: its slots, build fragment, bindings, setup glue and the glue of any pairing it completes, then re-resolves and verifies; it never overwrites glue already in the repo. A `LICENSE_WARNING(<library>)` warning means the library is copyleft or proprietary: tell the developer why before going on. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`.
+`start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. `extend` adds one library the same way: its slots, build fragment, bindings, setup glue and the glue of any pairing it completes, then re-resolves and verifies; it never overwrites glue already in the repo. A `LICENSE_WARNING(<library>)` warning means the library is copyleft or proprietary: tell the developer why before going on. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`. `start` reads the newest map release and the lock records it; later commands, `extend` included, read the release the lock records. Once a release is cached, everything but fetching works offline.
 
 ## Reading a verify result
 
@@ -31,6 +31,7 @@ The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke`
 - `SMOKE_FAILED`: the executable crashed or didn't shut down cleanly. `INIT_FAILED(<call>)` names the startup call that failed.
 - A rule's failure code, such as `ALLOC_HOOK_LATE(<library>)`, `INIT_ORDER(<step> before <step>)` or `ABI_DEFINE_MISMATCH(<define>)`, names the rule and library. Read the details file, then fix the glue it points at.
 - An `UNVERIFIABLE(<rule>)` warning means no probe could check that rule; it keeps the composition below `probed`.
+- `EVIDENCE_STALE(<subject>,<platform>)` and `EVIDENCE_BROKEN(<subject>,<platform>)` warnings are about Automap's published evidence for a binding or pairing at the lock's exact pins: stale is more than 30 days old, broken means Automap's latest run of it failed. Mention them to the developer; they don't change this composition's own level.
 
 ## Adapting glue
 

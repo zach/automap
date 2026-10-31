@@ -12,6 +12,7 @@ import (
 	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
+	"github.com/zach/automap/internal/release"
 	"github.com/zach/automap/internal/verify"
 )
 
@@ -197,6 +198,12 @@ func writeFiles(files map[string][]byte) ([]string, error) {
 // commit when it is a clean git checkout, and unreleased otherwise
 // (ADR-0079).
 func mapRelease(dir string) string {
+	// A map read from the release cache is that release.
+	if abs, err := filepath.Abs(dir); err == nil {
+		if tag := filepath.Base(abs); release.Tag.MatchString(tag) && abs == release.Dir(tag) {
+			return tag
+		}
+	}
 	git := func(args ...string) (string, error) {
 		out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).Output()
 		return strings.TrimSpace(string(out)), err

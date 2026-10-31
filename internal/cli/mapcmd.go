@@ -2,13 +2,17 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
+	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
+	"github.com/zach/automap/internal/release"
 	"github.com/zach/automap/schemas"
 )
 
@@ -21,9 +25,10 @@ func loadMap(a *args, r *result) (*mapmodel.Map, int) {
 		dir = os.Getenv("AUTOMAP_MAP")
 	}
 	if dir == "" {
-		r.Summary = "No map: give the public map's directory."
-		r.fail("NO_MAP", "Pass --map <dir> or set AUTOMAP_MAP to the public map's directory.")
-		return nil, exitUsage
+		var ok bool
+		if dir, ok = releaseDir(r); !ok {
+			return nil, exitUsage
+		}
 	}
 	privates, ok := manifestPrivateMaps(r)
 	if !ok {
@@ -41,6 +46,43 @@ func loadMap(a *args, r *result) (*mapmodel.Map, int) {
 		return nil, exitUsage
 	}
 	return m, exitOK
+}
+
+// releaseDir finds the map release to read when no map directory is
+// given: the one the lock in the current directory records, or else the
+// newest, fetched into the cache if it isn't there (ADR-0053, ADR-0038).
+func releaseDir(r *result) (string, bool) {
+	var lock struct {
+		MapRelease string `json:"map_release"`
+	}
+	tag := ""
+	if raw, err := os.ReadFile(composition.LockFile); err == nil && json.Unmarshal(raw, &lock) == nil {
+		tag = lock.MapRelease
+	}
+	var dir string
+	var err error
+	switch {
+	case release.Tag.MatchString(tag):
+		dir, err = release.Open(tag)
+	case tag != "":
+		r.Summary = "No map: the lock was resolved against a map directory."
+		r.fail("NO_MAP", "The lock records map release "+tag+", which isn't a published release: pass --map <dir> or set AUTOMAP_MAP to that map's directory.")
+		return "", false
+	default:
+		tag, dir, err = release.Newest()
+	}
+	var invalid *release.InvalidError
+	switch {
+	case errors.As(err, &invalid):
+		r.Summary = "Map release " + invalid.Tag + " is invalid."
+		r.fail("MAP_RELEASE_INVALID("+invalid.Tag+")", invalid.Reason)
+		return "", false
+	case err != nil:
+		r.Summary = "No map: no map release could be fetched or found in the cache."
+		r.fail("NO_MAP", err.Error()+". Pass --map <dir> or set AUTOMAP_MAP to the public map's directory, or fetch a release with the network on.")
+		return "", false
+	}
+	return dir, true
 }
 
 // manifestPrivateMaps reads the private maps the manifest names, in
@@ -116,6 +158,10 @@ func show(a *args, r *result) int {
 		lib := m.Libraries[id]
 		found = lib != nil
 		e["definition"] = lib
+		if evidence := libraryEvidence(m, id, time.Now()); found && len(evidence) > 0 {
+			e["evidence"] = evidence
+			warnEvidence(r, evidence)
+		}
 	case "slot":
 		slot := m.Slots[id]
 		found = slot != nil
@@ -201,7 +247,12 @@ func find(a *args, r *result) int {
 		for _, x := range v.Variants {
 			variants = append(variants, x.Name)
 		}
-		r.Entries = append(r.Entries, entry{"kind": "library", "id": id, "version": v.Version, "variants": variants})
+		e := entry{"kind": "library", "id": id, "version": v.Version, "variants": variants}
+		if evidence := libraryEvidence(m, id, time.Now()); len(evidence) > 0 {
+			e["evidence"] = evidence
+			warnEvidence(r, evidence)
+		}
+		r.Entries = append(r.Entries, e)
 		found = append(found, id+" "+v.Version)
 	}
 	r.OK = true

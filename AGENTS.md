@@ -30,6 +30,7 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `internal/mapmodel/` | Loads, validates and layers the public and private maps. |
 | `internal/composition/` | The manifest and lock, resolution, startup planning, and the files a composition is made of. |
 | `internal/canonical/` | RFC 8785 canonical JSON, for the lock. |
+| `internal/release/` | Finds, fetches and caches map releases and published evidence, and evidence states. |
 | `internal/verify/` | Builds through CMake and vcpkg, runs the smoke test and probes, writes evidence. |
 | `internal/agentfiles/` | The `AGENTS.md` section, the `CLAUDE.md` import, the router skill and the four nevers. |
 | `internal/clitest/` | The test harness that runs the CLI as a process. |
