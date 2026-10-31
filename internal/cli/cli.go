@@ -23,6 +23,8 @@ commands:
                                              add a library to the composition, then verify it
   verify [--seed <rule>[:<library>]]         build the composition, run its smoke test and probes, write evidence;
                                              with --seed, check a probe catches its seeded violation
+  eject                                      leave Automap: copy the Automap registry's ports into ports/,
+                                             point vcpkg at them, and remove the manifest and lock
   fetch                                      fill the caches the composition needs to build and verify offline
   vendor                                     copy the composition's ports, sources, map release and evidence
                                              into vendor/automap/, for builds with no network and no caches
@@ -47,6 +49,7 @@ var commands = map[string]command{
 	"show":    {bools: []string{"json"}, values: []string{"map"}, run: show},
 	"find":    {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
 	"fetch":   {bools: []string{"json"}, values: []string{"map"}, run: fetchCmd},
+	"eject":   {bools: []string{"json"}, values: []string{"map"}, run: eject},
 	"vendor":  {bools: []string{"json"}, values: []string{"map"}, run: vendorCmd},
 }
 
