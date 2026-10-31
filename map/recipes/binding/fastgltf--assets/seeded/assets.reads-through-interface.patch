@@ -1,0 +1,11 @@
+--- a/fastgltf_assets.cpp
++++ b/fastgltf_assets.cpp
+@@ -16,7 +16,7 @@
+     fastgltf::Parser parser(extensions);
+     // Without Options::LoadExternalBuffers fastgltf reads no file itself:
+     // each external buffer is loaded below, through the interface.
+-    auto asset = parser.loadGltf(data.get(), path.parent_path(), fastgltf::Options::LoadGLBBuffers);
++    auto asset = parser.loadGltf(data.get(), path.parent_path(), fastgltf::Options::LoadGLBBuffers | fastgltf::Options::LoadExternalBuffers);
+     if (asset.error() != fastgltf::Error::None) return asset;
+     for (fastgltf::Buffer& buffer : asset->buffers) {
+         auto* uri = std::get_if<fastgltf::sources::URI>(&buffer.data);

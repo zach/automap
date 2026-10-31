@@ -1,0 +1,7 @@
+{
+  "id": "model-import",
+  "description": "Reads 3D model files (meshes, materials, scenes) into the engine's data, at runtime or in build tools that cook assets.",
+  "examples": [
+    "fastgltf"
+  ]
+}

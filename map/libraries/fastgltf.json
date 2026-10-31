@@ -1,0 +1,90 @@
+{
+  "id": "fastgltf",
+  "name": "fastgltf",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/spnda/fastgltf"
+  },
+  "slots": [
+    "model-import"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/spnda/fastgltf"
+  },
+  "versions": [
+    {
+      "version": "0.9.1",
+      "released": "2026-09-27",
+      "pin": {
+        "tag": "v0.9.1",
+        "commit": "705564d4d54500ae88befb0db9e361e447923655",
+        "content_hash": "sha512:e7af2eeefe6d4bca6d466f1fce1ff3d000b97fb84a6609cb8a20eab218b0f557e67acee31809e5e05d521c5330b8a97734536ebce24d0135954e07d9d6bd3807"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "fastgltf",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "fastgltf",
+        "targets": [
+          "fastgltf::fastgltf"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "fastgltf as the fastgltf port builds it: the compiled library on vcpkg's simdjson, with fastgltf's default options."
+        }
+      ],
+      "facts": {
+        "assets": {
+          "usage": "both",
+          "file_io_hook": "fastgltf::GltfDataBuffer::FromBytes for the glTF or GLB file, and buffers loaded by the caller into sources::Array when Options::LoadExternalBuffers is left off",
+          "reload_hook": null,
+          "output_settings": [
+            "fastgltf::Options",
+            "fastgltf::Extensions passed to the Parser",
+            "fastgltf::Category"
+          ]
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": true
+        },
+        "build-flags": {
+          "abi_defines": [
+            "FASTGLTF_USE_CUSTOM_SMALLVECTOR",
+            "FASTGLTF_ENABLE_DEPRECATED_EXT",
+            "FASTGLTF_DISABLE_CUSTOM_MEMORY_POOL",
+            "FASTGLTF_USE_64BIT_FLOAT",
+            "FASTGLTF_COMPILE_AS_CPP20"
+          ],
+          "self_check": null,
+          "min_language_standard": "C++17",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "FASTGLTF_* options change fastgltf's types; fastgltf::fastgltf's interface carries the port's, and a translation unit that defines others before including fastgltf breaks the layout silently."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+--- a/stb_image_assets.cpp
++++ b/stb_image_assets.cpp
+@@ -12,5 +12,7 @@
+     if (!am::assets::read("stb-image", path, bytes) || bytes.size() > INT_MAX) return nullptr;
+     stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(bytes.data()), static_cast<int>(bytes.size()),
+                                             width, height, channels, desired_channels);
++    static stbi_uc loads = 0; // marks each decode, to tell them apart while debugging
++    if (pixels != nullptr) pixels[0] = loads++;
+     return pixels;
+ }

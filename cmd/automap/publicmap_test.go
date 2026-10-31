@@ -195,3 +195,25 @@ func TestExtendingWithMiniaudioFillsTheAudioSlot(t *testing.T) {
 		}
 	}
 }
+
+// fastgltf and stb_image bring the assets contract: its file-I/O interface
+// and each library's glue that reads through it.
+func TestExtendingWithAssetLibrariesBringsTheAssetsInterface(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "fastgltf", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "stb-image", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct{ Slots map[string]string }
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["model-import"] != "fastgltf" || man.Slots["image-decode"] != "stb-image" {
+		t.Errorf("slots %v, want fastgltf importing models and stb_image decoding images", man.Slots)
+	}
+	for _, f := range []string{"glue/automap/assets.h", "glue/automap/assets.cpp", "glue/fastgltf/fastgltf_assets.cpp", "glue/stb-image/stb_image_assets.cpp", "glue/stb-image/stb_image_allocation.cpp"} {
+		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
+			t.Errorf("the assets interface or its glue wasn't written: %v", err)
+		}
+	}
+}

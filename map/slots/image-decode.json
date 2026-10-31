@@ -1,0 +1,7 @@
+{
+  "id": "image-decode",
+  "description": "Decodes image files (PNG, JPEG and others) into pixels, at runtime or in build tools that cook textures.",
+  "examples": [
+    "stb-image"
+  ]
+}

@@ -1,0 +1,13 @@
+--- a/fastgltf_assets.cpp
++++ b/fastgltf_assets.cpp
+@@ -18,6 +18,10 @@
+     // each external buffer is loaded below, through the interface.
+     auto asset = parser.loadGltf(data.get(), path.parent_path(), fastgltf::Options::LoadGLBBuffers);
+     if (asset.error() != fastgltf::Error::None) return asset;
++    for (fastgltf::Mesh& mesh : asset->meshes) {
++        // Give unnamed meshes a unique name, so tools can tell them apart.
++        if (mesh.name.empty()) mesh.name = ("mesh@" + std::to_string(reinterpret_cast<std::uintptr_t>(&mesh))).c_str();
++    }
+     for (fastgltf::Buffer& buffer : asset->buffers) {
+         auto* uri = std::get_if<fastgltf::sources::URI>(&buffer.data);
+         if (uri == nullptr || !uri->uri.isLocalPath()) continue;

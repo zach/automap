@@ -1,0 +1,74 @@
+{
+  "contract": "assets",
+  "version": "1.0.0",
+  "description": "Asset import: every file an asset library reads goes through one file-I/O interface, and an import's output depends only on its input, the library's version and its settings.",
+  "facts": {
+    "usage": {
+      "description": "When the library runs: in the game, in build tools that cook assets, or both.",
+      "schema": {
+        "enum": [
+          "runtime",
+          "build-time",
+          "both"
+        ]
+      }
+    },
+    "file_io_hook": {
+      "description": "How the library's file reads are injected, such as a read callback or an API that takes bytes instead of a path, or null when it reads files itself.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "reload_hook": {
+      "description": "How loaded data is reloaded when its source file changes, or null.",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "output_settings": {
+      "required": false,
+      "description": "The settings that change an import's output, beyond its input and the library's version.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "assets.reads-through-interface",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Every file the library reads goes through the file-I/O interface: a probe that has the glue load a sample asset, with the files it refers to, sees the interface serve each one.",
+      "failure_code": "ASSET_READ_BYPASSED(<library>)"
+    },
+    {
+      "id": "assets.output-identical",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Importing the same input twice, with the same library version and settings, gives identical output.",
+      "failure_code": "ASSET_OUTPUT_DIFFERS(<library>)"
+    },
+    {
+      "id": "assets.reload-on-change",
+      "kind": "guidance",
+      "applies_to": "library",
+      "text": "A library whose loaded data the game keeps is reloaded through its reload hook when a source file changes, and the reload reads through the file-I/O interface too."
+    }
+  ],
+  "shared_interface": {
+    "files": [
+      "automap/assets.h",
+      "automap/assets.cpp"
+    ]
+  }
+}

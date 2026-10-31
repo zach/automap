@@ -304,7 +304,7 @@ The example contracts are allocation, jobs, lifecycle, diagnostics, build flags,
 
 ### 4.5 Libraries
 
-A library records its license as a fact [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md), its upstream contribution policy [ADR-0046](../adr/0046-four-agent-nevers.md), the slots it can fill, its source and, in the public map only, which console variants exist and who distributes them [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). Each version records its release date, its pin (commit and source content hash), its vcpkg port and registry, its CMake package and targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md) (a library whose port installs no CMake package, such as miniaudio, which installs its header alone, records an empty package, and its build fragment defines the imported target), any bundled copies of other libraries, its variants, and its facts keyed by contract [ADR-0074](../adr/0074-spike-format-fixes.md). A variant lists its build options (for vcpkg, the port features it enables as `vcpkg_features`, each optionally limited to platforms by a vcpkg platform expression in brackets, such as SDL3's `vulkan[linux]`, which SDL_GPU needs on Linux, and `vcpkg_default_features: "false"` to turn the port's default features off) and may override facts, the registry and the pin. A version's first variant is its default, used when a command names none.
+A library records its license as a fact [ADR-0039](../adr/0039-licenses-are-facts-copyleft-warns-at-extend.md), its upstream contribution policy [ADR-0046](../adr/0046-four-agent-nevers.md), the slots it can fill, its source and, in the public map only, which console variants exist and who distributes them [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). Each version records its release date, its pin (commit and source content hash), its vcpkg port and registry, its CMake package and targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md) (where the port installs no imported target, such as miniaudio, which installs its header alone and records an empty package, or stb_image, whose port has only a find module, the build fragment defines one), any bundled copies of other libraries, its variants, and its facts keyed by contract [ADR-0074](../adr/0074-spike-format-fixes.md). A variant lists its build options (for vcpkg, the port features it enables as `vcpkg_features`, each optionally limited to platforms by a vcpkg platform expression in brackets, such as SDL3's `vulkan[linux]`, which SDL_GPU needs on Linux, and `vcpkg_default_features: "false"` to turn the port's default features off) and may override facts, the registry and the pin. A version's first variant is its default, used when a command names none.
 
 A library whose `source.kind` is `path` is a directory in the developer's repo. It has no pin and no build backend: it joins the build as ordinary CMake targets [ADR-0035](../adr/0035-glue-targets-cmake-only.md), and the lock identifies it by path and content hash. The complete private library example is Acme's in-house scheduler, [`examples/private-map/libraries/acme-jobs.json`](examples/private-map/libraries/acme-jobs.json):
 
@@ -600,14 +600,14 @@ New libraries, versions, facts, recipes and probes enter through curation agents
 
 ### 8.2 Contracts
 
-Every contract ships at version 1.0.0 with at least one probed rule [ADR-0027](../adr/0027-v1-probe-floor-and-classification.md). Rule ids marked * are in the [example contracts](examples/map/contracts/).
+Every contract ships with at least one probed rule [ADR-0027](../adr/0027-v1-probe-floor-and-classification.md). Rule ids marked * are in the [example contracts](examples/map/contracts/).
 
 | Contract | Shared interface | v1 probed rules | v1 guidance |
 | --- | --- | --- | --- |
 | allocation | allocator facade | `allocation.hooks-before-first-allocation`*, `allocation.routed-through-facade`* | semantic rules, e.g. `allocation.same-allocator-across-modules`* |
 | jobs | neutral jobs interface; reference thread pool | `jobs.routed-through-interface`*, `jobs.tsan-clean`* (Linux, macOS) | semantic rules, e.g. `jobs.no-blocking-waits-on-workers`* |
 | diagnostics | log, assert and profile facade | `diagnostics.routed-through-facade`* | semantic rules, e.g. `diagnostics.assert-policy`* |
-| assets | file-I/O interface | output identical across runs with the same input, version and settings; every file read goes through the file-I/O interface | semantic rules |
+| assets | file-I/O interface | `assets.output-identical` (output identical across runs with the same input, version and settings), `assets.reads-through-interface` (every file read goes through the file-I/O interface) | `assets.reload-on-change` |
 | lifecycle | — | `lifecycle.init-order`*, `lifecycle.shutdown-reverse`* | `lifecycle.reload-boundary`* |
 | build flags | — | `build-flags.abi-defines-match`*, `build-flags.language-settings-agree`* | — |
 | platform | — | `platform.targets-supported`* | — |
