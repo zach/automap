@@ -1,0 +1,7 @@
+{
+  "id": "allocator",
+  "description": "The general-purpose allocator that backs the allocation facade; every library's allocations reach it through the facade.",
+  "examples": [
+    "mimalloc"
+  ]
+}

@@ -290,6 +290,16 @@ func TestVerifyRejectsAManifestThatDisagreesWithTheMap(t *testing.T) {
 	run.ExpectFailure(t, "LOCK_MISMATCH(stub-ui)", "manifest asks for docking")
 }
 
+func TestVerifyRejectsAChoiceNamingAnEmptySlot(t *testing.T) {
+	repo := startedRepo(t)
+	repo.EditJSON(t, "automap.manifest.json", set("choices/allocation/allocator", "allocator-slot"))
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "MANIFEST_INVALID", "allocator-slot needs a library in the allocator slot")
+}
+
 func TestVerifyRejectsAManifestNamingALibraryTheMapLacks(t *testing.T) {
 	repo := startedRepo(t)
 	repo.EditJSON(t, "automap.manifest.json", set("slots/physics-3d", "jolt"))

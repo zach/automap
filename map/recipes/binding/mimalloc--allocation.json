@@ -1,0 +1,48 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "mimalloc",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "mimalloc": {
+      "versions": [
+        "3.5.3"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "mimalloc--allocation/mimalloc_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "mimalloc--allocation/mimalloc_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_mimalloc_allocation(): blocks the facade serves, plain, zeroed, reallocated and aligned, were served by mimalloc (a probe-build count in the binding) and are in its heap (mi_is_in_heap_region).",
+      "seeded_violation": {
+        "description": "Serve every request from the system allocator instead of mimalloc.",
+        "patch": "mimalloc--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "not_applicable": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "reason": "mimalloc has no allocator hooks: it is the allocator behind the facade, and serves only the blocks the facade asks for."
+    }
+  ],
+  "adaptation_notes": [
+    "mimalloc fills the allocator slot: the allocation facade's am_allocator_slot_allocate, am_allocator_slot_reallocate and am_allocator_slot_release call mi_malloc_aligned, mi_realloc and mi_free, so every library's hooks, unchanged, now reach mimalloc.",
+    "mi_free frees aligned and unaligned blocks alike, so the facade's aligned and plain release share one path."
+  ]
+}

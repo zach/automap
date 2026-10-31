@@ -1,0 +1,37 @@
+--- a/mimalloc_allocation.cpp
++++ b/mimalloc_allocation.cpp
+@@ -3,6 +3,7 @@
+ // SPDX-License-Identifier: MIT-0
+ #include <atomic>
+ #include <cstddef>
++#include <cstdlib>
+ #include <cstdint>
+ 
+ #include <mimalloc.h>
+@@ -15,14 +16,17 @@
+ #define AM_MIMALLOC_SERVED() (void)0
+ #endif
+ 
+-void* am_allocator_slot_allocate(std::size_t size, std::size_t alignment) {
+-    AM_MIMALLOC_SERVED();
+-    return mi_malloc_aligned(size, alignment);
+-}
++#if defined(_WIN32)
++#include <malloc.h>
+ 
+-void* am_allocator_slot_reallocate(void* block, std::size_t size) {
+-    AM_MIMALLOC_SERVED();
+-    return mi_realloc(block, size);
++void* am_allocator_slot_allocate(std::size_t size, std::size_t alignment) { return _aligned_malloc(size, alignment); }
++void* am_allocator_slot_reallocate(void* block, std::size_t size) { return _aligned_realloc(block, size, alignof(std::max_align_t)); }
++void am_allocator_slot_release(void* block) { _aligned_free(block); }
++#else
++void* am_allocator_slot_allocate(std::size_t size, std::size_t alignment) {
++    void* block = nullptr;
++    return posix_memalign(&block, alignment < sizeof(void*) ? sizeof(void*) : alignment, size) == 0 ? block : nullptr;
+ }
+-
+-void am_allocator_slot_release(void* block) { mi_free(block); }
++void* am_allocator_slot_reallocate(void* block, std::size_t size) { return std::realloc(block, size); }
++void am_allocator_slot_release(void* block) { std::free(block); }
++#endif

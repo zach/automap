@@ -88,3 +88,29 @@ func TestExtendingWithASchedulerFillsTheJobsSlot(t *testing.T) {
 		t.Errorf("enkiTS's implementation of the jobs interface wasn't written: %v", err)
 	}
 }
+
+// Filling the allocator slot backs the allocation facade with the slot's
+// library: extend sets allocation.allocator to allocator-slot, and the
+// composition gets the library's implementation of the facade's backend.
+func TestExtendingWithAnAllocatorFillsTheAllocatorSlot(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "mimalloc", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct {
+		Slots   map[string]string
+		Choices map[string]map[string]any
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["allocator"] != "mimalloc" || man.Choices["allocation"]["allocator"] != "allocator-slot" {
+		t.Errorf("slots %v, allocation choices %v; want mimalloc in the allocator slot and allocator allocator-slot", man.Slots, man.Choices["allocation"])
+	}
+	if !strings.Contains(clitest.Read(t, repo, "glue/automap/choices.h"), "AUTOMAP_ALLOCATION_ALLOCATOR_ALLOCATOR_SLOT") {
+		t.Error("the choices header doesn't select the allocator slot")
+	}
+	if _, err := os.Stat(filepath.Join(repo.Dir, "glue/mimalloc/mimalloc_allocation.cpp")); err != nil {
+		t.Errorf("mimalloc's backend for the allocation facade wasn't written: %v", err)
+	}
+}

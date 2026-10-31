@@ -37,7 +37,7 @@
   ],
   "adaptation_notes": [
     "enkiTS fills the jobs slot: the jobs interface's am_jobs_slot_start, am_jobs_slot_submit, am_jobs_slot_run_one and am_jobs_slot_stop run on its scheduler, which the jobs phase initializes with the configured worker count and stops after every job finishes.",
-    "Each submitted job becomes an enki::ITaskSet freed once it completes; enkiTS doesn't touch a completed task without dependents.",
+    "Each submitted job becomes an enki::ITaskSet whose completion action deletes it, the pattern of enkiTS's CompletionAction example: enkiTS doesn't touch a task once its dependents run.",
     "A thread outside enkiTS that submits registers as one of its external task threads the first time, up to eight."
   ]
 }

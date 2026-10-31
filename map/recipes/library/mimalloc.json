@@ -1,0 +1,27 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "mimalloc"
+  },
+  "applies_to": {
+    "mimalloc": {
+      "versions": [
+        "3.5.3"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "mimalloc/mimalloc.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(mimalloc CONFIG REQUIRED) and links mimalloc-static where the triplet is static, mimalloc where it is dynamic; its header is <mimalloc.h>.",
+    "mimalloc doesn't override malloc in this variant: memory reaches it only through the allocation facade, so a library whose allocations bypass the facade still gets the system allocator."
+  ]
+}

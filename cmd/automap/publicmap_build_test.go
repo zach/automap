@@ -72,7 +72,7 @@ func TestEveryPublicMapSeedIsTested(t *testing.T) {
 		}
 		return nil
 	})
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -223,6 +223,59 @@ func TestTheTestbedExtendsWithJoltAndEnkiTSProbed(t *testing.T) {
 	}
 
 	for _, c := range enkitsSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds mimalloc adds when it fills the allocator slot.
+var mimallocSeeds = []struct{ seed, code string }{
+	{"allocation.routed-through-facade:mimalloc", "ALLOC_NOT_ROUTED(mimalloc)"},
+	{"diagnostics.routed-through-facade:mimalloc", "DIAG_NOT_ROUTED(mimalloc)"},
+}
+
+func TestTheTestbedExtendsWithJoltAndMimallocProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "jolt", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "mimalloc", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	routed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Rule == "allocation.routed-through-facade" && r.Status == "pass" {
+			routed[r.Library] = true
+		}
+		if r.Rule == "jobs.tsan-clean" && tsan && r.Status != "pass" {
+			t.Errorf("jobs.tsan-clean %+v with mimalloc serving the facade, want pass", r)
+		}
+	}
+	for _, lib := range []string{"sdl3", "dear-imgui", "jolt", "mimalloc"} {
+		if !routed[lib] {
+			t.Errorf("allocations routed for %v, want every library's through the facade and the facade's onto mimalloc", routed)
+			break
+		}
+	}
+
+	for _, c := range mimallocSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

@@ -1,0 +1,91 @@
+{
+  "id": "mimalloc",
+  "name": "mimalloc",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/microsoft/mimalloc"
+  },
+  "slots": [
+    "allocator"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/microsoft/mimalloc"
+  },
+  "versions": [
+    {
+      "version": "3.5.3",
+      "released": "2026-09-16",
+      "pin": {
+        "tag": "v3.5.3",
+        "commit": "d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45",
+        "content_hash": "sha512:ef24d926153eb81c95e6c79c335eed12c6e14523a2dd817faddc3f666909a244eab5f4be43cc01a6d8c8d62b5695d29fb535b3762128cdef50a7ee55302b2886"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "mimalloc",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "mimalloc",
+        "targets": [
+          "mimalloc-static",
+          "mimalloc"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "mimalloc as the mimalloc port builds it without features: the mi_* API only, not overriding malloc, static or shared as the triplet links."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "none",
+          "hooks": [],
+          "aligned": false,
+          "install_before": "",
+          "query": null
+        },
+        "diagnostics": {
+          "log_hook": "mi_register_output(mi_output_fun*, void*): statistics, warnings and errors",
+          "assert_hook": "mi_assert, compile-time (MI_DEBUG); a failure prints through the registered output and aborts",
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "diagnostics",
+              "step": "mimalloc:mi_register_output"
+            }
+          ],
+          "shutdown_steps": [],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": null,
+          "min_language_standard": "C11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}

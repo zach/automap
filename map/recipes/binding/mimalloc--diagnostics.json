@@ -1,0 +1,53 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "mimalloc",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "mimalloc": {
+      "versions": [
+        "3.5.3"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "mimalloc--diagnostics/mimalloc_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "mimalloc--diagnostics/mimalloc_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_mimalloc_diagnostics",
+      "steps": [
+        "mimalloc:mi_register_output"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_mimalloc_diagnostics(): mimalloc prints its options (mi_options_print) and the facade receives the lines; mimalloc has no query for its output function.",
+      "seeded_violation": {
+        "description": "Remove the mi_register_output call from am_bind_mimalloc_diagnostics().",
+        "patch": "mimalloc--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "mimalloc writes a line's prefix (\"mimalloc: warning: \") and its message in separate calls to the output function; the glue collects each line per thread and logs it at the level the prefix names.",
+    "mimalloc holds output written before mi_register_output and hands it to the function when it registers, so nothing printed in the memory phase is lost.",
+    "mimalloc's asserts (mi_assert, under MI_DEBUG) print through the registered output and abort; no runtime hook changes that."
+  ]
+}
