@@ -47,7 +47,7 @@ func extend(a *args, r *result) int {
 	if fails != nil {
 		return failWith(r, fails, "The composition's startup can't be generated.", exitFailed)
 	}
-	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{RegistryURL: registryURL(m)})
+	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{RegistryURL: registryURL(m), Vendored: composition.ReadVendoredPorts(".")})
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written.", exitFailed)
 	}

@@ -35,17 +35,15 @@ func (p edgePin) String() string { return p.library + "-" + p.version + "-" + p.
 // where Automap's CI adds it, or the cache when offline (ADR-0082). Missing
 // evidence is left out.
 func readPublished(m *mapmodel.Map, kind, id string, pins []edgePin, platforms []string, now time.Time) []published {
-	var names []string
 	pieces := [][2]string{{"recipe", id}}
 	for _, p := range pins {
-		names = append(names, p.String())
 		pieces = append(pieces, [2]string{"variant", p.library + ":" + p.version + ":" + p.variant})
 	}
 	owner := m.MapFor(pieces...)
 	fromRelease := owner == m.Maps[0] && release.Tag.MatchString(mapRelease(m.PublicDir()))
 	var out []published
 	for _, platform := range platforms {
-		rel := path.Join("evidence", kind, id, strings.Join(names, "+"), platform+".json")
+		rel := evidencePath(kind, id, pins, platform)
 		var raw []byte
 		if fromRelease {
 			raw, _ = release.Evidence(rel)
@@ -62,6 +60,16 @@ func readPublished(m *mapmodel.Map, kind, id string, pins []edgePin, platforms [
 		out = append(out, published{Subject: id, Platform: platform, Level: level, State: state})
 	}
 	return out
+}
+
+// evidencePath is where a binding's or pairing's evidence at exact pins on
+// a platform is in a map.
+func evidencePath(kind, id string, pins []edgePin, platform string) string {
+	var names []string
+	for _, p := range pins {
+		names = append(names, p.String())
+	}
+	return path.Join("evidence", kind, id, strings.Join(names, "+"), platform+".json")
 }
 
 // libraryEvidence is the published evidence for a library's bindings and
@@ -98,25 +106,42 @@ func libraryEvidence(m *mapmodel.Map, lib string, now time.Time) []published {
 	return out
 }
 
-// compositionEvidence is the published evidence for the composition's
-// bindings and pairings at the lock's exact pins, on the manifest's
-// platforms.
-func compositionEvidence(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, now time.Time) []published {
+// edge is one of a composition's bindings or pairings at the lock's exact
+// pins.
+type edge struct {
+	kind, id string
+	pins     []edgePin
+}
+
+// compositionEdges are the composition's bindings and pairings at the
+// lock's exact pins.
+func compositionEdges(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock) []edge {
 	pinOf := func(lib string) edgePin {
 		p := lock.Pins[lib]
 		return edgePin{lib, p.Version, p.Variant}
 	}
-	var out []published
+	var out []edge
 	for _, id := range composition.Recipes(m, man) {
 		r := m.Recipes[id]
 		switch r.Kind {
 		case "binding":
-			out = append(out, readPublished(m, "binding", id, []edgePin{pinOf(r.Subject.Library)}, man.Platforms, now)...)
+			out = append(out, edge{"binding", id, []edgePin{pinOf(r.Subject.Library)}})
 		case "pairing":
 			if len(r.Subject.Libraries) == 2 {
-				out = append(out, readPublished(m, "pairing", id, []edgePin{pinOf(r.Subject.Libraries[0]), pinOf(r.Subject.Libraries[1])}, man.Platforms, now)...)
+				out = append(out, edge{"pairing", id, []edgePin{pinOf(r.Subject.Libraries[0]), pinOf(r.Subject.Libraries[1])}})
 			}
 		}
+	}
+	return out
+}
+
+// compositionEvidence is the published evidence for the composition's
+// bindings and pairings at the lock's exact pins, on the manifest's
+// platforms.
+func compositionEvidence(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, now time.Time) []published {
+	var out []published
+	for _, e := range compositionEdges(m, man, lock) {
+		out = append(out, readPublished(m, e.kind, e.id, e.pins, man.Platforms, now)...)
 	}
 	return out
 }

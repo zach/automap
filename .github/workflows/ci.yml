@@ -108,7 +108,7 @@ jobs:
       matrix:
         name: [Linux, Windows, macOS]
         # The public map's compositions, in groups that each fit a job.
-        group: [core, slots, media]
+        group: [core, slots, media, offline]
         include:
           - name: Linux
             os: ubuntu-latest
@@ -122,6 +122,8 @@ jobs:
             tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
           - group: media
             tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed
+          - group: offline
+            tests: TestTheTestbedVerifiesOfflineAfterFetch|TestAVendoredTestbedVerifiesFromAFreshCloneOffline
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     defaults:

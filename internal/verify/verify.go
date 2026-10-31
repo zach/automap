@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -94,7 +93,10 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	var built, smoked, probesRan, tsanRan bool
 	var setAside []TSanReport
 	var linked []Result // results the linker decided, such as MSVC's ABI define check
-	if err := build(opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
+	vcpkg, err := VcpkgRoot(m)
+	if err != nil {
+		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error()})
+	} else if err := build(vcpkg, opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error(), DetailsFile: paths.buildLog})
 		if log, err := os.ReadFile(in(paths.buildLog)); err == nil {
 			if r := LinkMismatch(string(log)); r != nil {
@@ -117,7 +119,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	// its failure before startup stops, such as a library's ABI check,
 	// says why.
 	if built {
-		if err := build(opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
+		if err := build(vcpkg, opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
 			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
 		} else {
 			err := runExecutable(opts.Root, paths.probeBuild, paths.probeLog, man.Executable.Target, env, paths.results)
@@ -143,7 +145,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 					out.Failures = append(out.Failures, Failure{Code: "PROBE_FAILED", Message: "The probe run didn't exit cleanly: " + err.Error(), DetailsFile: paths.probeLog})
 				}
 				if rule := expectedRule(m, man, TSanRule); rule != nil && slices.Contains(rule.Platforms, platform) {
-					result, aside := runTSan(opts.Root, platform, man.Executable.Target, env)
+					result, aside := runTSan(vcpkg, opts.Root, platform, man.Executable.Target, env)
 					obs.Computed = append(obs.Computed, result)
 					tsanRan, setAside = true, aside
 				}
@@ -218,7 +220,7 @@ func expectedRule(m *mapmodel.Map, man *composition.Manifest, id string) *mapmod
 // runs it with --probe, and judges every report by the frame rule
 // (ADR-0073): a report fails the rule when a frame of either access stack
 // is in code the composition builds; the others are set aside.
-func runTSan(root, platform, target string, env []string) (Result, []TSanReport) {
+func runTSan(vcpkg, root, platform, target string, env []string) (Result, []TSanReport) {
 	r := Result{Rule: TSanRule}
 	dir := path.Join("build/automap", platform+"-tsan")
 	buildLog := path.Join("build/automap", "tsan-build-"+platform+".log")
@@ -228,7 +230,7 @@ func runTSan(root, platform, target string, env []string) (Result, []TSanReport)
 	triplets, _ := filepath.Abs(filepath.Join(root, "build", "automap", "tsan-triplets"))
 	os.MkdirAll(triplets, 0o755)
 	os.WriteFile(filepath.Join(triplets, triplet+".cmake"), []byte(contents), 0o644)
-	if err := build(root, dir, buildLog, platform, target, "-DAUTOMAP_PROBE=ON",
+	if err := build(vcpkg, root, dir, buildLog, platform, target, "-DAUTOMAP_PROBE=ON",
 		"-DVCPKG_OVERLAY_TRIPLETS="+triplets, "-DVCPKG_TARGET_TRIPLET="+triplet,
 		"-DCMAKE_C_FLAGS="+flags, "-DCMAKE_CXX_FLAGS="+flags,
 		"-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=thread", "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=thread"); err != nil {
@@ -281,21 +283,23 @@ func readResults(file string) (*harnessResults, error) {
 // build configures and builds the executable through CMake with vcpkg's
 // toolchain, logging to logFile, with extra configure arguments such as
 // -DAUTOMAP_PROBE=ON for a probe build.
-func build(root, buildDir, logFile, platform, target string, extra ...string) error {
-	vcpkg := os.Getenv("VCPKG_ROOT")
-	if vcpkg == "" {
-		return errors.New("VCPKG_ROOT isn't set: set it to the root of a vcpkg installation")
-	}
+func build(vcpkg, root, buildDir, logFile, platform, target string, extra ...string) error {
 	log, err := os.Create(filepath.Join(root, filepath.FromSlash(logFile)))
 	if err != nil {
 		return err
 	}
 	defer log.Close()
+	if err := WriteVcpkgLock(root, filepath.Join(root, filepath.FromSlash(buildDir), "vcpkg_installed")); err != nil {
+		return err
+	}
+	if err := SeedDownloads(vcpkg, root); err != nil {
+		return err
+	}
 	configure := []string{"-S", root, "-B", filepath.Join(root, filepath.FromSlash(buildDir)), "-G", "Ninja",
 		"-DCMAKE_BUILD_TYPE=Debug",
 		"-DCMAKE_TOOLCHAIN_FILE=" + filepath.Join(vcpkg, "scripts", "buildsystems", "vcpkg.cmake")}
 	configure = append(configure, extra...)
-	cmdEnv := os.Environ()
+	cmdEnv := append(os.Environ(), "VCPKG_ROOT="+vcpkg)
 	switch {
 	case strings.HasSuffix(platform, "-clang"):
 		configure = append(configure, "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++")
