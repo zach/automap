@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -28,17 +29,24 @@ import (
 type Task struct {
 	ID      string `json:"id"`
 	Request string `json:"request"`
-	// Repo is the starting repo, a directory beside task.json, or "" for an
-	// empty repo.
+	// Repo is the starting repo, a directory relative to task.json (another
+	// task's, such as ../custom-adopt/repo), or "" for an empty repo.
 	Repo string `json:"repo,omitempty"`
+	// Overlay is a directory beside task.json copied over the starting
+	// repo, such as a private map and a patch.
+	Overlay string `json:"overlay,omitempty"`
 	// Setup is automap invocations that bring the repo to the task's
 	// starting point before the session, such as starting the testbed.
 	Setup [][]string `json:"setup,omitempty"`
 	// Pass is what grading requires: the level automap verify --json
-	// reports, and the library each named slot holds in the manifest.
+	// reports, the library each named slot holds in the manifest, the
+	// libraries the composition has, and the libraries the lock pins to a
+	// private map's variant.
 	Pass struct {
-		Level string            `json:"level"`
-		Slots map[string]string `json:"slots,omitempty"`
+		Level           string            `json:"level"`
+		Slots           map[string]string `json:"slots,omitempty"`
+		Libraries       []string          `json:"libraries,omitempty"`
+		PrivateVariants []string          `json:"private_variants,omitempty"`
 	} `json:"pass"`
 	TimeoutMinutes int `json:"timeout_minutes"`
 }
@@ -190,7 +198,17 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	if t.Repo != "" {
 		os.CopyFS(repo, os.DirFS(filepath.Join(root, "evals", "tasks", t.ID, t.Repo)))
 	}
-	exec.Command("git", "-C", repo, "init", "-q").Run()
+	if t.Overlay != "" {
+		overlay(filepath.Join(root, "evals", "tasks", t.ID, t.Overlay), repo)
+	}
+	// A studio's repo is a git repository with its history, which the lock
+	// pins a private map in.
+	for _, args := range [][]string{{"init", "-q"}, {"add", "-A"}, {"commit", "-q", "--allow-empty", "-m", "Starting point"}} {
+		git := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		git.Env = append(os.Environ(), "GIT_AUTHOR_NAME=acme", "GIT_AUTHOR_EMAIL=acme@example.invalid",
+			"GIT_COMMITTER_NAME=acme", "GIT_COMMITTER_EMAIL=acme@example.invalid")
+		git.Run()
+	}
 	// The agent finds Automap the way a developer's agent would: the CLI on
 	// its PATH and the router skill installed at user scope.
 	skill := filepath.Join(home, ".claude", "skills", "automap", "SKILL.md")
@@ -264,26 +282,83 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	}
 	json.Unmarshal(out, &result)
 	r.Level = result.Level
+	o := outcome{Level: result.Level, Summary: result.Summary}
 	var manifest struct {
-		Slots map[string]string `json:"slots"`
+		Slots    map[string]string `json:"slots"`
+		Variants map[string]any    `json:"variants"`
 	}
 	if raw, err := os.ReadFile(filepath.Join(repo, "automap.manifest.json")); err == nil {
 		json.Unmarshal(raw, &manifest)
 	}
-	r.Status, r.Reason = grade(t, result.Level, result.Summary, manifest.Slots)
+	o.Slots = manifest.Slots
+	for lib := range manifest.Variants {
+		o.Libraries = append(o.Libraries, lib)
+	}
+	var lock struct {
+		Pins map[string]struct {
+			Registry *struct {
+				Kind string `json:"kind"`
+			} `json:"registry"`
+		} `json:"pins"`
+	}
+	if raw, err := os.ReadFile(filepath.Join(repo, "automap.lock.json")); err == nil {
+		json.Unmarshal(raw, &lock)
+	}
+	for lib, pin := range lock.Pins {
+		if pin.Registry != nil && pin.Registry.Kind == "private" {
+			o.PrivateVariants = append(o.PrivateVariants, lib)
+		}
+	}
+	r.Status, r.Reason = grade(t, o)
 	return r, used
+}
+
+// overlay copies the files under src over dst.
+func overlay(src, dst string) {
+	filepath.WalkDir(src, func(p string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		rel, _ := filepath.Rel(src, p)
+		data, err := os.ReadFile(p)
+		if err == nil {
+			os.MkdirAll(filepath.Join(dst, filepath.Dir(rel)), 0o755)
+			err = os.WriteFile(filepath.Join(dst, rel), data, 0o644)
+		}
+		return err
+	})
+}
+
+// outcome is what a session left: the level verify reached, its summary,
+// the manifest's slots and libraries, and the libraries the lock pins to a
+// private map's variant.
+type outcome struct {
+	Level, Summary  string
+	Slots           map[string]string
+	Libraries       []string
+	PrivateVariants []string
 }
 
 // grade judges a session's outcome: verify reached the task's level, and
 // the manifest puts each library the task names in its slot. It is a pure
 // function.
-func grade(t *Task, level, summary string, slots map[string]string) (status, reason string) {
-	if level != t.Pass.Level {
-		return "fail", fmt.Sprintf("verify reports %q, want %s: %s", level, t.Pass.Level, summary)
+func grade(t *Task, o outcome) (status, reason string) {
+	if o.Level != t.Pass.Level {
+		return "fail", fmt.Sprintf("verify reports %q, want %s: %s", o.Level, t.Pass.Level, o.Summary)
 	}
 	for slot, lib := range t.Pass.Slots {
-		if slots[slot] != lib {
-			return "fail", fmt.Sprintf("the manifest's %s slot holds %q, want %s", slot, slots[slot], lib)
+		if o.Slots[slot] != lib {
+			return "fail", fmt.Sprintf("the manifest's %s slot holds %q, want %s", slot, o.Slots[slot], lib)
+		}
+	}
+	for _, lib := range t.Pass.Libraries {
+		if !slices.Contains(o.Libraries, lib) {
+			return "fail", fmt.Sprintf("the composition doesn't have %s", lib)
+		}
+	}
+	for _, lib := range t.Pass.PrivateVariants {
+		if !slices.Contains(o.PrivateVariants, lib) {
+			return "fail", fmt.Sprintf("the lock doesn't pin %s to a private map's variant", lib)
 		}
 	}
 	return "pass", ""

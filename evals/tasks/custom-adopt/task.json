@@ -1,0 +1,17 @@
+{
+  "id": "custom-adopt",
+  "request": "Bring this engine under Automap.",
+  "repo": "repo",
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "windowing": "sdl3",
+      "physics-3d": "jolt"
+    },
+    "libraries": [
+      "acme-jobs",
+      "acme-renderer"
+    ]
+  },
+  "timeout_minutes": 90
+}

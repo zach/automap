@@ -117,7 +117,7 @@ jobs:
           - name: macOS
             os: macos-latest
           - group: core
-            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed
+            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed|TestTheCustomAdoptEvalsEngineCanBeAdopted
           - group: slots
             tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
           - group: media

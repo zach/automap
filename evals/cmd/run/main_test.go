@@ -60,7 +60,7 @@ func TestGrade(t *testing.T) {
 		{"jolt below probed", "smoke", map[string]string{"physics-3d": "jolt"}, false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			status, reason := grade(&task, c.level, "summary", c.slots)
+			status, reason := grade(&task, outcome{Level: c.level, Summary: "summary", Slots: c.slots})
 			if (status == "pass") != c.pass {
 				t.Errorf("grade %s (%s), want pass %v", status, reason, c.pass)
 			}
@@ -68,5 +68,25 @@ func TestGrade(t *testing.T) {
 				t.Error("a failed grade gives no reason")
 			}
 		})
+	}
+}
+
+func TestGradeChecksLibrariesAndPrivateVariants(t *testing.T) {
+	var task Task
+	task.Pass.Level = "probed"
+	task.Pass.Libraries = []string{"acme-jobs"}
+	task.Pass.PrivateVariants = []string{"sdl3"}
+	for _, c := range []struct {
+		name string
+		o    outcome
+		pass bool
+	}{
+		{"both", outcome{Level: "probed", Libraries: []string{"sdl3", "acme-jobs"}, PrivateVariants: []string{"sdl3"}}, true},
+		{"no in-house library", outcome{Level: "probed", Libraries: []string{"sdl3"}, PrivateVariants: []string{"sdl3"}}, false},
+		{"SDL3 from the public map", outcome{Level: "probed", Libraries: []string{"sdl3", "acme-jobs"}}, false},
+	} {
+		if status, _ := grade(&task, c.o); (status == "pass") != c.pass {
+			t.Errorf("%s: grade %s, want pass %v", c.name, status, c.pass)
+		}
 	}
 }
