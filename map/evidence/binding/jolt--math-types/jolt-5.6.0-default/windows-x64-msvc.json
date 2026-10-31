@@ -14,7 +14,7 @@
     "subject_kind": "binding",
     "subject_detail": {
       "contract": "math-types",
-      "contract_version": "1.0.0",
+      "contract_version": "1.1.0",
       "pin": {
         "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
         "content_hash": "sha512:bc6f2436bef91a6ffd09eee98186be645f6e9a9b3f65a7a645abf00432ac40ada03320c1fe946661817a94eda372cf8d88e4889991cdd25f1c16ecf9a4486677",
@@ -25,8 +25,8 @@
     },
     "platform": "windows-x64-msvc",
     "level": "probed",
-    "produced_at": "2026-10-31T06:03:54Z",
-    "map_release": "git:79c34fb0d47f0d49c41b44e184ea05a8f788db05",
+    "produced_at": "2026-10-31T06:40:23Z",
+    "map_release": "git:95c2e9bcc10da2b78d96f9aa595df5424f86d54a",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
@@ -43,7 +43,7 @@
         "rule": "math-types.adapters-round-trip",
         "library": "jolt",
         "status": "not-applicable",
-        "reason": "The composition has no math library for Jolt's types to convert to."
+        "reason": "The composition has no library in the math slot."
       }
     ],
     "verifier": {
