@@ -8,11 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
 	"github.com/zach/automap/internal/verify"
-	"github.com/zach/automap/schemas"
 )
 
 // verifyCmd builds the composition in the current directory, runs its
@@ -200,46 +198,19 @@ func copyComposition(src, dst string) error {
 // loadComposition reads the manifest and lock in the current directory and
 // the maps they name, and checks them against each other.
 func loadComposition(a *args, r *result) (*mapmodel.Map, *composition.Manifest, *composition.Lock, int) {
-	raw, err := os.ReadFile(manifestFile)
-	var doc any
-	if err == nil {
-		err = json.Unmarshal(raw, &doc)
-	}
-	if err != nil {
-		r.Summary = "The manifest can't be read."
-		r.fail("MANIFEST_INVALID", err.Error())
-		return nil, nil, nil, exitUsage
-	}
-	if v := schemas.Validate("manifest", doc); v != nil {
-		r.Summary = "The manifest doesn't match its schema."
-		for _, msg := range v {
-			r.fail("MANIFEST_INVALID", "manifest: "+msg)
-		}
-		return nil, nil, nil, exitUsage
-	}
-	var man composition.Manifest
-	json.Unmarshal(raw, &man)
-	rawLock, err := os.ReadFile(composition.LockFile)
-	if err != nil {
-		r.Summary = "The composition has no lock."
-		r.fail("NO_LOCK", composition.LockFile+" is missing. Only the CLI writes the lock: restore it from version control.")
-		return nil, nil, nil, exitUsage
-	}
-	lock, err := composition.CheckLock(rawLock)
-	if err != nil {
-		r.Summary = "Refusing to act on a hand-edited lock."
-		r.fail("LOCK_EDITED", composition.LockFile+" was edited by hand: "+err.Error()+". "+agentfiles.Never(1))
-		return nil, nil, nil, exitRefused
+	man, lock, status := readComposition(r)
+	if man == nil {
+		return nil, nil, nil, status
 	}
 	m, status := loadMap(a, r)
 	if m == nil {
 		return nil, nil, nil, status
 	}
-	if fails := composition.Check(m, &man, lock); fails != nil {
+	if fails := composition.Check(m, man, lock); fails != nil {
 		failWith(r, fails, "The composition doesn't match the map.", exitUsage)
 		return nil, nil, nil, exitUsage
 	}
-	return m, &man, lock, exitOK
+	return m, man, lock, exitOK
 }
 
 func contains(xs []string, x string) bool {

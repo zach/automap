@@ -314,8 +314,19 @@ func (r *Run) ExpectExit(t *testing.T, want int) {
 func (r *Run) ExpectGolden(t *testing.T, name string) {
 	t.Helper()
 	golden := filepath.Join(Root(t), "testdata", "golden", name)
-	before := r.Before
-	after := readTree(t, r.Dir)
+	// Build output and evidence change with every run: the result names
+	// them, and the golden files leave them out.
+	varies := func(tree map[string][]byte) map[string][]byte {
+		out := map[string][]byte{}
+		for p, data := range tree {
+			if !strings.HasPrefix(p, "build/") && !strings.HasPrefix(p, "evidence/") {
+				out[p] = data
+			}
+		}
+		return out
+	}
+	before := varies(r.Before)
+	after := varies(readTree(t, r.Dir))
 
 	if *update {
 		if err := os.RemoveAll(golden); err != nil {

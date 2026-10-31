@@ -34,6 +34,29 @@ func loadMap(a *args, r *result) (*mapmodel.Map, int) {
 	if !ok {
 		return nil, exitUsage
 	}
+	m, ok := loadMapAt(dir, privates, r)
+	if !ok {
+		return nil, exitUsage
+	}
+	// A composition reads its libraries at the versions its lock pins.
+	var lock struct {
+		Pins map[string]struct {
+			Version string `json:"version"`
+		} `json:"pins"`
+	}
+	if raw, err := os.ReadFile(composition.LockFile); err == nil && json.Unmarshal(raw, &lock) == nil {
+		versions := map[string]string{}
+		for lib, pin := range lock.Pins {
+			versions[lib] = pin.Version
+		}
+		m = m.Hold(versions)
+	}
+	return m, exitOK
+}
+
+// loadMapAt loads the public map in dir with the private maps, recording
+// any problem in r.
+func loadMapAt(dir string, privates []mapmodel.PrivateMap, r *result) (*mapmodel.Map, bool) {
 	m, problems := mapmodel.Load(dir, privates)
 	for _, p := range problems {
 		r.fail("MAP_INVALID("+p.File+")", p.Reason)
@@ -43,9 +66,9 @@ func loadMap(a *args, r *result) (*mapmodel.Map, int) {
 	}
 	if len(r.Failures) > 0 {
 		r.Summary = fmt.Sprintf("The map is invalid: %d %s.", len(r.Failures), plural(len(r.Failures), "problem", "problems"))
-		return nil, exitUsage
+		return nil, false
 	}
-	return m, exitOK
+	return m, true
 }
 
 // releaseDir finds the map release to read when no map directory is

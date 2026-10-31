@@ -792,3 +792,28 @@ func compareVersions(a, b string) int {
 	}
 	return len(as) - len(bs)
 }
+
+// Hold returns a view of the map in which each library named in versions
+// has only that version, so every reading of the library's newest version
+// reads it: the versions a lock pins, or the libraries an upgrade leaves
+// where they are. A library without the named version keeps all of its
+// versions. The map itself is unchanged.
+func (m *Map) Hold(versions map[string]string) *Map {
+	view := *m
+	view.Libraries = make(map[string]*Library, len(m.Libraries))
+	for id, lib := range m.Libraries {
+		view.Libraries[id] = lib
+		want, held := versions[id]
+		if !held {
+			continue
+		}
+		for _, v := range lib.Versions {
+			if v.Version == want {
+				only := *lib
+				only.Versions = []Version{v}
+				view.Libraries[id] = &only
+			}
+		}
+	}
+	return &view
+}

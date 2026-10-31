@@ -1,0 +1,14 @@
+{
+  "command": "upgrade",
+  "cli_version": "0.0.0-dev",
+  "ok": true,
+  "summary": "Upgraded to map-2026.10.01 (stub-ui 1.0.0 → 1.1.0); 1 file updated, 0 diverged; it is not verified: run automap verify.",
+  "warnings": [],
+  "failures": [],
+  "files_written": [
+    "automap.lock.json",
+    "automap.manifest.json",
+    "glue/stub-ui/stub_ui_allocation.cpp",
+    "vcpkg.json"
+  ]
+}

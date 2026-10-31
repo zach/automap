@@ -37,11 +37,12 @@ type command struct {
 }
 
 var commands = map[string]command{
-	"start":  {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
-	"extend": {bools: []string{"json", "no-verify"}, values: []string{"map", "slot"}, run: extend},
-	"verify": {bools: []string{"json"}, values: []string{"map", "platform", "seed"}, run: verifyCmd},
-	"show":   {bools: []string{"json"}, values: []string{"map"}, run: show},
-	"find":   {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
+	"start":   {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
+	"extend":  {bools: []string{"json", "no-verify"}, values: []string{"map", "slot"}, run: extend},
+	"upgrade": {bools: []string{"json", "no-verify"}, values: []string{"map", "map-release"}, run: upgrade},
+	"verify":  {bools: []string{"json"}, values: []string{"map", "platform", "seed"}, run: verifyCmd},
+	"show":    {bools: []string{"json"}, values: []string{"map"}, run: show},
+	"find":    {bools: []string{"json"}, values: []string{"map", "slot"}, run: find},
 }
 
 // Run runs the CLI with args (without the program name) in the current

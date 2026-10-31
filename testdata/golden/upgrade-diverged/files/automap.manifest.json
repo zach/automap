@@ -1,0 +1,84 @@
+{
+  "$schema": "https://github.com/zach/automap/schemas/manifest.schema.json",
+  "format": "automap-manifest/1",
+  "map_release": "map-2026.10.01",
+  "build_backend": "vcpkg",
+  "platforms": [
+    "windows-x64-msvc",
+    "linux-x64-clang",
+    "macos-arm64-appleclang"
+  ],
+  "executable": {
+    "target": "testbed",
+    "sources": [
+      "main.cpp"
+    ]
+  },
+  "slots": {
+    "input": "stub-window",
+    "tools-ui": "stub-ui",
+    "windowing": "stub-window"
+  },
+  "variants": {
+    "stub-ui": "default",
+    "stub-window": "default"
+  },
+  "choices": {
+    "allocation": {
+      "allocator": "system"
+    },
+    "build-flags": {
+      "cxx_standard": 20
+    },
+    "diagnostics": {
+      "log": "stderr",
+      "profiler": "none"
+    }
+  },
+  "glue": {
+    "interfaces": "glue/automap",
+    "choices_header": "glue/automap/choices.h",
+    "startup": [
+      "glue/automap/context.h",
+      "glue/automap/startup.h",
+      "glue/automap/startup.cpp"
+    ],
+    "bindings": {
+      "stub-ui/allocation": [
+        "glue/stub-ui/stub_ui_allocation.h",
+        "glue/stub-ui/stub_ui_allocation.cpp",
+        "glue/stub-ui/stub_ui_allocation_probe.cpp"
+      ],
+      "stub-ui/diagnostics": [
+        "glue/stub-ui/stub_ui_diagnostics.cpp",
+        "glue/stub-ui/stub_ui_diagnostics_probe.cpp"
+      ],
+      "stub-window/allocation": [
+        "glue/stub-window/stub_window_allocation.h",
+        "glue/stub-window/stub_window_allocation.cpp",
+        "glue/stub-window/stub_window_allocation_probe.cpp"
+      ],
+      "stub-window/diagnostics": [
+        "glue/stub-window/stub_window_diagnostics.cpp",
+        "glue/stub-window/stub_window_diagnostics_probe.cpp"
+      ]
+    },
+    "pairings": {
+      "stub-ui/stub-window": [
+        "glue/stub-ui--stub-window/stub_ui_stub_window.h",
+        "glue/stub-ui--stub-window/stub_ui_stub_window.cpp",
+        "glue/stub-ui--stub-window/stub_ui_stub_window_probe.cpp"
+      ]
+    },
+    "setup": {
+      "stub-ui": [
+        "glue/stub-ui/stub_ui_setup.h",
+        "glue/stub-ui/stub_ui_setup.cpp"
+      ],
+      "stub-window": [
+        "glue/stub-window/stub_window_setup.h",
+        "glue/stub-window/stub_window_setup.cpp"
+      ]
+    }
+  }
+}
