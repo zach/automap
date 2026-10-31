@@ -114,3 +114,34 @@ func TestExtendingWithAnAllocatorFillsTheAllocatorSlot(t *testing.T) {
 		t.Errorf("mimalloc's backend for the allocation facade wasn't written: %v", err)
 	}
 }
+
+// Filling the logging and profiling slots backs the diagnostics facade with
+// their libraries: extend sets diagnostics.log and diagnostics.profiler, and
+// the composition gets each library's backend for the facade.
+func TestExtendingWithDiagnosticsBackendsFillsTheirSlots(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "spdlog", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "tracy", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct {
+		Slots   map[string]string
+		Choices map[string]map[string]any
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["logging"] != "spdlog" || man.Slots["profiling"] != "tracy" ||
+		man.Choices["diagnostics"]["log"] != "logging-slot" || man.Choices["diagnostics"]["profiler"] != "profiling-slot" {
+		t.Errorf("slots %v, diagnostics choices %v; want spdlog logging and Tracy profiling", man.Slots, man.Choices["diagnostics"])
+	}
+	choices := clitest.Read(t, repo, "glue/automap/choices.h")
+	if !strings.Contains(choices, "AUTOMAP_DIAGNOSTICS_LOG_LOGGING_SLOT") || !strings.Contains(choices, "AUTOMAP_DIAGNOSTICS_PROFILER_PROFILING_SLOT") {
+		t.Error("the choices header doesn't select the logging and profiling slots")
+	}
+	for _, f := range []string{"glue/spdlog/spdlog_diagnostics.cpp", "glue/tracy/tracy_diagnostics.cpp"} {
+		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
+			t.Errorf("a diagnostics backend wasn't written: %v", err)
+		}
+	}
+}

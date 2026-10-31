@@ -1,0 +1,43 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "tracy",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "tracy": {
+      "versions": [
+        "0.14.1"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "tracy--diagnostics/tracy_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "tracy--diagnostics/tracy_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_tracy_diagnostics(): the Tracy client is running, and a zone opened and closed through the facade adds its begin and end events to the calling thread's queue in the client, which holds them while no profiler is connected.",
+      "seeded_violation": {
+        "description": "Return from am_profiling_slot_zone_begin() without opening a Tracy zone.",
+        "patch": "tracy--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "Tracy fills the profiling slot: each zone the diagnostics facade opens, from any library's profile hook (such as enkiTS's wait callbacks), becomes a tracy::ScopedZone named by the facade, kept on a per-thread stack until the facade closes it.",
+    "The zones' names are copied into Tracy's source locations at runtime, so a library may pass names that don't outlive the zone.",
+    "Tracy has no log or assert hook of its own to route; its internal messages are turned off with TRACY_NO_INTERNAL_MESSAGE, which no probe checks."
+  ]
+}

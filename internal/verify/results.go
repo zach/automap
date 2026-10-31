@@ -349,17 +349,27 @@ func CheckPrecision(choice string, precisions map[string]string) Result {
 }
 
 // linkMismatch is MSVC's report of a #pragma detect_mismatch conflict.
-var linkMismatch = regexp.MustCompile(`LNK2038: mismatch detected for '([^']+)': (.*)`)
+var (
+	linkMismatch = regexp.MustCompile(`LNK2038: mismatch detected for '([^']+)': (.*)`)
+	// A symbol whose name encodes the library's build options, such as
+	// Tracy's tracy::GetProfiler_CFG_E1_OD0_..., that the linker can't find.
+	mangledConfig = regexp.MustCompile(`(?i:undefined|unresolved)[\s\S]{0,300}?\b(\w+)::(\w+_CFG(?:_[A-Z]+[01])+)`)
+)
 
 // LinkMismatch is the build-flags.abi-defines-match result a failed build's
-// log shows, when MSVC's linker found two translation units built with
+// log shows, or nil: MSVC's linker found two translation units built with
 // different values of an ABI define declared with #pragma detect_mismatch,
-// or nil. It is a pure function.
+// or the linker found no definition of a symbol whose name encodes the
+// build options the caller was compiled with, because the library was built
+// with others. It is a pure function.
 func LinkMismatch(buildLog string) *Result {
-	m := linkMismatch.FindStringSubmatch(buildLog)
-	if m == nil {
-		return nil
+	if m := linkMismatch.FindStringSubmatch(buildLog); m != nil {
+		return &Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(" + m[1] + ")",
+			Reason: "The linker found translation units built with different " + m[1] + ": " + strings.TrimSpace(m[2]) + "."}
 	}
-	return &Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(" + m[1] + ")",
-		Reason: "The linker found translation units built with different " + m[1] + ": " + strings.TrimSpace(m[2]) + "."}
+	if m := mangledConfig.FindStringSubmatch(buildLog); m != nil {
+		return &Result{Rule: "build-flags.abi-defines-match", Status: "fail", FailureCode: "ABI_DEFINE_MISMATCH(" + m[1] + ")",
+			Reason: "The linker found no " + m[1] + "::" + m[2] + ", whose name encodes the build options the code calling it was compiled with: " + m[1] + " was built with other options."}
+	}
+	return nil
 }

@@ -1,0 +1,21 @@
+--- a/spdlog_diagnostics.cpp
++++ b/spdlog_diagnostics.cpp
+@@ -1,6 +1,7 @@
+ // spdlog's binding to the diagnostics contract: spdlog in the logging slot
+ // writes every message the diagnostics facade receives.
+ // SPDX-License-Identifier: MIT-0
++#include <cstdio>
+ #include <memory>
+ 
+ #include <spdlog/sinks/dist_sink.h>
+@@ -27,9 +28,7 @@
+ }
+ 
+ void am_logging_slot_write(int level, const char* library, const char* message) {
+-    static const spdlog::level::level_enum levels[] = {spdlog::level::trace, spdlog::level::info, spdlog::level::warn,
+-                                                       spdlog::level::err};
+-    am_spdlog_logger().log(levels[level], "{}: {}", library, message);
++    std::fprintf(stderr, "[%d] %s: %s\n", level, library, message);
+ }
+ 
+ // Makes the facade's logger. Runs in the diagnostics phase.

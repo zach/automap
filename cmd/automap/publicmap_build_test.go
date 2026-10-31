@@ -72,7 +72,7 @@ func TestEveryPublicMapSeedIsTested(t *testing.T) {
 		}
 		return nil
 	})
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -276,6 +276,61 @@ func TestTheTestbedExtendsWithJoltAndMimallocProbed(t *testing.T) {
 	}
 
 	for _, c := range mimallocSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds spdlog and Tracy add as the diagnostics facade's backends.
+var diagnosticsBackendSeeds = []struct{ seed, code string }{
+	{"diagnostics.routed-through-facade:spdlog", "DIAG_NOT_ROUTED(spdlog)"},
+	{"diagnostics.routed-through-facade:tracy", "DIAG_NOT_ROUTED(tracy)"},
+	{"build-flags.abi-defines-match:tracy", "ABI_DEFINE_MISMATCH(tracy)"},
+}
+
+// spdlog and Tracy back the facade of a composition whose libraries already
+// log and profile through it: enkiTS's profiler callbacks open facade zones.
+func TestTheTestbedExtendsWithSpdlogAndTracyProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	for _, lib := range []string{"jolt", "enkits", "spdlog"} {
+		repo.Automap(t, "extend", lib, "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	}
+
+	run := repo.Automap(t, "extend", "tracy", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	routed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Rule == "diagnostics.routed-through-facade" && r.Status == "pass" {
+			routed[r.Library] = true
+		}
+	}
+	for _, lib := range []string{"sdl3", "jolt", "enkits", "spdlog", "tracy"} {
+		if !routed[lib] {
+			t.Errorf("diagnostics routed for %v, want every library's through the facade and the facade's onto spdlog and Tracy", routed)
+			break
+		}
+	}
+
+	for _, c := range diagnosticsBackendSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

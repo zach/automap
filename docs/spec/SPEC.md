@@ -630,7 +630,7 @@ Thirteen libraries fill fifteen slots [ADR-0058](../adr/0058-v1-catalog.md). The
 | jobs | enkiTS (`enkits`) | Zlib | 1.12 | default |
 | allocator | mimalloc (`mimalloc`) | MIT | 3.6.0 | default |
 | profiling | Tracy (`tracy`) | BSD-3-Clause | 0.14.x | default |
-| logging | spdlog (`spdlog`) | MIT | 1.17.0 | default (bundled fmt) |
+| logging | spdlog (`spdlog`) | MIT | 1.17.0 | default (vcpkg's fmt) |
 | math | GLM (`glm`) | MIT or Happy Bunny | 1.0.3 | default |
 | audio | miniaudio (`miniaudio`) | MIT-0 or public domain | 0.11.25 | default |
 | ecs | flecs (`flecs`) | MIT | 4.1.6 | default |

@@ -1,0 +1,10 @@
+--- a/tracy_diagnostics.cpp
++++ b/tracy_diagnostics.cpp
+@@ -16,6 +16,7 @@
+ } // namespace
+ 
+ void am_profiling_slot_zone_begin(const char* name) {
++    return;
+     static const char source[] = __FILE__;
+     static const char function[] = "am::diag::Zone";
+     zones.push_back(std::make_unique<tracy::ScopedZone>(__LINE__, source, sizeof source - 1, function, sizeof function - 1,

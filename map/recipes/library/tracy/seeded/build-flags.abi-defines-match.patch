@@ -1,0 +1,7 @@
+--- a/tracy.cmake
++++ b/tracy.cmake
+@@ -4,3 +4,4 @@
+ find_package(Tracy CONFIG REQUIRED)
+ 
+ target_link_libraries(automap_glue PUBLIC Tracy::TracyClient)
++target_compile_definitions(automap_glue PRIVATE TRACY_ON_DEMAND)

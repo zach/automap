@@ -1,0 +1,7 @@
+{
+  "id": "logging",
+  "description": "The log backend behind the diagnostics facade: where every library's log messages and assertion failures are written.",
+  "examples": [
+    "spdlog"
+  ]
+}

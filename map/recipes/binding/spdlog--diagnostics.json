@@ -1,0 +1,61 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "spdlog",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "spdlog": {
+      "versions": [
+        "1.17.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "spdlog--diagnostics/spdlog_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "spdlog--diagnostics/spdlog_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_spdlog_setup_init",
+      "steps": [
+        "spdlog:logger"
+      ]
+    },
+    {
+      "phase": "diagnostics",
+      "when": "shutdown",
+      "call": "am_spdlog_setup_shutdown",
+      "steps": [
+        "spdlog:flush"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_spdlog_diagnostics(): a message logged through the facade reaches a callback sink the probe adds to the facade's logger.",
+      "seeded_violation": {
+        "description": "Write the facade's messages to standard error in am_logging_slot_write() instead of through spdlog.",
+        "patch": "spdlog--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "spdlog fills the logging slot: the diagnostics facade's am_logging_slot_write writes each message, with the library that sent it, to one spdlog logger, am_spdlog_logger(), at the matching level (trace, info, warn, err).",
+    "The logger is made the first time anything logs, which may be in the memory phase before the diagnostics phase runs, and is never destroyed, so libraries can log while the process exits. Its one sink is a dist_sink_mt, so sinks (a file, a console in the game) can be added while other threads log.",
+    "spdlog's own failures go to its error handler, which writes to standard error; it can't report through the facade, which would write back into spdlog."
+  ]
+}
