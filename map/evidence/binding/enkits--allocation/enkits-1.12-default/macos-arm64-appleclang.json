@@ -1,0 +1,57 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/dougbinks/enkiTS@v1.12",
+      "digest": {
+        "gitCommit": "0289cf6ffce86697e1f46cb4eeca1c946bffec71",
+        "sha512": "6fa1f9b44c1bce36ea5b477f3f92e31c832d85183a52b3802ac983eb4fcf6f8bc5507bbdc025aa0c071a4a831601a15993aa4fe86c46576b78c4806524f0ec45"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "allocation",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "0289cf6ffce86697e1f46cb4eeca1c946bffec71",
+        "content_hash": "sha512:6fa1f9b44c1bce36ea5b477f3f92e31c832d85183a52b3802ac983eb4fcf6f8bc5507bbdc025aa0c071a4a831601a15993aa4fe86c46576b78c4806524f0ec45",
+        "library": "enkits",
+        "variant": "default",
+        "version": "1.12"
+      }
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-10-31T04:04:36Z",
+    "map_release": "git:940b678c0fe9d628b1b2175e336566bacd05b2c9",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "enkits",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "enkits",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
