@@ -89,6 +89,8 @@ jobs:
       - name: Verify
         id: verify
         working-directory: ${{ inputs.working-directory }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # for GitHub's API, which limits unauthenticated requests
         run: |
           automap verify --json | tee "$RUNNER_TEMP/verify.json"
           echo "evidence=$(jq -r '.evidence_file // empty' "$RUNNER_TEMP/verify.json")" >> "$GITHUB_OUTPUT"

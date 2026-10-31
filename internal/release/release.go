@@ -39,6 +39,16 @@ var Tag = regexp.MustCompile(`^map-\d{4}\.\d{2}\.\d{2}$`)
 
 var client = &http.Client{Timeout: 30 * time.Second}
 
+// downloads is where a release's files are downloaded from directly, by
+// tag and file name: GitHub's release download URLs for the default
+// source, and <source>/releases/download otherwise.
+func downloads() string {
+	if Source() == DefaultSource {
+		return "https://github.com/zach/automap/releases/download"
+	}
+	return Source() + "/releases/download"
+}
+
 // Source is the releases API, from AUTOMAP_RELEASES or the default.
 func Source() string {
 	if s := os.Getenv("AUTOMAP_RELEASES"); s != "" {
@@ -97,7 +107,16 @@ type listed struct {
 
 // releases lists the published map releases, newest first.
 func releases() ([]listed, error) {
-	resp, err := client.Get(Source() + "/releases?per_page=100")
+	req, err := http.NewRequest("GET", Source()+"/releases?per_page=100", nil)
+	if err != nil {
+		return nil, err
+	}
+	// GitHub's API limits unauthenticated requests by address, which
+	// shared CI runners exhaust; a token, where there is one, lifts that.
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" && Source() == DefaultSource {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +169,16 @@ func Newest() (tag, dir string, err error) {
 func Open(tag string) (string, error) {
 	if _, err := os.Stat(Dir(tag)); err == nil {
 		return Dir(tag), nil
+	}
+	// A known release downloads straight from its files, without the API.
+	direct := listed{Tag: tag, Assets: []asset{
+		{Name: tag + ".tar.gz", URL: downloads() + "/" + tag + "/" + tag + ".tar.gz"},
+		{Name: tag + ".tar.gz.sha256", URL: downloads() + "/" + tag + "/" + tag + ".tar.gz.sha256"},
+	}}
+	dir, err := fetch(direct)
+	var invalid *InvalidError
+	if err == nil || errors.As(err, &invalid) {
+		return dir, err
 	}
 	list, err := releases()
 	if err != nil {
