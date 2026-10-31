@@ -27,7 +27,8 @@
       "build_backend": {
         "vcpkg": {
           "port": "sdl3-shadercross",
-          "registry": "automap"
+          "registry": "automap",
+          "port_version": 1
         }
       },
       "cmake": {

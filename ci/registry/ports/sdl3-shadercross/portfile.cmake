@@ -39,6 +39,16 @@ file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/share"
 )
 
+if(NOT SHADERCROSS_DXC)
+    # The installed config looks for DXC whether or not the library was built
+    # with it.
+    vcpkg_replace_string(
+        "${CURRENT_PACKAGES_DIR}/share/sdl3_shadercross/SDL3_shadercrossConfig.cmake"
+        "find_dependency(DirectXShaderCompiler)"
+        "# DXC: this build of SDL_shadercross doesn't use it."
+    )
+endif()
+
 vcpkg_copy_pdbs()
 vcpkg_fixup_pkgconfig()
 
