@@ -214,7 +214,7 @@ func TestVerifyInCIWithoutAnIdentityTokenOrAgainstAnUnreleasedMapIsUnsigned(t *t
 func commitMap(t *testing.T, repo *clitest.Repo) {
 	t.Helper()
 	for _, args := range [][]string{{"init", "-q"}, {"add", "."}, {"commit", "-q", "-m", "map"}} {
-		cmd := exec.Command("git", append([]string{"-C", repo.Dir + "/map", "-c", "user.name=t", "-c", "user.email=t@example.invalid"}, args...)...)
+		cmd := exec.Command("git", append([]string{"-C", repo.Dir + "/map", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "maintenance.auto=false", "-c", "gc.auto=0"}, args...)...)
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("git %v: %v\n%s", args, err, out)
 		}
