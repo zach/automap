@@ -1,0 +1,28 @@
+name: Cooldown gate
+
+# Merges curation pull requests once every version they add is at least 7
+# days old (a security release skips the wait) and Automap's CI verified
+# them at the probed level on every platform; labels changes that add a
+# slot, a library or a contract major version for the product owner
+# (ADR-0037, ADR-0051, ADR-0069).
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: go run ./ci/cmd/gate -repo "$GITHUB_REPOSITORY" -map map

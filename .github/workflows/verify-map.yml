@@ -112,7 +112,7 @@ jobs:
           JOB: ${{ matrix.job }}
         run: |
           go build -o "$RUNNER_TEMP/bin/" ./cmd/automap
-          go run ./ci/cmd/verifymap run -map map -job "$JOB" -automap "$RUNNER_TEMP/bin/automap" -out evidence-out
+          go run ./ci/cmd/verifymap run -map map -job "$JOB" -automap "$RUNNER_TEMP/bin/automap" -out evidence-out -require probed
       - name: Sign the evidence
         id: attest
         if: always() && hashFiles('evidence-out/**/*.json') != ''
