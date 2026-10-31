@@ -1,0 +1,26 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "acme-tools"
+  },
+  "applies_to": {
+    "acme-tools": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-tools/acme-tools.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "acme-tools is in the repo: automap.cmake adds its directory with add_subdirectory, and the fragment links its target."
+  ]
+}

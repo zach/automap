@@ -29,6 +29,7 @@ type releaseServer struct {
 	files    map[string][]byte // download path -> content
 	evidence map[string][]byte // path in the map -> content
 	listing  bool              // whether to answer the releases API
+	requests []string          // every request's path and query, in order
 }
 
 func newReleaseServer(t *testing.T) *releaseServer {
@@ -37,6 +38,7 @@ func newReleaseServer(t *testing.T) *releaseServer {
 	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		s.requests = append(s.requests, r.URL.RequestURI())
 		switch {
 		case r.URL.Path == "/releases" && !s.listing:
 			http.Error(w, "rate limit exceeded", http.StatusForbidden)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -111,11 +112,43 @@ func (m *Map) readMap(dir, kind string, private *PrivateMap) *MapMeta {
 		return nil
 	}
 	meta.Dir = dir
+	if private != nil {
+		meta.Commit = lastCommit(dir)
+	}
 	if (meta.Kind == "public") != (kind == "public") {
 		m.fail(f.name(), "only the public map has kind public")
 	}
 	m.Maps = append(m.Maps, meta)
 	return meta
+}
+
+// lastCommit is the commit that last changed a directory in its git
+// repository, or "" when it isn't in one. A private map in the developer's
+// own repo keeps its commit while only the rest of the repo changes.
+func lastCommit(dir string) string {
+	out, err := exec.Command("git", "-C", dir, "log", "-1", "--format=%H", "--", ".").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// MapFor is the map whose entries an edge's pieces come from, by kind and
+// id ("library", "variant" or "recipe"): the topmost in layering order that
+// defines or extends any of them, so whatever a private map adds to an edge
+// keeps its evidence in that map.
+func (m *Map) MapFor(pieces ...[2]string) *MapMeta {
+	top := 0
+	for _, p := range pieces {
+		for _, id := range m.Origins(p[0], p[1]) {
+			for i, meta := range m.Maps {
+				if meta.ID == id && i > top {
+					top = i
+				}
+			}
+		}
+	}
+	return m.Maps[top]
 }
 
 // mapFiles lists the JSON files in a map that the map model reads.
@@ -265,6 +298,11 @@ func (m *Map) loadLibraries(files []*file) {
 			m.Libraries[lib.ID] = &lib
 		}
 		m.origin("library", lib.ID, f.meta.ID)
+		for _, v := range lib.Versions {
+			for _, variant := range v.Variants {
+				m.origin("variant", lib.ID+":"+v.Version+":"+variant.Name, f.meta.ID)
+			}
+		}
 		m.checkLibrary(f, &lib)
 	}
 }
