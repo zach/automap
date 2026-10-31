@@ -1,0 +1,51 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/jrouwe/JoltPhysics@v5.6.0",
+      "digest": {
+        "gitCommit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+        "sha512": "bc6f2436bef91a6ffd09eee98186be645f6e9a9b3f65a7a645abf00432ac40ada03320c1fe946661817a94eda372cf8d88e4889991cdd25f1c16ecf9a4486677"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "handles",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "e77f175595e64cb44218cc9d9d56fc365ad0e36a",
+        "content_hash": "sha512:bc6f2436bef91a6ffd09eee98186be645f6e9a9b3f65a7a645abf00432ac40ada03320c1fe946661817a94eda372cf8d88e4889991cdd25f1c16ecf9a4486677",
+        "library": "jolt",
+        "variant": "deterministic",
+        "version": "5.6.0"
+      }
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "none",
+    "produced_at": "2026-10-31T11:12:34Z",
+    "map_release": "git:6d0e49b04de0f6d0b769e1bb29984b217d352770",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {},
+      "runner_image": "macos26 20261026.0455.2",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "handles.bits-preserved",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

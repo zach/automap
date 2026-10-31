@@ -1,0 +1,19 @@
+--- a/shadercross_assets.cpp
++++ b/shadercross_assets.cpp
+@@ -3,6 +3,7 @@
+ #include "shadercross_assets.h"
+ 
+ #include <cstring>
++#include <string>
+ 
+ #include "automap/assets.h"
+ 
+@@ -34,5 +35,8 @@
+     if (code == nullptr) return false;
+     cooked.assign(static_cast<const std::uint8_t*>(code), static_cast<const std::uint8_t*>(code) + size);
+     SDL_free(code);
++    // Note when the shader was cooked, to tell builds apart.
++    std::string stamp = "\n// cooked " + std::to_string(SDL_GetTicksNS()) + "\n";
++    cooked.insert(cooked.end(), stamp.begin(), stamp.end());
+     return true;
+ }

@@ -121,7 +121,7 @@ jobs:
           - group: slots
             tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
           - group: media
-            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed
+            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed|TestTheTestbedExtendsWithShadercrossProbed
           - group: offline
             tests: TestTheTestbedVerifiesOfflineAfterFetch|TestAVendoredTestbedVerifiesFromAFreshCloneOffline
     runs-on: ${{ matrix.os }}

@@ -5,13 +5,13 @@
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
       "environment": {},
-      "runner_image": "win25-vs2026 20261021.278.1",
+      "runner_image": "win25-vs2026 20261030.294.1",
       "sanitizers": {}
     },
     "level": "probed",
     "map_release": "map-2026.10.31",
     "platform": "windows-x64-msvc",
-    "produced_at": "2026-10-31T08:30:49Z",
+    "produced_at": "2026-10-31T10:35:25Z",
     "results": [
       {
         "rule": "allocation.hooks-before-first-allocation",

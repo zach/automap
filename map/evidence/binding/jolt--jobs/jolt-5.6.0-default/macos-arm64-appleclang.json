@@ -25,13 +25,13 @@
     },
     "platform": "macos-arm64-appleclang",
     "level": "probed",
-    "produced_at": "2026-10-31T08:05:46Z",
-    "map_release": "git:c8a114d3348570e33304eb537b11f0e2075402e3",
+    "produced_at": "2026-10-31T11:01:58Z",
+    "map_release": "git:6d0e49b04de0f6d0b769e1bb29984b217d352770",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
       "environment": {},
-      "runner_image": "macos26 20261021.0445.8",
+      "runner_image": "macos26 20261026.0455.2",
       "sanitizers": {
         "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
       }

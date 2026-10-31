@@ -11,7 +11,7 @@
     "level": "probed",
     "map_release": "map-2026.10.31",
     "platform": "macos-arm64-appleclang",
-    "produced_at": "2026-10-31T08:35:47Z",
+    "produced_at": "2026-10-31T10:55:09Z",
     "results": [
       {
         "rule": "allocation.hooks-before-first-allocation",

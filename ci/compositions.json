@@ -2,5 +2,6 @@
   {"id": "testbed", "with": ["sdl3", "dear-imgui:docking"]},
   {"id": "testbed-jolt", "with": ["sdl3", "dear-imgui:docking", "jolt"]},
   {"id": "testbed-jolt-glm", "with": ["sdl3", "dear-imgui:docking", "jolt", "glm"]},
-  {"id": "testbed-assets", "with": ["sdl3", "dear-imgui:docking", "fastgltf", "stb-image"]}
+  {"id": "testbed-assets", "with": ["sdl3", "dear-imgui:docking", "fastgltf", "stb-image"]},
+  {"id": "testbed-shadercross", "with": ["sdl3", "dear-imgui:docking", "sdl-shadercross"]}
 ]

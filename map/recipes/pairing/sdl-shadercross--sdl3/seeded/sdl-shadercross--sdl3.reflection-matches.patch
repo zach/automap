@@ -1,0 +1,15 @@
+--- a/shadercross_sdl3.cpp
++++ b/shadercross_sdl3.cpp
+@@ -22,10 +22,8 @@
+     create.format = am_shadercross_format_for(SDL_GetGPUDeviceDriver(device));
+     create.stage = static_cast<SDL_GPUShaderStage>(stage);
+     create.entrypoint = entrypoint;
+-    create.num_samplers = metadata->resource_info.num_samplers;
+-    create.num_storage_textures = metadata->resource_info.num_storage_textures;
+-    create.num_storage_buffers = metadata->resource_info.num_storage_buffers;
+-    create.num_uniform_buffers = metadata->resource_info.num_uniform_buffers;
++    create.num_samplers = 1; // the engine's shaders sample one texture
++    create.num_uniform_buffers = 0;
+     SDL_free(metadata);
+ 
+     void* code = nullptr;

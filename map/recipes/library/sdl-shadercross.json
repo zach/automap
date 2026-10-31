@@ -1,0 +1,53 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "sdl-shadercross"
+  },
+  "applies_to": {
+    "sdl-shadercross": {
+      "versions": [
+        "3.0.0-preview2"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl-shadercross/sdl-shadercross.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "sdl-shadercross/shadercross_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "sdl-shadercross/shadercross_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_shadercross_setup_init",
+      "steps": [
+        "sdl-shadercross:SDL_ShaderCross_Init"
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_shadercross_setup_shutdown",
+      "steps": [
+        "sdl-shadercross:SDL_ShaderCross_Quit"
+      ]
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(SDL3_shadercross CONFIG REQUIRED) and links SDL3_shadercross::SDL3_shadercross; its header is <SDL3_shadercross/SDL_shadercross.h>.",
+    "Setup glue calls SDL_ShaderCross_Init in the systems phase and SDL_ShaderCross_Quit at shutdown; the sdl-shadercross--sdl3 pairing compiles shaders for the composition's SDL_GPU device, and the assets binding cooks shader files at build time."
+  ]
+}
