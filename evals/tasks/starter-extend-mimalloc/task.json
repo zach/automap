@@ -1,0 +1,34 @@
+{
+  "id": "starter-extend-mimalloc",
+  "request": "Add a fast general-purpose allocator.",
+  "setup": [
+    [
+      "start",
+      "--with",
+      "sdl3",
+      "--with",
+      "dear-imgui:docking",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "jolt",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "enkits",
+      "--no-verify",
+      "--json"
+    ]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "allocator": "mimalloc"
+    }
+  },
+  "timeout_minutes": 90
+}

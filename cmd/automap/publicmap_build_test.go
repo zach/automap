@@ -754,3 +754,43 @@ func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
 		})
 	}
 }
+
+// starterSteps are journey 2's extend steps, in order, from the testbed
+// with Jolt: the rest of the v1 catalog (SPEC §2.5).
+var starterSteps = []string{"enkits", "mimalloc", "spdlog", "tracy", "glm", "flecs", "miniaudio", "fastgltf", "stb-image", "sdl-shadercross"}
+
+// The starter engine: all thirteen catalog libraries, with every slot
+// filled, reach probed (SPEC §8.6).
+func TestTheStarterEngineReachesProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	for _, lib := range append([]string{"jolt"}, starterSteps[:len(starterSteps)-1]...) {
+		repo.Automap(t, "extend", lib, "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	}
+
+	run := repo.Automap(t, "extend", starterSteps[len(starterSteps)-1], "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	checkEvidence(t, run, "probed")
+	var man struct {
+		Slots map[string]string `json:"slots"`
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	want := map[string]string{"windowing": "sdl3", "input": "sdl3", "gpu": "sdl3", "tools-ui": "dear-imgui", "physics-3d": "jolt",
+		"jobs": "enkits", "allocator": "mimalloc", "logging": "spdlog", "profiling": "tracy", "math": "glm", "ecs": "flecs",
+		"audio": "miniaudio", "model-import": "fastgltf", "image-decode": "stb-image", "shader-compiler": "sdl-shadercross"}
+	for slot, lib := range want {
+		if man.Slots[slot] != lib {
+			t.Errorf("slot %s holds %q, want %s", slot, man.Slots[slot], lib)
+		}
+	}
+}
