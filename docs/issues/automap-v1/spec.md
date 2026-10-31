@@ -10,7 +10,7 @@ A framework-first indie builds games on their own C++ engine, assembled from lib
 
 ## Solution
 
-Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI that acts on it. The map describes slots, libraries, one contract per seam, and recipes that bind each library to the contracts, each with reference glue and probes. When the developer asks for a testbed, or to add a library, the agent runs the CLI. The CLI writes the composition's manifest and lock, the vcpkg and CMake files, and the glue into the developer's repo, then builds the engine and runs probes that check every rule. It records the outcome as evidence at a stated level, signed when produced in CI. The developer owns everything written; nothing from Automap is linked into the engine, and they can eject at any time. Automap's own CI verifies every binding and pairing on three desktop platforms and publishes signed evidence in the map, so the agent can tell which combinations are known-good before it starts. Private maps extend the same model to in-house libraries, patched libraries and NDA console platforms, with no special cases.
+Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI that acts on it. The map describes slots, libraries, one contract per seam, and recipes that bind each library to the contracts, each with reference glue and probes. When the developer asks for a testbed, or to add a library, the agent runs the CLI. The CLI writes the composition's manifest and lock, the vcpkg and CMake files, and the glue into the developer's repo, then builds the engine and runs probes that check every rule. It records the outcome as evidence at a stated level, signed when produced in CI. The developer owns everything written; nothing from Automap is linked into the engine, and they can eject at any time. Automap's own CI verifies every binding and pairing on three desktop platforms and publishes signed evidence in the map, so the agent can tell which combinations are known-good before it starts. Private maps extend the same model to in-house and patched libraries, with no special cases.
 
 ## User Stories
 
@@ -71,37 +71,35 @@ Automap gives the developer's agent a map of the C++ engine ecosystem and a CLI 
 41. As a studio, I want success judged by probes passing, not by resemblance to reference glue, so that my existing architecture is respected.
 42. As a studio, I want an in-house library joined to the build as ordinary CMake targets and pinned by its path and content hash, so that nothing about it needs a package registry.
 
-### Private and NDA content
+### Private content
 
 43. As a studio, I want a private map with the public map's schema, in a repo I control, that the CLI never uploads, so that proprietary content stays private.
 44. As a studio, I want to carry a patched library as a private variant with its own pin and evidence, so that a fix I can't send upstream is still tracked and checked.
-45. As a developer's agent, I want a private map to extend a public library only by adding versions, variants and (for NDA platforms) supported targets, so that private content can't silently change public facts.
-46. As a studio shipping on a console, I want that console's content in a private map of its own, so that staff without that NDA see nothing of it.
-47. As a studio, I want to choose a library's variant per platform, such as SDL's console port on the console and the public source elsewhere, so that one composition covers every platform I ship on.
-48. As a studio, I want evidence for the console produced on my devkits, signed with my own key and never written to a public transparency log, so that NDA platform names never leak.
+45. As a developer's agent, I want a private map to extend a public library only by adding versions and variants, so that private content can't silently change public facts.
+46. As a studio, I want to choose a library's variant per platform, so that one composition covers every platform I ship on.
 
 ### Ejecting and working offline
 
-49. As a framework-first indie, I want to eject in one step and be left with a plain CMake and vcpkg project that builds and passes its smoke test, so that I'm never locked in.
-50. As a framework-first indie, I want composing, building and verifying to work offline once caches are filled, so that I can work on a plane.
-51. As a framework-first indie, I want to vendor everything my composition needs into my repo, so that builds are fully reproducible without the network.
+47. As a framework-first indie, I want to eject in one step and be left with a plain CMake and vcpkg project that builds and passes its smoke test, so that I'm never locked in.
+48. As a framework-first indie, I want composing, building and verifying to work offline once caches are filled, so that I can work on a plane.
+49. As a framework-first indie, I want to vendor everything my composition needs into my repo, so that builds are fully reproducible without the network.
 
 ### The agent's instructions
 
-52. As a developer's agent, I want an Automap section in the repo's `AGENTS.md`, between markers, holding the build, test and run commands, the manifest and lock locations, the slots in use, and the instruction to go through the router skill and CLI, so that every session starts oriented.
-53. As a framework-first indie, I want the rest of my `AGENTS.md` left untouched, and a `CLAUDE.md` import line added only if I have a `CLAUDE.md`, so that my own instructions stay mine.
-54. As a developer's agent, I want the router skill written into every place my agents read skills from, at the CLI's version, so that its guidance always matches the CLI.
-55. As a framework-first indie, I want my agent held to four nevers (no hand-edited lock, no fabricated evidence, no weakened probes, no upstream contributions to projects that ban them), with the CLI refusing where it can detect a violation, so that the evidence stays honest.
-56. As a developer's agent, I want the CLI to refuse to act on a lock whose canonical hash doesn't match, so that a hand edit is caught immediately.
+50. As a developer's agent, I want an Automap section in the repo's `AGENTS.md`, between markers, holding the build, test and run commands, the manifest and lock locations, the slots in use, and the instruction to go through the router skill and CLI, so that every session starts oriented.
+51. As a framework-first indie, I want the rest of my `AGENTS.md` left untouched, and a `CLAUDE.md` import line added only if I have a `CLAUDE.md`, so that my own instructions stay mine.
+52. As a developer's agent, I want the router skill written into every place my agents read skills from, at the CLI's version, so that its guidance always matches the CLI.
+53. As a framework-first indie, I want my agent held to four nevers (no hand-edited lock, no fabricated evidence, no weakened probes, no upstream contributions to projects that ban them), with the CLI refusing where it can detect a violation, so that the evidence stays honest.
+54. As a developer's agent, I want the CLI to refuse to act on a lock whose canonical hash doesn't match, so that a hand edit is caught immediately.
 
 ### Automap's own operation
 
-57. As Automap's maintainer, I want a watcher to notice upstream releases and curation agents to update facts, recipes and probes, so that the map stays fresh without human toil.
-58. As Automap's maintainer, I want Automap's CI to verify every binding, every pairing with a recipe, and the reference compositions, for each library's latest and previous version and each variant, on every input change and at least every 30 days, so that evidence is always current.
-59. As a contributor, I want to propose facts, recipes, probes or new versions as pull requests that pass the same gates as curation agents, so that anyone can improve the map.
-60. As Automap's maintainer, I want humans to decide only what the map covers and contract major versions, so that agents do the rest.
-61. As Automap's maintainer, I want an eval suite of fresh agent sessions doing the five jobs along the three journeys on every map release, so that success is measured without telemetry.
-62. As Automap's maintainer, I want the four v1 measures (testbed in 15 minutes warm, 90% first-attempt success, freshness, 100% eject) computed from the evals and the map, so that the v1 release decision rests on evidence.
+55. As Automap's maintainer, I want a watcher to notice upstream releases and curation agents to update facts, recipes and probes, so that the map stays fresh without human toil.
+56. As Automap's maintainer, I want Automap's CI to verify every binding, every pairing with a recipe, and the reference compositions, for each library's latest and previous version and each variant, on every input change and at least every 30 days, so that evidence is always current.
+57. As a contributor, I want to propose facts, recipes, probes or new versions as pull requests that pass the same gates as curation agents, so that anyone can improve the map.
+58. As Automap's maintainer, I want humans to decide only what the map covers and contract major versions, so that agents do the rest.
+59. As Automap's maintainer, I want an eval suite of fresh agent sessions doing the five jobs along the three journeys on every map release, so that success is measured without telemetry.
+60. As Automap's maintainer, I want the four v1 measures (testbed in 15 minutes warm, 90% first-attempt success, freshness, 100% eject) computed from the evals and the map, so that the v1 release decision rests on evidence.
 
 ## Implementation Decisions
 
@@ -155,7 +153,7 @@ The eight schemas and their examples are the contract between modules; they are 
 
 - Audit beyond extend-time license warnings, and porting to new platforms.
 - Build backends other than vcpkg (Conan is considered after v1) and build systems other than CMake.
-- Web platforms and a web-capable testbed; consoles in Automap's public CI.
+- Web platforms and a web-capable testbed; NDA platforms such as consoles ([ADR-0083](../../adr/0083-nda-platforms-are-deferred.md)).
 - Godot and LibGodot extenders; consumers in languages other than C++.
 - An MCP server, telemetry, commercial services.
 - Engine-facing slot APIs.
