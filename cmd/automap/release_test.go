@@ -28,15 +28,18 @@ type releaseServer struct {
 	tags     []string
 	files    map[string][]byte // download path -> content
 	evidence map[string][]byte // path in the map -> content
+	listing  bool              // whether to answer the releases API
 }
 
 func newReleaseServer(t *testing.T) *releaseServer {
 	t.Helper()
-	s := &releaseServer{files: map[string][]byte{}, evidence: map[string][]byte{}}
+	s := &releaseServer{files: map[string][]byte{}, evidence: map[string][]byte{}, listing: true}
 	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		switch {
+		case r.URL.Path == "/releases" && !s.listing:
+			http.Error(w, "rate limit exceeded", http.StatusForbidden)
 		case r.URL.Path == "/releases":
 			var list []map[string]any
 			for _, tag := range s.tags {
@@ -46,6 +49,14 @@ func newReleaseServer(t *testing.T) *releaseServer {
 				}})
 			}
 			json.NewEncoder(w).Encode(list)
+		case strings.HasPrefix(r.URL.Path, "/releases/download/"):
+			// <tag>/<file>, as GitHub serves a release's files directly
+			parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/releases/download/"), "/", 2)
+			if data, ok := s.files["/download/"+parts[len(parts)-1]]; ok {
+				w.Write(data)
+				return
+			}
+			http.NotFound(w, r)
 		case strings.HasPrefix(r.URL.Path, "/download/"):
 			if data, ok := s.files[r.URL.Path]; ok {
 				w.Write(data)
@@ -206,4 +217,23 @@ func TestAMapDirectoryStillWinsOverReleases(t *testing.T) {
 	if got := lockRelease(t, repo); got != "unreleased" {
 		t.Errorf("with --map the lock records %q, want unreleased", got)
 	}
+}
+
+// A lock's release downloads without GitHub's releases API, which shared
+// CI runners exhaust.
+func TestTheLocksReleaseDownloadsWithoutTheReleasesAPI(t *testing.T) {
+	s := newReleaseServer(t)
+	s.publish(t, "map-2026.10.01", fixtureMapDir(t), nil)
+	repo := releaseRepo(t, s, t.TempDir())
+	repo.Automap(t, startWindowFromRelease...).ExpectExit(t, 0)
+	s.mu.Lock()
+	s.listing = false
+	s.mu.Unlock()
+
+	fresh := releaseRepo(t, s, t.TempDir()) // the same composition with nothing cached
+	for _, f := range []string{"automap.manifest.json", "automap.lock.json"} {
+		fresh.WriteFile(t, f, clitest.Read(t, repo, f))
+	}
+
+	fresh.Automap(t, "show", "library", "stub-window", "--json").ExpectExit(t, 0)
 }
