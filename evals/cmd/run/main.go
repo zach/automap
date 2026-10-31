@@ -263,9 +263,10 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 			return r, ""
 		}
 	}
-	// The executable, before the session: an eject task's composition is
-	// gone after it.
-	target := executable(repo)
+	// The executable and the headless settings its evidence records,
+	// before the session: an eject can take the composition and its
+	// evidence with it.
+	target, smokeEnv := executable(repo), headless(repo)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t.TimeoutMinutes)*time.Minute)
 	defer cancel()
 	began := time.Now()
@@ -307,7 +308,7 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	if t.Pass.Ejected {
 		o := outcome{Ejected: !exists(filepath.Join(repo, "automap.manifest.json")) && !exists(filepath.Join(repo, "automap.lock.json"))}
 		if o.Ejected {
-			o.Plain = buildWithoutAutomap(repo, target, env)
+			o.Plain = buildWithoutAutomap(repo, target, env, smokeEnv)
 		}
 		r.Status, r.Reason = grade(t, o)
 		passed := r.Status == "pass"
@@ -357,7 +358,7 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	// The eject measure: a passing journey composition, ejected, builds
 	// and passes its smoke test without Automap.
 	if r.Status == "pass" {
-		note := ejectCopy(repo, automap, target, env)
+		note := ejectCopy(repo, automap, target, env, append(smokeEnv, headless(repo)...))
 		built := note == ""
 		r.Ejected, r.EjectNote = &built, note
 	}
@@ -384,7 +385,7 @@ func executable(repo string) string {
 
 // ejectCopy ejects a copy of repo, leaving out build output, and builds
 // it without Automap. It returns why that failed, or "".
-func ejectCopy(repo, automap, target string, env []string) string {
+func ejectCopy(repo, automap, target string, env, smokeEnv []string) string {
 	work, err := os.MkdirTemp("", "automap-eject-")
 	if err != nil {
 		return err.Error()
@@ -422,13 +423,14 @@ func ejectCopy(repo, automap, target string, env []string) string {
 	if out, err := eject.CombinedOutput(); err != nil {
 		return fmt.Sprintf("automap eject: %v: %s", err, tail(out))
 	}
-	return buildWithoutAutomap(work, target, env)
+	return buildWithoutAutomap(work, target, env, smokeEnv)
 }
 
 // buildWithoutAutomap builds repo as a plain CMake and vcpkg project and
-// runs its executable for a smoke test's 120 frames, with the headless
-// settings its evidence records. It returns why that failed, or "".
-func buildWithoutAutomap(repo, target string, env []string) string {
+// runs its executable for a smoke test's 120 frames with smokeEnv, the
+// headless settings its evidence recorded. It returns why that failed, or
+// "".
+func buildWithoutAutomap(repo, target string, env, smokeEnv []string) string {
 	if target == "" {
 		return "the composition named no executable"
 	}
@@ -446,7 +448,7 @@ func buildWithoutAutomap(repo, target string, env []string) string {
 		}
 	}
 	run := exec.Command(filepath.Join(build, target), "--frames", "120")
-	run.Dir, run.Env = repo, append(env, headless(repo)...)
+	run.Dir, run.Env = repo, append(env, smokeEnv...)
 	if out, err := run.CombinedOutput(); err != nil {
 		return fmt.Sprintf("the smoke run: %v: %s", err, tail(out))
 	}
