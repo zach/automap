@@ -1,0 +1,63 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/ocornut/imgui@v1.93.0-docking",
+      "digest": {
+        "gitCommit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "sha512": "00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621"
+      }
+    },
+    {
+      "name": "pkg:github/libsdl-org/SDL@release-3.4.18",
+      "digest": {
+        "gitCommit": "829a65d769d935c4852f8159e964312c0957260a",
+        "sha512": "12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "pairing",
+    "subject_detail": {
+      "pins": [
+        {
+          "commit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+          "content_hash": "sha512:00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621",
+          "library": "dear-imgui",
+          "variant": "docking",
+          "version": "1.93.0"
+        },
+        {
+          "commit": "829a65d769d935c4852f8159e964312c0957260a",
+          "content_hash": "sha512:12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50",
+          "library": "sdl3",
+          "variant": "default",
+          "version": "3.4.18"
+        }
+      ]
+    },
+    "platform": "windows-x64-msvc",
+    "level": "probed",
+    "produced_at": "2026-10-30T23:50:18Z",
+    "map_release": "git:6ed1654e8bf76ed29396d740f0519123aeef5869",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+      "environment": {},
+      "runner_image": "win25-vs2026 20261030.294.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

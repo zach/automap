@@ -1,0 +1,51 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/ocornut/imgui@v1.93.0-docking",
+      "digest": {
+        "gitCommit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "sha512": "00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "diagnostics",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "content_hash": "sha512:00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621",
+        "library": "dear-imgui",
+        "variant": "docking",
+        "version": "1.93.0"
+      }
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-30T23:51:24Z",
+    "map_release": "git:6ed1654e8bf76ed29396d740f0519123aeef5869",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {},
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

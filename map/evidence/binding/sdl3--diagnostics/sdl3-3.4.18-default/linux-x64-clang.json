@@ -1,0 +1,52 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/libsdl-org/SDL@release-3.4.18",
+      "digest": {
+        "gitCommit": "829a65d769d935c4852f8159e964312c0957260a",
+        "sha512": "12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "diagnostics",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "829a65d769d935c4852f8159e964312c0957260a",
+        "content_hash": "sha512:12fcb5592016b27922b08d1580d75f5f15c72e67cf04415e2bd824dc7563ac940c25bbe368b03d0a755f5832803049467e3d0ee6784ed3684792bc4d7741af50",
+        "library": "sdl3",
+        "variant": "default",
+        "version": "3.4.18"
+      }
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-30T23:46:39Z",
+    "map_release": "git:6ed1654e8bf76ed29396d740f0519123aeef5869",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {
+        "SDL_VIDEO_DRIVER": "offscreen"
+      },
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
