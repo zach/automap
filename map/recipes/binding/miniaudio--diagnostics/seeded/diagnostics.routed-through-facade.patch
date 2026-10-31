@@ -1,0 +1,10 @@
+--- a/miniaudio_diagnostics.cpp
++++ b/miniaudio_diagnostics.cpp
+@@ -32,7 +32,6 @@
+ // log to the context and engine.
+ bool am_bind_miniaudio_diagnostics(am::Context&) {
+     if (ma_log_init(&am_miniaudio_allocation(), &am_miniaudio_log()) != MA_SUCCESS) return false;
+-    ma_log_register_callback(&am_miniaudio_log(), ma_log_callback_init(&am_miniaudio_log_message, nullptr));
+     am::lifecycle::init_step("miniaudio:ma_log_init");
+     return true;
+ }

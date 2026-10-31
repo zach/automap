@@ -1,0 +1,132 @@
+{
+  "id": "miniaudio",
+  "name": "miniaudio",
+  "license": {
+    "spdx": "Unlicense OR MIT-0",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/mackron/miniaudio"
+  },
+  "slots": [
+    "audio"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/mackron/miniaudio"
+  },
+  "versions": [
+    {
+      "version": "0.11.25",
+      "released": "2026-03-04",
+      "pin": {
+        "tag": "0.11.25",
+        "commit": "9634bedb5b5a2ca38c1ee7108a9358a4e233f14d",
+        "content_hash": "sha512:8cdfe5cd66dd84628430a24026b307c21158b4776492eec234c2ce3cf0da3ae26fe8162f3ed285502f6002fdf252ccb660f7c216e044e3c306b75b0997700b45"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "miniaudio",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "",
+        "targets": [
+          "miniaudio::miniaudio"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "miniaudio as the miniaudio port installs it: miniaudio.h alone, with no CMake package. The build fragment defines miniaudio::miniaudio, and setup glue compiles the implementation once with every backend miniaudio enables by default."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "callback-struct",
+          "hooks": [
+            {
+              "api": "ma_allocation_callbacks::onMalloc",
+              "signature": "void*(size_t sz, void* pUserData)"
+            },
+            {
+              "api": "ma_allocation_callbacks::onRealloc",
+              "signature": "void*(void* p, size_t sz, void* pUserData)"
+            },
+            {
+              "api": "ma_allocation_callbacks::onFree",
+              "signature": "void(void* p, void* pUserData)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "ma_log_init, ma_context_init and ma_engine_init, which copy the callbacks from their configs",
+          "query": "ma_engine::allocationCallbacks and ma_context::allocationCallbacks"
+        },
+        "diagnostics": {
+          "log_hook": "ma_log_register_callback(ma_log*, ma_log_callback) on the ma_log the context and engine are given",
+          "assert_hook": "MA_ASSERT, a compile-time macro (assert by default)",
+          "query": "ma_context_get_log(ma_context*)"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "miniaudio:allocationCallbacks"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "miniaudio:ma_log_init"
+            },
+            {
+              "phase": "systems",
+              "step": "miniaudio:ma_context_init+ma_engine_init"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "miniaudio:ma_engine_uninit+ma_context_uninit"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "miniaudio:ma_log_uninit"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "MA_NO_DEVICE_IO",
+            "MA_NO_ENGINE",
+            "MA_NO_RESOURCE_MANAGER",
+            "MA_NO_NODE_GRAPH",
+            "MA_NO_THREADING",
+            "MA_NO_DECODING",
+            "MA_NO_ENCODING",
+            "MA_NO_GENERATION",
+            "MA_USE_STDINT",
+            "MA_NO_RUNTIME_LINKING"
+          ],
+          "self_check": null,
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "Exactly one translation unit defines MINIAUDIO_IMPLEMENTATION before including miniaudio.h, and every translation unit sees the same MA_NO_* and MA_ENABLE_* defines, which nothing checks; they change the layout of ma_engine and ma_context."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "AUTOMAP_MINIAUDIO_BACKEND=null",
+          "web": true
+        }
+      }
+    }
+  ]
+}

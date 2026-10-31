@@ -1,0 +1,60 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "miniaudio",
+    "contract": "allocation",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "miniaudio": {
+      "versions": [
+        "0.11.25"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "miniaudio--allocation/miniaudio_allocation.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "miniaudio--allocation/miniaudio_allocation_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "memory",
+      "when": "init",
+      "call": "am_bind_miniaudio_allocation",
+      "steps": [
+        "miniaudio:allocationCallbacks"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "allocation.hooks-before-first-allocation",
+      "check": "After the engine, context and log are gone, the facade's probe-build block tracking shows miniaudio released no block the facade didn't allocate; one it did fails the rule as ALLOC_HOOK_LATE(miniaudio).",
+      "seeded_violation": {
+        "description": "Allocate a block with miniaudio's default allocator before filling in the callbacks, then free it through the facade's.",
+        "patch": "miniaudio--allocation/seeded/allocation.hooks-before-first-allocation.patch"
+      }
+    },
+    {
+      "rule": "allocation.routed-through-facade",
+      "check": "am_probe_miniaudio_allocation(): the engine and its context hold the facade's callbacks, and the facade served miniaudio during the run.",
+      "seeded_violation": {
+        "description": "Leave the callbacks empty in am_bind_miniaudio_allocation(), so miniaudio uses the C runtime's allocator.",
+        "patch": "miniaudio--allocation/seeded/allocation.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "miniaudio copies ma_allocation_callbacks out of each object's config (ma_log_init, ma_context_config, ma_engine_config) when the object is made: the binding fills the callbacks setup glue hands to all three in the memory phase, before any of them exists.",
+    "miniaudio asks for no particular alignment; its callbacks map to the facade's allocate, reallocate and release."
+  ]
+}

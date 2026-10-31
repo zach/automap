@@ -1,0 +1,60 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "miniaudio",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "miniaudio": {
+      "versions": [
+        "0.11.25"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "miniaudio--diagnostics/miniaudio_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "miniaudio--diagnostics/miniaudio_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_miniaudio_diagnostics",
+      "steps": [
+        "miniaudio:ma_log_init"
+      ]
+    },
+    {
+      "phase": "diagnostics",
+      "when": "shutdown",
+      "call": "am_unbind_miniaudio_diagnostics",
+      "steps": [
+        "miniaudio:ma_log_uninit"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_miniaudio_diagnostics(): the context writes to the binding's log, and a message posted to it reaches the facade.",
+      "seeded_violation": {
+        "description": "Make the log without registering the facade's callback on it.",
+        "patch": "miniaudio--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The binding makes the one ma_log setup glue gives the context and engine, with miniaudio's allocation callbacks, and registers a callback that logs each message at the facade's matching level (error, warning, info; debug as trace).",
+    "MA_ASSERT is a compile-time macro; a composition that wants miniaudio's asserts in the facade defines it before setup glue includes miniaudio.h, which no probe checks."
+  ]
+}

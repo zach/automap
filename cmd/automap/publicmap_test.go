@@ -174,3 +174,24 @@ func TestExtendingWithGLMFillsTheMathSlot(t *testing.T) {
 		}
 	}
 }
+
+// miniaudio fills the audio slot, with its setup glue and its allocation
+// and diagnostics bindings.
+func TestExtendingWithMiniaudioFillsTheAudioSlot(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "miniaudio", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct{ Slots map[string]string }
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["audio"] != "miniaudio" {
+		t.Errorf("slots %v, want miniaudio in the audio slot", man.Slots)
+	}
+	for _, f := range []string{"glue/miniaudio/miniaudio_setup.cpp", "glue/miniaudio/miniaudio_allocation.cpp", "glue/miniaudio/miniaudio_diagnostics.cpp"} {
+		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
+			t.Errorf("miniaudio's glue wasn't written: %v", err)
+		}
+	}
+}

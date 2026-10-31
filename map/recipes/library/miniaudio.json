@@ -1,0 +1,61 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "miniaudio"
+  },
+  "applies_to": {
+    "miniaudio": {
+      "versions": [
+        "0.11.25"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "miniaudio/miniaudio.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "miniaudio/miniaudio_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "miniaudio/miniaudio_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_miniaudio_setup_init",
+      "steps": [
+        "miniaudio:ma_context_init+ma_engine_init"
+      ],
+      "provides": [
+        {
+          "name": "miniaudio.engine",
+          "type": "ma_engine*"
+        }
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_miniaudio_setup_shutdown",
+      "steps": [
+        "miniaudio:ma_engine_uninit+ma_context_uninit"
+      ]
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The miniaudio port installs miniaudio.h and no CMake package: the build fragment finds the header and defines the imported target miniaudio::miniaudio, with threads and, on Linux, libdl and libm.",
+    "Setup glue is the one translation unit that defines MINIAUDIO_IMPLEMENTATION. It owns the composition's ma_engine and the ma_context the engine plays through, and gives both the log and allocation callbacks the bindings fill in during the memory and diagnostics phases; miniaudio copies them when each object is made.",
+    "AUTOMAP_MINIAUDIO_BACKEND=null, which verify sets for headless runs (the library's platform fact), makes the context use only miniaudio's null backend, which plays into nothing and needs no audio device. Without it, the context tries the platform's backends in miniaudio's order.",
+    "Game code plays sounds with ma_engine_play_sound(ctx.miniaudio.engine, ...) or through am_miniaudio_engine(); the engine's data callback runs on miniaudio's audio thread."
+  ]
+}
