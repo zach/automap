@@ -1,6 +1,6 @@
 {
   "command": "verify",
-  "cli_version": "1.0.0",
+  "cli_version": "0.1.0",
   "ok": false,
   "summary": "Composition is smoke on linux-x64-clang: 1 probed rule failed.",
   "level": "smoke",

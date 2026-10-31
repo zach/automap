@@ -117,7 +117,7 @@ $ automap start --with sdl3 --with dear-imgui:docking --json
 The CLI resolves the libraries against the newest map release, assigns SDL3 to every slot it fills (windowing, input, gpu) and Dear ImGui to tools-ui, and writes the files in §2.3: the manifest and lock, the vcpkg files, the build fragments, the shared interfaces and probe harness, SDL3's and Dear ImGui's bindings and setup glue, the `dear-imgui--sdl3` pairing glue, the choices header, the startup, a testbed `main.cpp`, the `AGENTS.md` section and the router skill. It then runs `automap verify` for the host platform. The JSON result is:
 
 ```json
-{ "command": "start", "cli_version": "1.0.0", "ok": true, "level": "probed",
+{ "command": "start", "cli_version": "0.1.0", "ok": true, "level": "probed",
   "summary": "Started a testbed (sdl3 3.4.18, dear-imgui 1.93.0 docking); the composition is probed on linux-x64-clang.",
   "failures": [], "evidence_file": "evidence/linux-x64-clang.json" }
 ```
@@ -166,28 +166,15 @@ $ automap upgrade jolt --json
 
 The CLI moves the lock to the newest map release [ADR-0053](../adr/0053-map-releases-are-immutable-and-recorded-in-locks.md), re-resolves Jolt, applies the new recipe's reference glue where the composition's glue still matches the old reference, and reports where it differs. It then runs verification. Suppose the release adds an allocator hook: the result names `ALLOC_NOT_ROUTED(jolt)`, and the recipe's adaptation notes say which hook to add. The agent fixes the glue, re-runs `automap verify`, and the upgrade ends at the probed level. Upgrades happen only when the developer's agent runs them [ADR-0009](../adr/0009-no-automap-maintenance-agent.md).
 
-### 2.6 Journey 3: custom integration (adopt, private map, NDA platform, eject)
+### 2.6 Journey 3: custom integration (adopt, private map, eject)
 
-A hypothetical studio, Acme Games, has a hand-built engine: SDL3, Jolt, an in-house scheduler (`engine/acme-jobs`) and an in-house renderer (`engine/acme-renderer`). It ships on Windows, Linux and a hypothetical NDA console, Nebula. The files are in [`examples/private-map/`](examples/private-map/), [`examples/private-map-nebula/`](examples/private-map-nebula/) and [`examples/composition/acme-engine/`](examples/composition/acme-engine/).
+A hypothetical studio, Acme Games, has a hand-built engine: SDL3, Jolt, an in-house scheduler (`engine/acme-jobs`) and an in-house renderer (`engine/acme-renderer`). It ships on Windows and Linux. The files are in [`examples/private-map/`](examples/private-map/) and [`examples/composition/acme-engine/`](examples/composition/acme-engine/); the examples also carry a hypothetical NDA console's map, [`examples/private-map-nebula/`](examples/private-map-nebula/), though NDA platforms are deferred (§7.5).
 
 **1. Adopt.** The agent runs `automap adopt --json` at the repo root. The CLI reads the CMake project and `vcpkg.json`, matches `SDL3::SDL3` and `Jolt::Jolt` to map libraries, and reports `Acme::Jobs` and `Acme::Renderer` as targets no map describes. The developer's own code is a library like any other [ADR-0013](../adr/0013-developer-code-is-a-library.md), so the agent creates a private map in `automap-private/` and writes [`acme-jobs.json`](examples/private-map/libraries/acme-jobs.json) and [`acme-renderer.json`](examples/private-map/libraries/acme-renderer.json) from their headers, with `source.kind` `path`. It writes recipes for their bindings and for the `acme-renderer--sdl3` pairing, pointing at glue that already exists, such as `engine/platform/window.cpp`. Re-running `automap adopt` writes the manifest with those glue paths, marks Acme's own startup code as developer-owned so the CLI doesn't generate one, and runs verification; the lifecycle probe judges Acme's startup order like any other [ADR-0080](../adr/0080-the-cli-generates-startup.md). Probes fail where the existing glue misses a rule; the agent adapts the glue until they pass. Success is judged by probes, not by resemblance to reference glue [ADR-0016](../adr/0016-recipes-are-reference-glue-plus-probes.md).
 
 **2. A patched library.** Acme carries a fix to SDL3 that SDL's policy bars from going upstream as AI-written work [ADR-0046](../adr/0046-four-agent-nevers.md). The agent adds a private variant, `acme-patched`, with its own pin and an overlay port in the private map ([`private-map/libraries/sdl3.json`](examples/private-map/libraries/sdl3.json)), and sets the manifest's SDL3 variant. There is no separate patch concept [ADR-0047](../adr/0047-private-maps.md).
 
-**3. An NDA platform.** Nebula's content lives in its own private map, in a repo only Nebula-licensed staff can read [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). It adds SDL's Nebula port as a console variant, Acme's renderer's Nebula variant, and Nebula to the supported targets of Jolt and `acme-jobs` [ADR-0075](../adr/0075-variants-per-platform.md). The manifest chooses SDL3's and the renderer's variants per platform:
-
-```json
-"variants": {
-  "sdl3": { "default": "acme-patched", "nebula-arm64-clang": "nebula" },
-  "acme-renderer": { "default": "default", "nebula-arm64-clang": "nebula" },
-  "jolt": "default",
-  "acme-jobs": "default"
-}
-```
-
-The lock pins those two libraries separately for Nebula. Acme's devkit CI runs `automap verify` on Nebula and signs the record with Acme's own key, without any public transparency log, and stores it in the Nebula map ([example](examples/private-map-nebula/evidence/composition/acme-engine/nebula-arm64-clang.json)) [ADR-0049](../adr/0049-nda-evidence-from-nda-holders-only.md). ThreadSanitizer doesn't run on Nebula, so that result is not-applicable [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md).
-
-**4. Eject.** Acme decides to leave Automap. `automap eject --json` copies any Automap registry ports the composition uses into `ports/` in the repo, rewrites `vcpkg-configuration.json` to point at them, and removes the manifest and lock. The repo is a plain CMake and vcpkg project; it builds and passes its smoke test without Automap installed [ADR-0040](../adr/0040-eject-is-one-cli-step.md).
+**3. Eject.** Acme decides to leave Automap. `automap eject --json` copies any Automap registry ports the composition uses into `ports/` in the repo, rewrites `vcpkg-configuration.json` to point at them, and removes the manifest and lock. The repo is a plain CMake and vcpkg project; it builds and passes its smoke test without Automap installed [ADR-0040](../adr/0040-eject-is-one-cli-step.md).
 
 ### 2.7 What the agent works from
 
@@ -519,7 +506,6 @@ Every claim states the highest level it passed [ADR-0028](../adr/0028-evidence-i
 | Automap's CI | bindings, pairings, reference compositions | Automap's CI identity, through GitHub artifact attestations (Sigstore, public transparency log) | the public map [ADR-0030](../adr/0030-evidence-is-signed-and-stored-in-the-map.md) |
 | Developer's CI | their composition | their CI's identity | their repo, beside the lock [ADR-0032](../adr/0032-developer-composition-evidence-lives-in-their-repo.md) |
 | Developer, locally | their composition | unsigned, marked so, with verifier id `local` | their repo |
-| NDA holder | anything on an NDA platform | their own key; never a public transparency log | that platform's private map [ADR-0049](../adr/0049-nda-evidence-from-nda-holders-only.md) |
 
 The map's published evidence comes only from Automap's CI [ADR-0052](../adr/0052-open-contributions-same-evidence-gates.md). A CI link may appear in a record but is never the record [ADR-0030](../adr/0030-evidence-is-signed-and-stored-in-the-map.md).
 
@@ -581,7 +567,7 @@ Variants that need non-additive build options, libraries vcpkg lacks, and freshe
 
 ### 7.5 NDA platforms
 
-Each NDA platform's libraries, variants, recipes and evidence live in a private map of their own [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md). The public map says only that a console variant exists and who distributes it. A composition chooses console variants per platform [ADR-0075](../adr/0075-variants-per-platform.md). Evidence for the platform comes only from the NDA holder, signed with their own key and never written to a public transparency log [ADR-0049](../adr/0049-nda-evidence-from-nda-holders-only.md). Automap's public CI never builds for consoles.
+NDA platforms, such as consoles, are deferred indefinitely: Automap designs and builds nothing for them [ADR-0083](../adr/0083-nda-platforms-are-deferred.md). ADR-0048 and ADR-0049 stand as the direction if they are taken up: each NDA platform's content in a private map of its own, and its evidence signed by the NDA holder and never written to a public transparency log. Per-platform variant choices already exist for them [ADR-0075](../adr/0075-variants-per-platform.md).
 
 ### 7.6 Eject
 
@@ -694,7 +680,6 @@ The eval suite runs Claude Code in headless mode on GitHub-hosted runners, each 
 | starter-upgrade | the starter engine pinned one map release behind | the upgraded composition probed |
 | custom-adopt | a fixture copy of Acme's engine | manifest and private map written; probed on desktop |
 | custom-variant | the adopted engine and "Use our patched SDL3." | private variant added; probed |
-| custom-nda | the adopted engine and a stand-in NDA map (a Linux toolchain under a private platform id, signed with a test key) | per-platform variants resolved; evidence signed and stored in the stand-in map |
 | custom-eject | the adopted engine | ejected project builds and passes smoke without Automap |
 
 ---
@@ -722,7 +707,7 @@ Anyone, including agents and upstream maintainers, can propose map changes as pu
 
 | Thing | Scheme |
 | --- | --- |
-| CLI | semver, tags `cli-v<semver>` [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
+| CLI | semver, starting at 0.1.0; tags `cli-v<semver>` [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
 | Map releases | immutable, dated, tags `map-YYYY.MM.DD`, then `map-YYYY.MM.DD.N` for a day's later releases; recorded in every lock [ADR-0053](../adr/0053-map-releases-are-immutable-and-recorded-in-locks.md) |
 | Contracts | semver each, independently; bindings and shared interfaces name the version they target [ADR-0024](../adr/0024-contracts-are-versioned-independently.md) |
 | Formats | `automap-manifest/1`, `automap-lock/1`, predicate type `https://github.com/zach/automap/evidence/v1`; a breaking change is a new number |
@@ -831,9 +816,9 @@ Human checkpoints exist only for any new or changed ADR; what the map covers and
 | --- | --- | --- |
 | M4 Upgrade | `automap upgrade`; the watcher and curation agents; cooldown gate | `starter-upgrade` eval on the testbed + Jolt across a real new release |
 | M5 Starter engine | The rest of the v1 catalog and contracts; the `sdl-shadercross--sdl3` pairing; the starter-engine reference composition | §8.4–8.6 acceptance tests; journey 2 evals |
-| M6 Adopt and private maps | `automap adopt`; private maps and their layering; private variants; per-platform variants; NDA evidence signing | `custom-adopt`, `custom-variant` and `custom-nda` evals |
+| M6 Adopt and private maps | `automap adopt`; private maps and their layering; private variants; per-platform variants | `custom-adopt` and `custom-variant` evals |
 | M7 Eject and offline | `automap eject`, `fetch`, `vendor` | `custom-eject` eval; ejected journey compositions build without Automap |
-| v1 release | All four measures met [ADR-0063](../adr/0063-v1-success-measures.md) | human checkpoint [ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md) |
+| v1 release (CLI 0.1.0) | All four measures met [ADR-0063](../adr/0063-v1-success-measures.md) | human checkpoint [ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md) |
 
 The order follows the day-one minimum, then upgrade, then adopt [ADR-0010](../adr/0010-day-one-minimum-start-then-extend-once.md).
 
@@ -853,7 +838,6 @@ The order follows the day-one minimum, then upgrade, then adopt [ADR-0010](../ad
 | Curation load outgrows the project. | Agents curate; humans decide coverage only [ADR-0051](../adr/0051-agents-curate-the-public-map.md); the freshness measure shows drift [ADR-0063](../adr/0063-v1-success-measures.md). |
 | vcpkg's model limits variants or freshness. | The Automap registry [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md); eject keeps the developer free [ADR-0040](../adr/0040-eject-is-one-cli-step.md). |
 | The C++-only, desktop-only audience is narrow. | Chosen deliberately [ADR-0001](../adr/0001-primary-persona-framework-first-indie.md), [ADR-0056](../adr/0056-v1-platforms-desktop-only.md); web deferred, not dropped (OQ-008). |
-| NDA content leaks into public artifacts. | One private map per NDA platform; no public transparency log; public CI never builds consoles [ADR-0048](../adr/0048-one-private-map-per-nda-platform.md), [ADR-0049](../adr/0049-nda-evidence-from-nda-holders-only.md). |
 
 ### 12.2 Open questions
 
@@ -873,7 +857,7 @@ These details are needed to build v1 but no ADR records them. They follow from t
 5. Signing through GitHub artifact attestations (§6.3) and the CI runners and headless GPU per platform (§6.4).
 6. The choices header's naming rule (§4.10), and seeded violations as patch files mapped through the manifest (§6.1).
 7. The v1 pairings, the binding matrix beyond [ADR-0058](../adr/0058-v1-catalog.md)'s list, and the later milestones' order (§8.4, §8.5, §11.2).
-8. A reference CI workflow in the router skill (§2.4), and the stand-in NDA map in the eval suite (§8.7).
+8. A reference CI workflow in the router skill (§2.4).
 9. Map metadata files and the vcpkg baseline, tool release and registry location they carry (§4.2, §5.5), the default variant (§4.5), how the CLI obtains vcpkg and the configurable registry location (§5.5), no special build options for headless runs, and probe builds in their own directory (§5.5).
 10. The executable in the manifest and the testbed template (§2.3, §4.7), `start`'s default platforms (§5.4), 120 smoke frames and the probe results file (§5.6), `verify --seed` and seeds owned by whoever owns the file (§6.1), the find and show `entries` (§5.4), the skill directories (§5.7), and verifier id `local` (§6.3).
 
@@ -963,3 +947,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0080](../adr/0080-the-cli-generates-startup.md) | The CLI generates the composition's startup from its recipes |
 | [0081](../adr/0081-eval-suite-runs-claude-code-headless.md) | The eval suite runs Claude Code headless, under a spending cap |
 | [0082](../adr/0082-evidence-is-read-live-for-exact-pins.md) | Map releases freeze facts, recipes and probes; evidence is read live for exact pins |
+| [0083](../adr/0083-nda-platforms-are-deferred.md) | NDA platforms are deferred indefinitely |

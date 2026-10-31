@@ -1,0 +1,19 @@
+{
+  "id": "custom-variant",
+  "request": "Use our patched SDL3: patches/sdl3-acme.patch is our fix, which SDL won't take upstream.",
+  "repo": "../custom-adopt/repo",
+  "overlay": "files",
+  "setup": [
+    ["adopt", "--no-verify", "--json"]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "windowing": "sdl3"
+    },
+    "private_variants": [
+      "sdl3"
+    ]
+  },
+  "timeout_minutes": 90
+}

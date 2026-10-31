@@ -1,0 +1,12 @@
+--- a/src/SDL.c
++++ b/src/SDL.c
+@@ -754,7 +754,8 @@
+ // Get the library source revision
+ const char *SDL_GetRevision(void)
+ {
+-    return SDL_REVISION;
++    // Acme: tag the revision so a build shows it carries the fix.
++    return "acme-patched " SDL_REVISION;
+ }
+ 
+ // Get the name of the platform

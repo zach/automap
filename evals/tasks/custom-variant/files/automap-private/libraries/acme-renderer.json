@@ -1,0 +1,65 @@
+{
+  "id": "acme-renderer",
+  "name": "Acme Renderer (in-house)",
+  "license": {
+    "spdx": "MIT-0",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "not-applicable",
+    "source": "In-house code; the developer's agent edits it directly."
+  },
+  "slots": [
+    "renderer"
+  ],
+  "source": {
+    "kind": "path",
+    "path": "engine/acme-renderer"
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "released": "2026-10-20",
+      "cmake": {
+        "package": "AcmeRenderer",
+        "targets": [
+          "Acme::Renderer"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {}
+        }
+      ],
+      "facts": {
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": null,
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": true
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": null,
+          "min_language_standard": "C++17",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": false
+        }
+      }
+    }
+  ]
+}
