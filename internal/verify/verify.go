@@ -138,6 +138,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 					precision = p
 				}
 				obs.Computed = append(obs.Computed, CheckPrecision(precision, Precisions(m, man)))
+				obs.Computed = append(obs.Computed, CheckDeterminism(Deterministic(m, man)))
 				if err != nil {
 					out.Failures = append(out.Failures, Failure{Code: "PROBE_FAILED", Message: "The probe run didn't exit cleanly: " + err.Error(), DetailsFile: paths.probeLog})
 				}

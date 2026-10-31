@@ -1,0 +1,44 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "handles",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default",
+        "double-precision",
+        "deterministic"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--handles/jolt_handles.h",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--handles/jolt_handles_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "handles.bits-preserved",
+      "check": "am_probe_jolt_handles(): body ids with each index and sequence bit set, the largest id and the invalid id convert to am::handles::JoltBody and back unchanged.",
+      "seeded_violation": {
+        "description": "Store body ids in 16 bits, since a level has few bodies.",
+        "patch": "jolt--handles/seeded/handles.bits-preserved.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am::handles::JoltBody carries a JPH::BodyID's whole 32-bit value; from_jolt and to_jolt convert between them.",
+    "The PhysicsSystem owns every body. A BodyID's sequence number tells a removed body's id from a reused index, so glue keeps the whole id, never only the index, and never keeps a Body* past the lock that returned it."
+  ]
+}

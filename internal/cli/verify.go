@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -47,6 +48,11 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 		r.fail("PLATFORM_NOT_IN_COMPOSITION("+platform+")", "The manifest's platforms are "+fmt.Sprint(man.Platforms)+".")
 		return exitUsage
 	}
+	written, fails := regenerate(m, man, lock, ".")
+	if fails != nil {
+		return failWith(r, fails, "The composition's files can't be generated.", exitFailed)
+	}
+	r.FilesWritten = append(r.FilesWritten, written...)
 	out := verify.Run(m, man, lock, verify.Options{Root: ".", Platform: platform, Evidence: true})
 	r.Level = out.Level
 	r.EvidenceFile = out.EvidenceFile
@@ -139,6 +145,9 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 	if raw, err := os.ReadFile(filepath.Join(scratch, composition.ManifestFile)); err == nil {
 		json.Unmarshal(raw, &seeded)
 	}
+	if _, fails := regenerate(m, &seeded, lock, scratch); fails != nil {
+		return failWith(r, fails, "The seeded composition's files can't be generated.", exitFailed)
+	}
 	out := verify.Run(m, &seeded, lock, verify.Options{Root: scratch, Platform: platform})
 	r.Level = out.Level
 	for _, res := range out.Results {
@@ -220,4 +229,36 @@ func contains(xs []string, x string) bool {
 		}
 	}
 	return false
+}
+
+// regenerate rewrites the files the CLI generates from the manifest and the
+// lock (the choices header, automap.cmake, the vcpkg files and, unless the
+// developer owns it, the startup) where they differ, so a choice edited in
+// the manifest takes effect when the composition is verified. It returns
+// the files it wrote.
+func regenerate(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, root string) ([]string, []composition.Failure) {
+	plan, fails := composition.PlanStartup(m, man)
+	if fails != nil {
+		return nil, fails
+	}
+	files, fails := composition.Files(m, man, lock, plan, composition.FileOptions{RegistryURL: registryURL(m)})
+	if fails != nil {
+		return nil, fails
+	}
+	var written []string
+	for _, p := range generatedFiles(man) {
+		next, ok := files[p]
+		if !ok || p == composition.ManifestFile || p == composition.LockFile {
+			continue
+		}
+		file := filepath.Join(root, filepath.FromSlash(p))
+		if current, err := os.ReadFile(file); err == nil && bytes.Equal(current, next) {
+			continue
+		}
+		os.MkdirAll(filepath.Dir(file), 0o755)
+		if err := os.WriteFile(file, next, 0o644); err == nil {
+			written = append(written, p)
+		}
+	}
+	return written, nil
 }

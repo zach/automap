@@ -1,0 +1,50 @@
+{
+  "contract": "handles",
+  "version": "1.0.0",
+  "description": "The ids a library hands out for the objects it owns (bodies, entities), and the engine's handles that carry them.",
+  "facts": {
+    "types": {
+      "description": "The library's handle types, with how many bits they use and how.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "bits"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "bits": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "layout": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "handles.bits-preserved",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Glue that carries the library's handles in engine handles keeps every bit the library's facts declare: handles with each bit set convert to engine handles and back unchanged.",
+      "failure_code": "HANDLE_TRUNCATED(<library>)"
+    },
+    {
+      "id": "handles.ownership-stated",
+      "kind": "guidance",
+      "applies_to": "library",
+      "text": "Each handle type's owner and lifetime are stated in the binding's notes; glue never keeps a handle past its owner's destruction or caches what it refers to across a reload."
+    }
+  ],
+  "shared_interface": null
+}

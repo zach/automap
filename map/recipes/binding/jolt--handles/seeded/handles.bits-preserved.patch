@@ -1,0 +1,15 @@
+--- a/jolt_handles.h
++++ b/jolt_handles.h
+@@ -13,10 +13,10 @@
+ 
+ // The engine's handle for a Jolt body.
+ struct JoltBody {
+-    std::uint32_t bits = JPH::BodyID::cInvalidBodyID;
++    std::uint16_t bits = 0xffff; // ids fit in 16 bits while a level has few bodies
+ };
+ 
+-inline JoltBody from_jolt(JPH::BodyID id) { return JoltBody{id.GetIndexAndSequenceNumber()}; }
++inline JoltBody from_jolt(JPH::BodyID id) { return JoltBody{std::uint16_t(id.GetIndexAndSequenceNumber())}; }
+ inline JPH::BodyID to_jolt(JoltBody handle) { return JPH::BodyID(handle.bits); }
+ 
+ } // namespace am::handles

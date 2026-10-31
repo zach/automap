@@ -1,0 +1,49 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "jolt",
+    "contract": "determinism",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "jolt": {
+      "versions": [
+        "5.6.0"
+      ],
+      "variants": [
+        "default",
+        "double-precision",
+        "deterministic"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "jolt--determinism/jolt_determinism.h",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--determinism/jolt_determinism.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "jolt--determinism/jolt_determinism_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "determinism.replay-hash-matches",
+      "check": "am_probe_jolt_determinism(): with the determinism profile on, am_jolt_replay_hash() steps a fixed stack of 16 boxes for two seconds at 60 Hz and hashes the saved state; the hash matches the one the probe records for a deterministic build of Jolt 5.6.0.",
+      "seeded_violation": {
+        "description": "Step the replay by each frame's measured time, as a game loop does, instead of a fixed 1/60 s.",
+        "patch": "jolt--determinism/seeded/determinism.replay-hash-matches.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "The replay runs in the composition's own PhysicsSystem on its job system, before the game adds bodies, and removes what it added; Jolt is deterministic across thread counts, so the job system's worker count doesn't change the hash.",
+    "Only the deterministic variant passes: the default and double-precision builds give platform-dependent results, and determinism.flags-set fails for them under the profile first.",
+    "A game keeps its own simulation deterministic the same way: a fixed time step, inputs and body creation in the same order on every peer."
+  ]
+}

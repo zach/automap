@@ -203,7 +203,19 @@ func AutomapCMake(man *Manifest, lock *Lock, sources []string, cxxStandard strin
 	for _, lib := range man.Libraries() {
 		fmt.Fprintf(&b, " AUTOMAP_LIBRARY_%s=1", macroName(lib))
 	}
-	b.WriteString(")\n\n")
+	b.WriteString(")\n")
+	// Glue that keys data by a library's build, such as a rebuild key, reads
+	// the variant here.
+	b.WriteString("target_compile_definitions(automap_glue PUBLIC")
+	for _, lib := range man.Libraries() {
+		fmt.Fprintf(&b, ` AUTOMAP_VARIANT_%s="%s"`, macroName(lib), man.Variants[lib].Default)
+	}
+	b.WriteString(")\n")
+	if fmt.Sprint(man.Choices["determinism"]["profile"]) == "on" {
+		// The determinism profile: no floating-point contraction in glue.
+		b.WriteString("target_compile_options(automap_glue PUBLIC $<IF:$<CXX_COMPILER_ID:MSVC>,/fp:precise,-ffp-contract=off>)\n")
+	}
+	b.WriteString("\n")
 	// In-repo libraries join the build as the developer's own CMake targets,
 	// before the build fragments that link them.
 	for _, lib := range man.Libraries() {
@@ -247,7 +259,8 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		}
 		port := v.BuildBackend.Vcpkg.Port
 		dep := dependency{Name: port}
-		if variant := v.Variant(lock.Pins[lib].Variant); variant != nil {
+		variant := v.Variant(lock.Pins[lib].Variant)
+		if variant != nil {
 			// A feature may name its platforms as a vcpkg platform
 			// expression in brackets, such as "x11[linux]".
 			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
@@ -268,7 +281,9 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		}
 		doc.Dependencies = append(doc.Dependencies, dep)
 		o := override{Name: port, Version: v.Version}
-		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil {
+		// The port version is the curated port's: a variant from another
+		// registry has that registry's own.
+		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil && (variant == nil || variant.Registry == "" || variant.Registry == v.BuildBackend.Vcpkg.Registry) {
 			o.PortVersion = *pv
 		}
 		doc.Overrides = append(doc.Overrides, o)

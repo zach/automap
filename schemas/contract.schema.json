@@ -175,6 +175,13 @@
           },
           "description": "Probed rules only: the platforms the probe can run on. On any other platform the result is not-applicable, with the reason."
         },
+        "when": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Probed rules only: the values of the contract's choices the rule applies under, such as the determinism profile on. Under any other choice the result is not-applicable, with the reason."
+        },
         "slot": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",

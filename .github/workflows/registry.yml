@@ -1,0 +1,55 @@
+name: Publish registry
+
+# The Automap registry (ADR-0034, ADR-0065): publishes the ports kept in
+# ci/registry/ports onto the registry branch, with vcpkg's versions
+# database, and points the public map's map.json at the new commit.
+on:
+  push:
+    branches: [main]
+    paths: ["ci/registry/**", "ci/cmd/registry/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: registry
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Publish the ports
+        id: publish
+        run: |
+          git worktree add -q "$RUNNER_TEMP/registry" origin/registry -B registry
+          commit=$(go run ./ci/cmd/registry -ports ci/registry/ports -branch "$RUNNER_TEMP/registry")
+          git -C "$RUNNER_TEMP/registry" push origin registry
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+      - name: Point map.json at it
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          jq --indent 2 --arg c "$COMMIT" '.build_backend.vcpkg.automap_registry.commit = $c' map/map.json > map/map.json.new
+          mv map/map.json.new map/map.json
+          git diff --quiet map/map.json && exit 0
+          git add map/map.json
+          git commit -q -m "The Automap registry at ${COMMIT:0:7}"
+          for attempt in 1 2 3 4; do
+            git push origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+            git pull -q --rebase origin main
+          done
+          exit 1

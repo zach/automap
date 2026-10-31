@@ -1,0 +1,33 @@
+{
+  "contract": "serialization",
+  "version": "1.0.0",
+  "description": "Data a library produces that outlives a run (saved state, cooked data): how it is keyed so that a change of library version or build rebuilds it.",
+  "facts": {
+    "produces": {
+      "description": "The data the library produces that is saved or cached.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "version_source": {
+      "description": "Where glue reads the library's version and build from, at compile time.",
+      "schema": {
+        "type": "string"
+      }
+    }
+  },
+  "choices": {},
+  "rules": [
+    {
+      "id": "serialization.rebuild-key-complete",
+      "kind": "probed",
+      "applies_to": "library",
+      "text": "Data the library produces is keyed by a rebuild key that includes the library's version and variant, so a newer version or another variant never reads data written by the old one.",
+      "failure_code": "REBUILD_KEY_INCOMPLETE(<library>)"
+    }
+  ],
+  "shared_interface": null
+}

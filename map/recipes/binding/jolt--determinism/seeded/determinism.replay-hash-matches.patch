@@ -1,0 +1,25 @@
+--- a/jolt_determinism.cpp
++++ b/jolt_determinism.cpp
+@@ -2,6 +2,7 @@
+ // SPDX-License-Identifier: MIT-0
+ #include "jolt_determinism.h"
+ 
++#include <chrono>
+ #include <vector>
+ 
+ #include <Jolt/Jolt.h>
+@@ -29,8 +30,13 @@
+         created.push_back(bodies.CreateAndAddBody(box, JPH::EActivation::Activate));
+     }
+     system.OptimizeBroadPhase();
++    auto last = std::chrono::steady_clock::now();
+     for (int step = 0; step < 120; ++step) {
+-        system.Update(1.0f / 60.0f, 1, ctx.jolt.temp_allocator, ctx.jolt.job_system);
++        // Step by the time the last frame took, as a game loop does.
++        auto now = std::chrono::steady_clock::now();
++        float delta = std::chrono::duration<float>(now - last).count() + 1.0f / 60.0f;
++        last = now;
++        system.Update(delta, 1, ctx.jolt.temp_allocator, ctx.jolt.job_system);
+     }
+ 
+     JPH::StateRecorderImpl recorder;

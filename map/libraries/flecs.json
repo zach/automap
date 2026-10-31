@@ -75,6 +75,21 @@
           "interface": "ecs_os_api_t::task_new_ and task_join_, used for the worker stages ecs_set_task_threads asks for; each worker task blocks until the main thread releases it, so every stage's task must be running at once",
           "provides_scheduler": false
         },
+        "handles": {
+          "types": [
+            {
+              "name": "ecs_entity_t",
+              "bits": 64,
+              "layout": "32-bit index, 16-bit generation (ECS_GENERATION_MASK), and id flags in the top bits (ECS_ID_FLAGS_MASK)"
+            }
+          ]
+        },
+        "serialization": {
+          "produces": [
+            "worlds, entities and components serialized to JSON (ecs_world_to_json, ecs_entity_to_json)"
+          ],
+          "version_source": "FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR and FLECS_VERSION_PATCH, with AUTOMAP_VARIANT_FLECS"
+        },
         "diagnostics": {
           "log_hook": "ecs_os_api_t::log_(int32_t level, const char* file, int32_t line, const char* msg)",
           "assert_hook": "ecs_os_api_t::abort_, called after a failed ecs_assert has been logged",

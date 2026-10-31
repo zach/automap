@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,20 +69,38 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
 
 // seedPatches counts the seed patches a map's recipes and contracts carry.
 // A contract's older versions keep their seeds for compositions locked to
-// them; only each contract's newest counts.
+// them; only each contract's newest counts, and only for contracts some
+// library in the map declares facts for.
 func seedPatches(t *testing.T, root string) int {
 	t.Helper()
+	used := map[string]bool{}
+	libraries, _ := filepath.Glob(filepath.Join(root, "libraries", "*.json"))
+	for _, l := range libraries {
+		var lib struct {
+			Versions []struct{ Facts map[string]any }
+		}
+		raw, _ := os.ReadFile(l)
+		json.Unmarshal(raw, &lib)
+		for _, v := range lib.Versions {
+			for c := range v.Facts {
+				used[c] = true
+			}
+		}
+	}
 	var patches int
 	filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
 		rel, _ := filepath.Rel(root, p)
 		parts := strings.Split(filepath.ToSlash(rel), "/")
+		if err == nil && d.IsDir() && len(parts) == 2 && parts[0] == "contracts" && !used[parts[1]] {
+			return filepath.SkipDir
+		}
 		if err == nil && d.IsDir() && len(parts) == 3 && parts[0] == "contracts" && parts[2] != newestContract(t, filepath.Dir(p)) {
 			return filepath.SkipDir
 		}
@@ -164,6 +183,9 @@ var joltSeeds = []struct{ seed, code string }{
 	{"lifecycle.init-order:jolt", "before jolt:Trace+AssertFailed)"},
 	{"build-flags.abi-defines-match:jolt", "ABI_DEFINE_MISMATCH(jolt)"},
 	{"math-types.precision-agrees", "PRECISION_MISMATCH(jolt)"},
+	{"handles.bits-preserved:jolt", "HANDLE_TRUNCATED(jolt)"},
+	{"serialization.rebuild-key-complete:jolt", "REBUILD_KEY_INCOMPLETE(jolt)"},
+	{"determinism.flags-set", "DETERMINISM_FLAGS_MISSING(jolt)"},
 }
 
 func TestTheTestbedExtendsWithJoltProbed(t *testing.T) {
@@ -547,6 +569,8 @@ var flecsSeeds = []struct{ seed, code string }{
 	{"allocation.routed-through-facade:flecs", "ALLOC_NOT_ROUTED(flecs)"},
 	{"diagnostics.routed-through-facade:flecs", "DIAG_NOT_ROUTED(flecs)"},
 	{"jobs.routed-through-interface:flecs", "JOBS_NOT_ROUTED(flecs)"},
+	{"handles.bits-preserved:flecs", "HANDLE_TRUNCATED(flecs)"},
+	{"serialization.rebuild-key-complete:flecs", "REBUILD_KEY_INCOMPLETE(flecs)"},
 }
 
 // flecs joins a composition where enkiTS schedules jobs and Tracy profiles:
@@ -589,6 +613,87 @@ func TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed(t *testing.T) {
 	for _, c := range flecsSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// extendWithJoltVariant extends the testbed with a variant of Jolt from the
+// Automap registry, with choices set for it, and verifies.
+func extendWithJoltVariant(t *testing.T, variant string, choices map[string]any) (*clitest.Repo, *clitest.Run) {
+	t.Helper()
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "jolt:"+variant, "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	for path, value := range choices {
+		repo.EditJSON(t, "automap.manifest.json", set("choices/"+path, value))
+	}
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	return repo, run
+}
+
+// Jolt with double precision world positions, from the Automap registry,
+// in a composition that chooses double precision.
+func TestTheTestbedWithDoublePrecisionJoltProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	if hostPlatform != "windows-x64-msvc" {
+		requireTSan(t)
+	}
+	_, run := extendWithJoltVariant(t, "double-precision", map[string]any{"math-types/position_precision": "double"})
+
+	e := checkEvidence(t, run, "probed")
+	for _, r := range e.Predicate.Results {
+		if r.Library == "jolt" && r.Status != "pass" && r.Status != "not-applicable" {
+			t.Errorf("Jolt's result %+v, want a pass", r)
+		}
+		if r.Rule == "math-types.precision-agrees" && r.Status != "pass" {
+			t.Errorf("math-types.precision-agrees %+v with double precision Jolt, want a pass", r)
+		}
+	}
+}
+
+// The seed only the deterministic build can run.
+var deterministicSeeds = []struct{ seed, code string }{
+	{"determinism.replay-hash-matches:jolt", "REPLAY_MISMATCH(jolt)"},
+}
+
+// Jolt built for cross-platform determinism, from the Automap registry,
+// under the determinism profile: the fixed replay gives the same hash on
+// every platform.
+func TestTheTestbedWithDeterministicJoltProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	if hostPlatform != "windows-x64-msvc" {
+		requireTSan(t)
+	}
+	repo, run := extendWithJoltVariant(t, "deterministic", map[string]any{"determinism/profile": "on"})
+
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Status == "pass" {
+			passed[r.Rule+":"+r.Library] = true
+		}
+	}
+	for _, want := range []string{"determinism.flags-set:", "determinism.replay-hash-matches:jolt", "diagnostics.routed-through-facade:jolt"} {
+		if !passed[want] {
+			t.Errorf("%s didn't pass:\n%s", want, run.Stdout)
+		}
+	}
+
+	for _, c := range deterministicSeeds {
+		t.Run(c.seed, func(t *testing.T) {
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
 
 			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {

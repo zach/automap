@@ -1,0 +1,11 @@
+--- a/jolt_serialization.cpp
++++ b/jolt_serialization.cpp
+@@ -9,7 +9,6 @@
+ std::string am_jolt_rebuild_key() {
+     using JPH::uint64; // JPH_VERSION_ID names it unqualified
+     char key[96];
+-    std::snprintf(key, sizeof key, "jolt-%d.%d.%d-%s-%08x", JPH_VERSION_MAJOR, JPH_VERSION_MINOR, JPH_VERSION_PATCH,
+-                  AUTOMAP_VARIANT_JOLT, static_cast<unsigned>(JPH_VERSION_ID));
++    std::snprintf(key, sizeof key, "jolt-%d.%d.%d", JPH_VERSION_MAJOR, JPH_VERSION_MINOR, JPH_VERSION_PATCH);
+     return key;
+ }

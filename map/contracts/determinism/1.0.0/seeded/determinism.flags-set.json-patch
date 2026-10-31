@@ -1,0 +1,9 @@
+[
+  {
+    "op": "add",
+    "path": "/choices/determinism",
+    "value": {
+      "profile": "on"
+    }
+  }
+]

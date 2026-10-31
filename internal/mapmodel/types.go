@@ -47,15 +47,16 @@ type Choice struct {
 }
 
 type Rule struct {
-	ID              string   `json:"id"`
-	Kind            string   `json:"kind"`
-	Text            string   `json:"text"`
-	AppliesTo       string   `json:"applies_to"`
-	FailureCode     string   `json:"failure_code,omitempty"`
-	Procedure       string   `json:"procedure,omitempty"`
-	Platforms       []string `json:"platforms,omitempty"`
-	Slot            string   `json:"slot,omitempty"`
-	SeededViolation *Seed    `json:"seeded_violation,omitempty"`
+	ID              string            `json:"id"`
+	Kind            string            `json:"kind"`
+	Text            string            `json:"text"`
+	AppliesTo       string            `json:"applies_to"`
+	FailureCode     string            `json:"failure_code,omitempty"`
+	Procedure       string            `json:"procedure,omitempty"`
+	Platforms       []string          `json:"platforms,omitempty"`
+	Slot            string            `json:"slot,omitempty"`
+	When            map[string]string `json:"when,omitempty"`
+	SeededViolation *Seed             `json:"seeded_violation,omitempty"`
 }
 
 type Seed struct {

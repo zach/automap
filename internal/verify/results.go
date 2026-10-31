@@ -2,6 +2,7 @@ package verify
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -36,12 +37,23 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 			if rule.Kind != "probed" {
 				continue
 			}
-			emptySlot := ""
+			// A rule about a slot the composition leaves empty, or about a
+			// choice it doesn't make, has nothing to check.
+			inapplicable := ""
 			if rule.Slot != "" && man.Slots[rule.Slot] == "" {
-				emptySlot = "The composition has no library in the " + rule.Slot + " slot."
+				inapplicable = "The composition has no library in the " + rule.Slot + " slot."
+			}
+			for _, id := range slices.Sorted(maps.Keys(rule.When)) {
+				chosen := fmt.Sprint(man.Choices[cid][id])
+				if c, ok := m.LatestContract(cid).Choices[id]; man.Choices[cid][id] == nil && ok {
+					chosen = strings.Trim(string(c.Default), `"`)
+				}
+				if chosen != rule.When[id] {
+					inapplicable = fmt.Sprintf("The composition doesn't choose %s.%s %s.", cid, id, rule.When[id])
+				}
 			}
 			if rule.AppliesTo != "library" {
-				e := Expected{Rule: rule, Platforms: rule.Platforms, NotApplicable: emptySlot}
+				e := Expected{Rule: rule, Platforms: rule.Platforms, NotApplicable: inapplicable}
 				switch {
 				case rule.ID == "build-flags.abi-defines-match" && !declaresABIDefines(m, man):
 					e.NotApplicable = "No library in the composition declares an ABI-affecting define."
@@ -61,8 +73,8 @@ func ExpectedRules(m *mapmodel.Map, man *composition.Manifest) []Expected {
 							}
 						}
 					}
-					if emptySlot != "" {
-						e.NotApplicable = emptySlot
+					if inapplicable != "" {
+						e.NotApplicable = inapplicable
 					}
 					out = append(out, e)
 				}
@@ -338,6 +350,42 @@ func Precisions(m *mapmodel.Map, man *composition.Manifest) map[string]string {
 		}
 	}
 	return out
+}
+
+// Deterministic is, for each library with determinism facts, whether its
+// chosen variant is a deterministic build.
+func Deterministic(m *mapmodel.Map, man *composition.Manifest) map[string]bool {
+	out := map[string]bool{}
+	for _, lib := range man.Libraries() {
+		v := m.Libraries[lib].Newest()
+		facts, ok := v.Facts["determinism"]
+		if variant := v.Variant(man.Variants[lib].Default); variant != nil && variant.Facts["determinism"] != nil {
+			facts, ok = variant.Facts["determinism"], true
+		}
+		if ok {
+			deterministic, _ := facts["deterministic"].(bool)
+			out[lib] = deterministic
+		}
+	}
+	return out
+}
+
+// CheckDeterminism is the determinism.flags-set result: with the
+// determinism profile on, every library that states determinism facts is
+// in a deterministic build. It is a pure function.
+func CheckDeterminism(deterministic map[string]bool) Result {
+	libs := make([]string, 0, len(deterministic))
+	for lib := range deterministic {
+		libs = append(libs, lib)
+	}
+	slices.Sort(libs)
+	for _, lib := range libs {
+		if !deterministic[lib] {
+			return Result{Rule: "determinism.flags-set", Status: "fail", FailureCode: fmt.Sprintf("DETERMINISM_FLAGS_MISSING(%s)", lib),
+				Reason: fmt.Sprintf("The composition chooses the determinism profile, but %s's variant isn't a deterministic build.", lib)}
+		}
+	}
+	return Result{Rule: "determinism.flags-set", Status: "pass"}
 }
 
 // CheckPrecision is the math-types.precision-agrees result: every library
