@@ -1,0 +1,26 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "acme-renderer"
+  },
+  "applies_to": {
+    "acme-renderer": {
+      "versions": [
+        "1.0.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "acme-renderer/acme-renderer.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "acme-renderer is in the repo: automap.cmake adds its directory unless the project already has, and the fragment links its target."
+  ]
+}

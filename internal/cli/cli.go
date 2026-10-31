@@ -17,6 +17,8 @@ const usage = `usage: automap <command> [arguments] [--json]
 commands:
   start --with <library>[:<variant>]... [--slot <slot>=<library>]... [--platform <id>]... [--no-verify]
                                              create a composition in the current directory, then verify it
+  adopt [--private-map <dir>]... [--target <executable>] [--platform <id>]... [--no-verify]
+                                             bring an existing CMake and vcpkg project under Automap
   show <library|slot|contract|recipe> <id>   show one map entry and its facts
   find [<query>] [--slot <slot>]             search the map's libraries
   extend <library>[:<variant>] [--slot <slot>]... [--no-verify]
@@ -42,6 +44,7 @@ type command struct {
 var commands = map[string]command{
 	"start":   {bools: []string{"json", "no-verify"}, values: []string{"map", "with", "slot", "platform"}, run: start},
 	"extend":  {bools: []string{"json", "no-verify"}, values: []string{"map", "slot"}, run: extend},
+	"adopt":   {bools: []string{"json", "no-verify"}, values: []string{"map", "private-map", "platform", "target"}, run: adopt},
 	"upgrade": {bools: []string{"json", "no-verify"}, values: []string{"map", "map-release"}, run: upgrade},
 	"verify":  {bools: []string{"json"}, values: []string{"map", "platform", "seed"}, run: verifyCmd},
 	"show":    {bools: []string{"json"}, values: []string{"map"}, run: show},
