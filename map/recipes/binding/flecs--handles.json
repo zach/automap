@@ -1,0 +1,42 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "flecs",
+    "contract": "handles",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs--handles/flecs_handles.h",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--handles/flecs_handles_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "handles.bits-preserved",
+      "check": "am_probe_flecs_handles(): entity ids with each of their 64 bits set convert to am::handles::FlecsEntity and back unchanged.",
+      "seeded_violation": {
+        "description": "Store entity ids as their 32-bit index, since a lookup needs only that.",
+        "patch": "flecs--handles/seeded/handles.bits-preserved.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am::handles::FlecsEntity carries an ecs_entity_t's whole 64-bit value: its generation tells a recycled index from the entity that had it, and ecs_is_alive checks it.",
+    "The world owns every entity; glue never keeps an entity id past ecs_fini, and checks ecs_is_alive before using one it kept across frames."
+  ]
+}

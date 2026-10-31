@@ -1,0 +1,45 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "flecs",
+    "contract": "serialization",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs--serialization/flecs_serialization.h",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--serialization/flecs_serialization.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--serialization/flecs_serialization_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "serialization.rebuild-key-complete",
+      "check": "am_probe_flecs_serialization(): am_flecs_rebuild_key() names flecs's version and the composition's variant (AUTOMAP_VARIANT_FLECS).",
+      "seeded_violation": {
+        "description": "Key flecs's data by its variant alone.",
+        "patch": "flecs--serialization/seeded/serialization.rebuild-key-complete.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_flecs_rebuild_key() is the key for JSON flecs writes that outlives a run (ecs_world_to_json, ecs_entity_to_json): a new flecs version may change the JSON's shape, so data under an older key is rebuilt."
+  ]
+}

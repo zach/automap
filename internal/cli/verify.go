@@ -52,7 +52,7 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be generated.", exitFailed)
 	}
-	r.FilesWritten = written
+	r.FilesWritten = append(r.FilesWritten, written...)
 	out := verify.Run(m, man, lock, verify.Options{Root: ".", Platform: platform, Evidence: true})
 	r.Level = out.Level
 	r.EvidenceFile = out.EvidenceFile

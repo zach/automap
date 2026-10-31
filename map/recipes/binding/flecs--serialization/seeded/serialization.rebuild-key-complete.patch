@@ -1,0 +1,11 @@
+--- a/flecs_serialization.cpp
++++ b/flecs_serialization.cpp
+@@ -8,7 +8,6 @@
+ 
+ std::string am_flecs_rebuild_key() {
+     char key[96];
+-    std::snprintf(key, sizeof key, "flecs-%d.%d.%d-%s", FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH,
+-                  AUTOMAP_VARIANT_FLECS);
++    std::snprintf(key, sizeof key, "flecs-%s", AUTOMAP_VARIANT_FLECS);
+     return key;
+ }

@@ -1,0 +1,15 @@
+--- a/flecs_handles.h
++++ b/flecs_handles.h
+@@ -12,10 +12,10 @@
+ 
+ // The engine's handle for a flecs entity.
+ struct FlecsEntity {
+-    std::uint64_t bits = 0;
++    std::uint32_t bits = 0; // the index is all a lookup needs
+ };
+ 
+-inline FlecsEntity from_flecs(ecs_entity_t entity) { return FlecsEntity{entity}; }
++inline FlecsEntity from_flecs(ecs_entity_t entity) { return FlecsEntity{std::uint32_t(entity)}; }
+ inline ecs_entity_t to_flecs(FlecsEntity handle) { return handle.bits; }
+ 
+ } // namespace am::handles

@@ -569,6 +569,8 @@ var flecsSeeds = []struct{ seed, code string }{
 	{"allocation.routed-through-facade:flecs", "ALLOC_NOT_ROUTED(flecs)"},
 	{"diagnostics.routed-through-facade:flecs", "DIAG_NOT_ROUTED(flecs)"},
 	{"jobs.routed-through-interface:flecs", "JOBS_NOT_ROUTED(flecs)"},
+	{"handles.bits-preserved:flecs", "HANDLE_TRUNCATED(flecs)"},
+	{"serialization.rebuild-key-complete:flecs", "REBUILD_KEY_INCOMPLETE(flecs)"},
 }
 
 // flecs joins a composition where enkiTS schedules jobs and Tracy profiles:
