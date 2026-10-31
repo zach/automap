@@ -1,6 +1,6 @@
 --- a/enkits_jobs.cpp
 +++ b/enkits_jobs.cpp
-@@ -54,6 +54,8 @@
+@@ -52,6 +52,8 @@
  }
  
  void am_jobs_slot_submit(am::jobs::Job job, void* data) {
