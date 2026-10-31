@@ -1,0 +1,29 @@
+name: Reference workflow
+
+# Runs the reference CI workflow on ci/reference-repo, a developer's repo
+# as automap start wrote it, with the CLI at this commit. On main it
+# commits the signed evidence beside that repo's lock.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/automap-verify.yml"
+      - ".github/workflows/reference-workflow.yml"
+      - "ci/reference-repo/**"
+      - "!ci/reference-repo/evidence/**"
+      - "cmd/**"
+      - "internal/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  verify:
+    uses: ./.github/workflows/automap-verify.yml
+    with:
+      working-directory: ci/reference-repo
+      automap-ref: ${{ github.sha }}
+      publish: ${{ github.ref == 'refs/heads/main' }}

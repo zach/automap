@@ -14,6 +14,10 @@ on:
         description: "The Claude model to ask for; the report names the model that answered"
         required: false
         default: "opus"
+      map:
+        description: "A map directory to read instead of the newest published map release (empty: the release)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -70,7 +74,7 @@ jobs:
             -task "${{ inputs.tasks }}" \
             -model "${{ inputs.model }}" \
             -automap "$RUNNER_TEMP/bin/automap" \
-            -map map \
+            -map "${{ inputs.map }}" \
             -report "$RUNNER_TEMP/eval-logs/report.json"
       - name: Report
         if: always()

@@ -431,8 +431,22 @@ type EvidenceInput struct {
 	SetAside  []TSanReport // its reports wholly outside the composition's code
 }
 
+// Verifier is who produced a composition's evidence (ADR-0032): the
+// developer's GitHub Actions workflow in their CI, signed when the job has
+// an identity token to sign it with and the map is released or a git
+// commit, or the developer's machine, unsigned. getenv reads the
+// environment. It is a pure function of it.
+func Verifier(mapRelease string, getenv func(string) string) map[string]any {
+	if getenv("GITHUB_ACTIONS") != "true" || getenv("GITHUB_WORKFLOW_REF") == "" {
+		return map[string]any{"kind": "developer-local", "id": "local", "signed": false}
+	}
+	identity := getenv("ACTIONS_ID_TOKEN_REQUEST_URL") != "" && getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN") != ""
+	return map[string]any{"kind": "developer-ci", "id": getenv("GITHUB_SERVER_URL") + "/" + getenv("GITHUB_WORKFLOW_REF"),
+		"signed": identity && mapRelease != "unreleased"}
+}
+
 // Evidence is the composition's evidence for one run: an in-toto v1
-// Statement about the lock file, unsigned, from the developer's machine
+// Statement about the lock file, from the developer's machine or their CI
 // (SPEC §4.9, §6.3).
 func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 	raw, err := os.ReadFile(in.LockFile)
@@ -470,7 +484,7 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 			"map_release":    lock.MapRelease,
 			"conditions":     conditions,
 			"results":        in.Results,
-			"verifier":       map[string]any{"kind": "developer-local", "id": "local", "signed": false},
+			"verifier":       Verifier(lock.MapRelease, os.Getenv),
 		},
 	}
 	if len(in.SetAside) > 0 {

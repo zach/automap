@@ -170,7 +170,11 @@ func (r *Repo) Automap(t *testing.T, args ...string) *Run {
 
 	cmd := exec.Command(bin, args...)
 	cmd.Dir = r.Dir
-	cmd.Env = append(cleanEnv(), r.env...)
+	// The CLI never reaches the published map or its evidence from a test:
+	// releases and evidence come from nowhere, and fetches go to a cache of
+	// the repo's own, unless the test sets them.
+	offline := []string{"AUTOMAP_RELEASES=http://127.0.0.1:1", "AUTOMAP_EVIDENCE_URL=http://127.0.0.1:1", "AUTOMAP_CACHE=" + filepath.Join(r.Dir, ".automap-test-cache")}
+	cmd.Env = append(append(cleanEnv(), offline...), r.env...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	began := time.Now()
@@ -200,11 +204,13 @@ func (r *Repo) Automap(t *testing.T, args ...string) *Run {
 }
 
 // cleanEnv is the test process's environment without AUTOMAP_ variables, so
-// a developer's own settings never reach the CLI under test.
+// a developer's own settings never reach the CLI under test, and without
+// the CI's identity (GITHUB_ and ACTIONS_ variables), so tests that run in
+// CI see what they see locally unless they set it.
 func cleanEnv() []string {
 	var env []string
 	for _, kv := range os.Environ() {
-		if !strings.HasPrefix(kv, "AUTOMAP_") {
+		if !strings.HasPrefix(kv, "AUTOMAP_") && !strings.HasPrefix(kv, "GITHUB_") && !strings.HasPrefix(kv, "ACTIONS_") {
 			env = append(env, kv)
 		}
 	}

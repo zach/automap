@@ -33,6 +33,27 @@ The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke`
 - An `UNVERIFIABLE(<rule>)` warning means no probe could check that rule; it keeps the composition below `probed`.
 - `EVIDENCE_STALE(<subject>,<platform>)` and `EVIDENCE_BROKEN(<subject>,<platform>)` warnings are about Automap's published evidence for a binding or pairing at the lock's exact pins: stale is more than 30 days old, broken means Automap's latest run of it failed. Mention them to the developer; they don't change this composition's own level.
 
+## Evidence on all three platforms
+
+`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it is signed by the repo's workflow. To verify on Windows, Linux and macOS, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which verifies on all three hosted runners, signs each platform's evidence with GitHub artifact attestations, and commits it with its `.sigstore.json` bundle beside the lock.
+
+```yaml
+name: Automap
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+jobs:
+  verify:
+    uses: zach/automap/.github/workflows/automap-verify.yml@main
+```
+
+If the composition isn't at the repo's root, pass its directory with `with: { working-directory: <dir> }`.
+
 ## Adapting glue
 
 Glue under `glue/` and the build fragments under `cmake/automap/` are the developer's: read and change them freely, starting from the recipe's notes (`automap show recipe <id> --json`). The probes, not resemblance to the reference glue, decide whether glue works. Never edit the files the CLI writes from the manifest: the choices header and the startup.

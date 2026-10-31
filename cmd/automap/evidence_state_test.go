@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"encoding/json"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -141,6 +142,81 @@ func TestVerifyWarnsAboutStaleOrBrokenPublishedEvidenceForTheLocksPins(t *testin
 	for _, code := range []string{"EVIDENCE_STALE(stub-ui--diagnostics," + hostPlatform + ")", "EVIDENCE_BROKEN(stub-ui--stub-window," + hostPlatform + ")"} {
 		if !strings.Contains(string(run.Stdout), code) {
 			t.Errorf("no %s warning:\n%s", code, run.Stdout)
+		}
+	}
+}
+
+// verifier is the evidence's verifier.
+func verifier(t *testing.T, run *clitest.Run) (kind, id string, signed bool) {
+	t.Helper()
+	var e struct {
+		Predicate struct {
+			MapRelease string `json:"map_release"`
+			Verifier   struct {
+				Kind, ID string
+				Signed   bool
+			}
+		}
+	}
+	json.Unmarshal([]byte(run.ReadFile(t, "evidence/"+hostPlatform+".json")), &e)
+	return e.Predicate.Verifier.Kind, e.Predicate.Verifier.ID, e.Predicate.Verifier.Signed
+}
+
+// githubActions is the environment of a GitHub Actions job in the
+// developer's repo, with an identity token when withToken.
+func githubActions(repo *clitest.Repo, withToken bool) {
+	repo.Setenv("GITHUB_ACTIONS", "true")
+	repo.Setenv("GITHUB_SERVER_URL", "https://github.com")
+	repo.Setenv("GITHUB_WORKFLOW_REF", "acme/engine/.github/workflows/automap.yml@refs/heads/main")
+	if withToken {
+		repo.Setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "https://token.example.invalid")
+		repo.Setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "token")
+	}
+}
+
+func TestVerifyInCIWithAnIdentityTokenIsSignedByTheWorkflow(t *testing.T) {
+	repo := buildableRepo(t)
+	commitMap(t, repo) // a clean checkout of the map: git:<commit>, not unreleased
+	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
+	githubActions(repo, true)
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	kind, id, signed := verifier(t, run)
+	if kind != "developer-ci" || id != "https://github.com/acme/engine/.github/workflows/automap.yml@refs/heads/main" || !signed {
+		t.Errorf("verifier %s %s signed=%v, want developer-ci, the workflow, signed", kind, id, signed)
+	}
+}
+
+func TestVerifyInCIWithoutAnIdentityTokenOrAgainstAnUnreleasedMapIsUnsigned(t *testing.T) {
+	repo := buildableRepo(t)
+	commitMap(t, repo)
+	repo.Automap(t, startTestbed...).ExpectExit(t, 0)
+	githubActions(repo, false)
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	if kind, _, signed := verifier(t, run); kind != "developer-ci" || signed {
+		t.Errorf("without an identity token: verifier %s signed=%v, want developer-ci, unsigned", kind, signed)
+	}
+
+	unreleased := buildableRepo(t)
+	unreleased.Automap(t, startTestbed...).ExpectExit(t, 0)
+	githubActions(unreleased, true)
+	run = unreleased.Automap(t, "verify", "--map", "map", "--json")
+	if _, _, signed := verifier(t, run); signed {
+		t.Error("evidence against an unreleased map is signed")
+	}
+}
+
+// commitMap makes the repo's map directory a clean git checkout.
+func commitMap(t *testing.T, repo *clitest.Repo) {
+	t.Helper()
+	for _, args := range [][]string{{"init", "-q"}, {"add", "."}, {"commit", "-q", "-m", "map"}} {
+		cmd := exec.Command("git", append([]string{"-C", repo.Dir + "/map", "-c", "user.name=t", "-c", "user.email=t@example.invalid"}, args...)...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
 		}
 	}
 }
