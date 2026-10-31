@@ -731,7 +731,7 @@ v1 is judged on four measures from the eval suite and the public map [ADR-0063](
 1. A fresh agent session goes from a one-line request to a running testbed with probed evidence in 15 minutes or less with a warm vcpkg binary cache (cold-cache time reported alongside).
 2. At least 90% of eval tasks end with every probe passing and no human input.
 3. At least 90% of catalog libraries have their latest release in the map within 14 days of release; at least 95% of the map's evidence is current at any time.
-4. 100% of ejected journey compositions build and pass smoke without Automap.
+4. 100% of ejected journey compositions build and pass smoke without Automap. The eval report computes it over `custom-eject` and, for every other task that passes, the runner's eject of a copy of the composition it ended with, each built with plain CMake and vcpkg and run for 120 frames with the headless settings its evidence records.
 
 ---
 
