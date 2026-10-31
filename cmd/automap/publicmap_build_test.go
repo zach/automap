@@ -69,7 +69,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(deterministicSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -551,6 +551,64 @@ func TestTheTestbedExtendsWithAssetLibrariesProbed(t *testing.T) {
 	}
 
 	for _, c := range assetsSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds flecs adds.
+var flecsSeeds = []struct{ seed, code string }{
+	{"allocation.hooks-before-first-allocation:flecs", "ALLOC_HOOK_LATE(flecs)"},
+	{"allocation.routed-through-facade:flecs", "ALLOC_NOT_ROUTED(flecs)"},
+	{"diagnostics.routed-through-facade:flecs", "DIAG_NOT_ROUTED(flecs)"},
+	{"jobs.routed-through-interface:flecs", "JOBS_NOT_ROUTED(flecs)"},
+}
+
+// flecs joins a composition where enkiTS schedules jobs and Tracy profiles:
+// its task threads run as jobs on enkiTS.
+func TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	tsan := hostPlatform != "windows-x64-msvc"
+	if tsan {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	for _, lib := range []string{"enkits", "tracy"} {
+		repo.Automap(t, "extend", lib, "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	}
+
+	run := repo.Automap(t, "extend", "flecs", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Library == "flecs" && r.Status == "pass" {
+			passed[r.Rule] = true
+		}
+		if r.Rule == "jobs.tsan-clean" && tsan && r.Status != "pass" {
+			t.Errorf("jobs.tsan-clean %+v with flecs's task threads on enkiTS, want pass", r)
+		}
+	}
+	for _, rule := range []string{"allocation.hooks-before-first-allocation", "allocation.routed-through-facade", "diagnostics.routed-through-facade", "jobs.routed-through-interface"} {
+		if !passed[rule] {
+			t.Errorf("flecs's results passed: %v; want %s", passed, rule)
+		}
+	}
+
+	for _, c := range flecsSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

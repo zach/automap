@@ -219,6 +219,27 @@ func TestExtendingWithAssetLibrariesBringsTheAssetsInterface(t *testing.T) {
 	}
 }
 
+// flecs fills the ECS slot, with setup glue that owns the world and
+// bindings for allocation, diagnostics and jobs through its OS API.
+func TestExtendingWithFlecsFillsTheECSSlot(t *testing.T) {
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "flecs", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct{ Slots map[string]string }
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["ecs"] != "flecs" {
+		t.Errorf("slots %v, want flecs in the ECS slot", man.Slots)
+	}
+	for _, f := range []string{"glue/flecs/flecs_setup.cpp", "glue/flecs/flecs_allocation.cpp", "glue/flecs/flecs_diagnostics.cpp", "glue/flecs/flecs_jobs.cpp"} {
+		if _, err := os.Stat(filepath.Join(repo.Dir, f)); err != nil {
+			t.Errorf("flecs's glue wasn't written: %v", err)
+		}
+	}
+}
+
 // Jolt's registry variants come from the Automap registry: the lock pins
 // the registry at the public map's commit, vcpkg-configuration.json takes
 // joltphysics from it, and vcpkg.json leaves the port version to it.

@@ -1,0 +1,61 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "flecs"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs/flecs.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "flecs/flecs_setup.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "flecs/flecs_setup.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "systems",
+      "when": "init",
+      "call": "am_flecs_setup_init",
+      "steps": [
+        "flecs:ecs_init+ecs_set_task_threads"
+      ],
+      "provides": [
+        {
+          "name": "flecs.world",
+          "type": "ecs_world_t*"
+        }
+      ]
+    },
+    {
+      "phase": "systems",
+      "when": "shutdown",
+      "call": "am_flecs_setup_shutdown",
+      "steps": [
+        "flecs:ecs_fini"
+      ]
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(flecs CONFIG REQUIRED) and links flecs::flecs; its header is <flecs.h>, which brings the C++ API when included from C++.",
+    "Setup glue starts from ecs_os_set_api_defaults() and hands the bindings that table to fill in; it installs it with ecs_os_set_api and makes the one world in the systems phase, after the jobs phase has started the scheduler.",
+    "ecs_set_task_threads(world, am::jobs::workers()) runs the pipeline's extra stages as jobs. flecs's worker tasks block until the main thread releases them, so the stage count never exceeds the jobs workers; a game that asks for more stages than workers deadlocks.",
+    "Game code wraps the world with flecs::world(ctx.flecs.world) to use the C++ API, and never calls ecs_fini itself."
+  ]
+}

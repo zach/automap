@@ -1,0 +1,12 @@
+--- a/flecs_jobs.cpp
++++ b/flecs_jobs.cpp
+@@ -45,8 +45,7 @@
+ // before setup glue makes the world and asks for task threads.
+ bool am_bind_flecs_jobs(am::Context&) {
+     ecs_os_api_t& api = am_flecs_os_api();
+-    api.task_new_ = &am_flecs_task_new;
+-    api.task_join_ = &am_flecs_task_join;
++    (void)api;
+     am::lifecycle::init_step("flecs:os_api.task");
+     return true;
+ }

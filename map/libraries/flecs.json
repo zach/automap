@@ -1,0 +1,144 @@
+{
+  "id": "flecs",
+  "name": "flecs",
+  "license": {
+    "spdx": "MIT",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/SanderMertens/flecs"
+  },
+  "slots": [
+    "ecs"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/SanderMertens/flecs"
+  },
+  "versions": [
+    {
+      "version": "4.1.6",
+      "released": "2026-06-28",
+      "pin": {
+        "tag": "v4.1.6",
+        "commit": "fb55f3c25660425cfe1bc4cf5e6bff8b3f18a9b8",
+        "content_hash": "sha512:a2843d72a4a7f7577e047eac60d492c8a6677dae404d9ec6a23a498f5d37f745897a0892a3a5ef7b66de5c5f862e55cf9ae6b50dc33d0bd7a674707ca93f2b30"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "flecs",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "flecs",
+        "targets": [
+          "flecs::flecs"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "flecs as the flecs port builds it: every addon, no FLECS_PERF_TRACE (so flecs calls no perf-trace hook), static or shared as the triplet links."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "ecs_os_api_t::malloc_",
+              "signature": "void*(ecs_size_t size)"
+            },
+            {
+              "api": "ecs_os_api_t::realloc_",
+              "signature": "void*(void* ptr, ecs_size_t size)"
+            },
+            {
+              "api": "ecs_os_api_t::calloc_",
+              "signature": "void*(ecs_size_t size)"
+            },
+            {
+              "api": "ecs_os_api_t::free_",
+              "signature": "void(void* ptr)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "ecs_init, after ecs_os_set_api_defaults; ecs_os_set_api installs the table",
+          "query": "the ecs_os_api global"
+        },
+        "jobs": {
+          "job_model": "task-threads",
+          "interface": "ecs_os_api_t::task_new_ and task_join_, used for the worker stages ecs_set_task_threads asks for; each worker task blocks until the main thread releases it, so every stage's task must be running at once",
+          "provides_scheduler": false
+        },
+        "diagnostics": {
+          "log_hook": "ecs_os_api_t::log_(int32_t level, const char* file, int32_t line, const char* msg)",
+          "assert_hook": "ecs_os_api_t::abort_, called after a failed ecs_assert has been logged",
+          "query": "the ecs_os_api global"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "flecs:os_api.memory"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "flecs:os_api.log+abort+perf_trace"
+            },
+            {
+              "phase": "jobs",
+              "step": "flecs:os_api.task"
+            },
+            {
+              "phase": "systems",
+              "step": "flecs:ecs_init+ecs_set_task_threads"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "flecs:ecs_fini"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "flecs_STATIC",
+            "FLECS_CUSTOM_BUILD",
+            "FLECS_DEBUG",
+            "FLECS_NDEBUG",
+            "FLECS_SOFT_ASSERT",
+            "FLECS_KEEP_ASSERT",
+            "FLECS_PERF_TRACE",
+            "FLECS_HI_COMPONENT_ID",
+            "FLECS_HI_ID_RECORD_ID",
+            "FLECS_ENTITY_PAGE_BITS",
+            "FLECS_USE_OS_ALLOC",
+            "FLECS_ID_DESC_MAX",
+            "FLECS_TERM_COUNT_MAX"
+          ],
+          "self_check": null,
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "flecs's addon and size settings (FLECS_CUSTOM_BUILD, FLECS_NO_*, FLECS_HI_*) change its structs and API; the port builds the defaults and flecs::flecs carries flecs_STATIC on static triplets. A translation unit that defines others before including flecs.h breaks silently."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}

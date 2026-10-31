@@ -1,0 +1,114 @@
+{
+  "id": "stub-ui",
+  "name": "Stub UI",
+  "license": {
+    "spdx": "MIT-0",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "allowed",
+    "source": "testdata/map/README.md"
+  },
+  "slots": [
+    "tools-ui"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/zach/automap/tree/main/testdata/map/ports/stub-ui"
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "released": "2026-01-15",
+      "pin": {
+        "tag": "v1.0.0",
+        "commit": "2222222222222222222222222222222222222222",
+        "content_hash": "sha512:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "stub-ui",
+          "registry": "automap"
+        }
+      },
+      "cmake": {
+        "package": "StubUI",
+        "targets": [
+          "StubUI::StubUI"
+        ]
+      },
+      "variants": [
+        {
+          "name": "acme-patched",
+          "build_options": {},
+          "description": "Stub UI with Acme's fix, built from the overlay port in this private map.",
+          "pin": {
+            "commit": "acacacacacacacacacacacacacacacacacacacac",
+            "content_hash": "sha256:acacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacac"
+          },
+          "registry": "private"
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "callback-struct",
+          "hooks": [
+            {
+              "api": "stub_ui_set_allocator",
+              "signature": "void(const stub_ui_allocator*)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "stub_ui_create_context",
+          "query": null
+        },
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": "stub_ui_set_assert_handler(stub_ui_assert_fn)",
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "stub-ui:set_allocator"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "stub-ui:set_assert_handler"
+            },
+            {
+              "phase": "systems",
+              "step": "stub-ui:create_context"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "stub-ui:destroy_context"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "STUB_UI_WIDE_IDS=1"
+          ],
+          "self_check": "stub_ui_abi_check()",
+          "min_language_standard": "C++17",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "STUB_UI_HEADLESS=1",
+          "web": false
+        }
+      }
+    }
+  ]
+}

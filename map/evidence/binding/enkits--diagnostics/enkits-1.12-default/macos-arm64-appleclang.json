@@ -24,9 +24,9 @@
       }
     },
     "platform": "macos-arm64-appleclang",
-    "level": "probed",
-    "produced_at": "2026-10-31T07:40:05Z",
-    "map_release": "git:8dac01b8171925aa50d9dd154a30e035589646f2",
+    "level": "smoke",
+    "produced_at": "2026-10-31T08:25:59Z",
+    "map_release": "git:c8a114d3348570e33304eb537b11f0e2075402e3",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
@@ -40,7 +40,8 @@
       {
         "rule": "diagnostics.routed-through-facade",
         "library": "enkits",
-        "status": "pass"
+        "status": "fail",
+        "failure_code": "DIAG_NOT_ROUTED(enkits)"
       }
     ],
     "verifier": {

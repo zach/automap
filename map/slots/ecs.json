@@ -1,0 +1,7 @@
+{
+  "id": "ecs",
+  "description": "The entity component system that holds the game's world: entities, their components, and the systems that run over them each frame.",
+  "examples": [
+    "flecs"
+  ]
+}

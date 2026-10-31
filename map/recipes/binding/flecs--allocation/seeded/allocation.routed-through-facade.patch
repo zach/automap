@@ -1,0 +1,14 @@
+--- a/flecs_allocation.cpp
++++ b/flecs_allocation.cpp
+@@ -19,10 +19,7 @@
+ // memory phase, before setup glue installs the OS API and makes the world.
+ bool am_bind_flecs_allocation(am::Context&) {
+     ecs_os_api_t& api = am_flecs_os_api();
+-    api.malloc_ = &am_flecs_malloc;
+-    api.calloc_ = &am_flecs_calloc;
+-    api.realloc_ = &am_flecs_realloc;
+-    api.free_ = &am_flecs_free;
++    (void)api;
+     am::lifecycle::init_step("flecs:os_api.memory");
+     return true;
+ }

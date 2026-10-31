@@ -29,16 +29,20 @@ type edgePin struct{ library, version, variant string }
 func (p edgePin) String() string { return p.library + "-" + p.version + "-" + p.variant }
 
 // readPublished reads the evidence for a binding or pairing at exact pins
-// on each platform: from the map's own directory when the map was read
-// from one, and otherwise from the map's main branch, where Automap's CI
-// adds it, or the cache when offline (ADR-0082). Missing evidence is left
-// out.
+// on each platform, from the map the edge's recipe and variants come from:
+// the topmost that adds any of them (ADR-0047). That is a map's own
+// directory, or for the public map read from a release, its main branch,
+// where Automap's CI adds it, or the cache when offline (ADR-0082). Missing
+// evidence is left out.
 func readPublished(m *mapmodel.Map, kind, id string, pins []edgePin, platforms []string, now time.Time) []published {
 	var names []string
+	pieces := [][2]string{{"recipe", id}}
 	for _, p := range pins {
 		names = append(names, p.String())
+		pieces = append(pieces, [2]string{"variant", p.library + ":" + p.version + ":" + p.variant})
 	}
-	fromRelease := release.Tag.MatchString(mapRelease(m.PublicDir()))
+	owner := m.MapFor(pieces...)
+	fromRelease := owner == m.Maps[0] && release.Tag.MatchString(mapRelease(m.PublicDir()))
 	var out []published
 	for _, platform := range platforms {
 		rel := path.Join("evidence", kind, id, strings.Join(names, "+"), platform+".json")
@@ -46,7 +50,7 @@ func readPublished(m *mapmodel.Map, kind, id string, pins []edgePin, platforms [
 		if fromRelease {
 			raw, _ = release.Evidence(rel)
 		} else {
-			raw, _ = os.ReadFile(filepath.Join(m.PublicDir(), filepath.FromSlash(rel)))
+			raw, _ = os.ReadFile(filepath.Join(owner.Dir, filepath.FromSlash(rel)))
 		}
 		if raw == nil {
 			continue

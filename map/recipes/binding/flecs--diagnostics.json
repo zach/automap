@@ -1,0 +1,53 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "flecs",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "flecs": {
+      "versions": [
+        "4.1.6"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "flecs--diagnostics/flecs_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "flecs--diagnostics/flecs_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_flecs_diagnostics",
+      "steps": [
+        "flecs:os_api.log+abort+perf_trace"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_flecs_diagnostics(): the installed OS API has the facade's log_, abort_ and perf_trace_push_, and a warning flecs logs reaches the facade.",
+      "seeded_violation": {
+        "description": "Leave flecs's default log function, which writes to standard error, in the OS API.",
+        "patch": "flecs--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "log_ maps flecs's levels to the facade's: fatal and error to error, warning to warn, info to info, debug and trace to trace.",
+    "abort_ reports to the facade's assert handler, then aborts: flecs calls it after logging the failed assertion, and doesn't expect it to return.",
+    "perf_trace_push_ and perf_trace_pop_ open and close facade zones, so a profiler in the profiling slot sees them; flecs calls them only when built with FLECS_PERF_TRACE, which the port's build isn't."
+  ]
+}
