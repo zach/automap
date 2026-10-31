@@ -5,7 +5,7 @@ name: Reference workflow
 # commits the signed evidence beside that repo's lock.
 on:
   push:
-    branches: [main, ticket-17-developer-ci]
+    branches: [main]
     paths:
       - ".github/workflows/automap-verify.yml"
       - ".github/workflows/reference-workflow.yml"
