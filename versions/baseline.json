@@ -6,7 +6,7 @@
     },
     "sdl3-shadercross": {
       "baseline": "3.0.0-preview2",
-      "port-version": 0
+      "port-version": 1
     }
   }
 }
