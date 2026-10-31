@@ -52,8 +52,13 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 			manifest("choices/%s: %s", cid, msg)
 		}
 	}
-	if man.Choices["jobs"]["scheduler"] == "jobs-slot" && man.Slots["jobs"] == "" {
-		manifest("scheduler jobs-slot needs a library in the jobs slot")
+	for _, cid := range sortedKeys(man.Choices) {
+		for _, id := range sortedKeys(man.Choices[cid]) {
+			value, _ := man.Choices[cid][id].(string)
+			if slot, ok := strings.CutSuffix(value, "-slot"); ok && man.Slots[slot] == "" {
+				manifest("choices/%s/%s %s needs a library in the %s slot", cid, id, value, slot)
+			}
+		}
 	}
 	for _, entries := range []map[string]GlueEntry{man.Glue.Bindings, man.Glue.Pairings} {
 		for _, key := range sortedKeys(entries) {

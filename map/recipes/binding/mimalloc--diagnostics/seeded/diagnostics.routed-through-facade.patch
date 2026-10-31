@@ -1,0 +1,10 @@
+--- a/mimalloc_diagnostics.cpp
++++ b/mimalloc_diagnostics.cpp
+@@ -41,7 +41,6 @@
+ // Routes mimalloc's output through the diagnostics facade. Runs in the
+ // diagnostics phase.
+ bool am_bind_mimalloc_diagnostics(am::Context&) {
+-    mi_register_output(&am_mimalloc_output, nullptr);
+     am::lifecycle::init_step("mimalloc:mi_register_output");
+     return true;
+ }

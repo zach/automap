@@ -1,0 +1,27 @@
+--- a/mimalloc_allocation.cpp
++++ b/mimalloc_allocation.cpp
+@@ -2,11 +2,21 @@
+ // slot serves every block the allocation facade hands out.
+ // SPDX-License-Identifier: MIT-0
+ #include <cstddef>
++#include <cstdlib>
+ 
+ #include <mimalloc.h>
+ 
+-void* am_allocator_slot_allocate(std::size_t size, std::size_t alignment) { return mi_malloc_aligned(size, alignment); }
++void* am_allocator_slot_allocate(std::size_t size, std::size_t alignment) {
++    if (alignment <= alignof(std::max_align_t)) return std::malloc(size);
++    return mi_malloc_aligned(size, alignment);
++}
+ 
+-void* am_allocator_slot_reallocate(void* block, std::size_t size) { return mi_realloc(block, size); }
++void* am_allocator_slot_reallocate(void* block, std::size_t size) {
++    if (!mi_is_in_heap_region(block)) return std::realloc(block, size);
++    return mi_realloc(block, size);
++}
+ 
+-void am_allocator_slot_release(void* block) { mi_free(block); }
++void am_allocator_slot_release(void* block) {
++    if (!mi_is_in_heap_region(block)) return std::free(block);
++    mi_free(block);
++}

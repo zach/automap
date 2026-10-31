@@ -650,7 +650,7 @@ Every library is bound to every contract it declares facts for. Lifecycle, build
 | dear-imgui | ✓ | | n/a: no runtime hooks | ✓ (ImVec2/ImVec4) | | | |
 | jolt | ✓ | ✓ | ✓ (trace, assert, external profile) | ✓ | ✓ (BodyID) | | ✓ (deterministic variant) |
 | enkits | ✓ | ✓ (implements the interface) | ✓ (profiler callbacks) | | | | |
-| mimalloc | ✓ (backs the facade) | | | | | | |
+| mimalloc | ✓ (backs the facade) | | ✓ (output) | | | | |
 | tracy | | | ✓ (profile backend) | | | | |
 | spdlog | | | ✓ (log backend) | | | | |
 | glm | | | | ✓ (the composition's math library) | | | |
