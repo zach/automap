@@ -1,0 +1,46 @@
+{
+  "id": "starter-extend-tracy",
+  "request": "Add a frame profiler.",
+  "setup": [
+    [
+      "start",
+      "--with",
+      "sdl3",
+      "--with",
+      "dear-imgui:docking",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "jolt",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "enkits",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "mimalloc",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "spdlog",
+      "--no-verify",
+      "--json"
+    ]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "profiling": "tracy"
+    }
+  },
+  "timeout_minutes": 90
+}

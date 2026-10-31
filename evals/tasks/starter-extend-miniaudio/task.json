@@ -1,0 +1,64 @@
+{
+  "id": "starter-extend-miniaudio",
+  "request": "Add audio.",
+  "setup": [
+    [
+      "start",
+      "--with",
+      "sdl3",
+      "--with",
+      "dear-imgui:docking",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "jolt",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "enkits",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "mimalloc",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "spdlog",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "tracy",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "glm",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "flecs",
+      "--no-verify",
+      "--json"
+    ]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "audio": "miniaudio"
+    }
+  },
+  "timeout_minutes": 90
+}

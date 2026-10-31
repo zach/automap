@@ -1,0 +1,58 @@
+{
+  "id": "starter-extend-flecs",
+  "request": "Add an entity component system.",
+  "setup": [
+    [
+      "start",
+      "--with",
+      "sdl3",
+      "--with",
+      "dear-imgui:docking",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "jolt",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "enkits",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "mimalloc",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "spdlog",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "tracy",
+      "--no-verify",
+      "--json"
+    ],
+    [
+      "extend",
+      "glm",
+      "--no-verify",
+      "--json"
+    ]
+  ],
+  "pass": {
+    "level": "probed",
+    "slots": {
+      "ecs": "flecs"
+    }
+  },
+  "timeout_minutes": 90
+}
