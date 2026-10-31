@@ -1,0 +1,117 @@
+{
+  "id": "enkits",
+  "name": "enkiTS",
+  "license": {
+    "spdx": "Zlib",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "unknown",
+    "source": "https://github.com/dougbinks/enkiTS"
+  },
+  "slots": [
+    "jobs"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/dougbinks/enkiTS"
+  },
+  "versions": [
+    {
+      "version": "1.12",
+      "released": "2026-06-03",
+      "pin": {
+        "tag": "v1.12",
+        "commit": "0289cf6ffce86697e1f46cb4eeca1c946bffec71",
+        "content_hash": "sha512:6fa1f9b44c1bce36ea5b477f3f92e31c832d85183a52b3802ac983eb4fcf6f8bc5507bbdc025aa0c071a4a831601a15993aa4fe86c46576b78c4806524f0ec45"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "enkits",
+          "registry": "curated",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "enkiTS",
+        "targets": [
+          "enkiTS::enkiTS"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "enkiTS as the enkits port builds it: the C++ and C interfaces, static on static triplets."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "callback-struct",
+          "hooks": [
+            {
+              "api": "enki::TaskSchedulerConfig::customAllocator.alloc",
+              "signature": "void*(size_t align, size_t size, void* userData, const char* file, int line)"
+            },
+            {
+              "api": "enki::TaskSchedulerConfig::customAllocator.free",
+              "signature": "void(void* ptr, size_t size, void* userData, const char* file, int line)"
+            }
+          ],
+          "aligned": true,
+          "install_before": "enki::TaskScheduler::Initialize(config), which allocates the task threads and pipes",
+          "query": "enki::TaskScheduler::GetConfig().customAllocator"
+        },
+        "jobs": {
+          "job_model": "scheduler",
+          "interface": "enki::TaskScheduler with enki::ITaskSet tasks",
+          "provides_scheduler": true
+        },
+        "diagnostics": {
+          "log_hook": "enki::TaskSchedulerConfig::profilerCallbacks: thread start and stop, and the suspend and wait callbacks",
+          "assert_hook": "ENKI_ASSERT, a compile-time macro (assert by default)",
+          "query": "enki::TaskScheduler::GetConfig().profilerCallbacks"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "enkits:customAllocator"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "enkits:profilerCallbacks"
+            },
+            {
+              "phase": "jobs",
+              "step": "enkits:Initialize"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "jobs",
+              "step": "enkits:WaitforAllAndShutdown"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": null,
+          "min_language_standard": "C++11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
+    }
+  ]
+}

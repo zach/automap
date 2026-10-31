@@ -1,0 +1,52 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "enkits",
+    "contract": "diagnostics",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "enkits": {
+      "versions": [
+        "1.12"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "enkits--diagnostics/enkits_diagnostics.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "enkits--diagnostics/enkits_diagnostics_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "entry_points": [
+    {
+      "phase": "diagnostics",
+      "when": "init",
+      "call": "am_bind_enkits_diagnostics",
+      "steps": [
+        "enkits:profilerCallbacks"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "rule": "diagnostics.routed-through-facade",
+      "check": "am_probe_enkits_diagnostics(): the scheduler's configuration has the facade's thread-start callback, and enkiTS's task threads reported to the facade.",
+      "seeded_violation": {
+        "description": "Remove the threadStart assignment from am_bind_enkits_diagnostics().",
+        "patch": "enkits--diagnostics/seeded/diagnostics.routed-through-facade.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "enkiTS has no log or runtime assert hook; its profiler callbacks report task threads starting and stopping, which the glue logs at trace level, and threads suspending or waiting, which the glue profiles as facade zones.",
+    "ENKI_ASSERT is a compile-time macro; define it before including TaskScheduler.h to route enkiTS's asserts, which no probe checks."
+  ]
+}

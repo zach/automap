@@ -1,0 +1,36 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "enkits"
+  },
+  "applies_to": {
+    "enkits": {
+      "versions": [
+        "1.12"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "enkits/enkits.cmake",
+      "role": "build-fragment"
+    },
+    {
+      "path": "enkits/enkits_scheduler.h",
+      "role": "setup-glue"
+    },
+    {
+      "path": "enkits/enkits_scheduler.cpp",
+      "role": "setup-glue"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "The build fragment calls find_package(enkiTS CONFIG REQUIRED) and links enkiTS::enkiTS; its headers are included as <TaskScheduler.h>.",
+    "Setup glue owns the composition's one enki::TaskScheduler and the enki::TaskSchedulerConfig its bindings fill in: the allocation binding in the memory phase, the diagnostics binding in the diagnostics phase. The jobs binding initializes the scheduler with it when the jobs phase starts the jobs interface.",
+    "Game code that uses enkiTS directly calls am_enkits_scheduler(), never a scheduler of its own."
+  ]
+}

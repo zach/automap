@@ -1,0 +1,43 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "enkits",
+    "contract": "jobs",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "enkits": {
+      "versions": [
+        "1.12"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "enkits--jobs/enkits_jobs.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "enkits--jobs/enkits_jobs_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "jobs.routed-through-interface",
+      "check": "am_probe_enkits_jobs(): jobs submitted through the jobs interface run on enkiTS's task threads.",
+      "seeded_violation": {
+        "description": "Run each submitted job on the submitting thread instead of handing it to enkiTS.",
+        "patch": "enkits--jobs/seeded/jobs.routed-through-interface.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "enkiTS fills the jobs slot: the jobs interface's am_jobs_slot_start, am_jobs_slot_submit, am_jobs_slot_run_one and am_jobs_slot_stop run on its scheduler, which the jobs phase initializes with the configured worker count and stops after every job finishes.",
+    "Each submitted job becomes an enki::ITaskSet freed once it completes; enkiTS doesn't touch a completed task without dependents.",
+    "A thread outside enkiTS that submits registers as one of its external task threads the first time, up to eight."
+  ]
+}

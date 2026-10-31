@@ -1,0 +1,10 @@
+--- a/enkits_diagnostics.cpp
++++ b/enkits_diagnostics.cpp
+@@ -46,7 +46,6 @@
+ // scheduler.
+ bool am_bind_enkits_diagnostics(am::Context&) {
+     enki::ProfilerCallbacks& callbacks = am_enkits_config().profilerCallbacks;
+-    callbacks.threadStart = &am_enkits_thread_start;
+     callbacks.threadStop = &am_enkits_thread_stop;
+     callbacks.waitForNewTaskSuspendStart = &am_enkits_suspend_start;
+     callbacks.waitForNewTaskSuspendStop = &am_enkits_suspend_stop;

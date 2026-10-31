@@ -143,8 +143,32 @@ func NewManifest(m *mapmodel.Map, req Request) (*Manifest, []Failure) {
 			man.Choices[c][id] = v
 		}
 	}
+	slotChoices(m, man)
 	man.Glue = defaultGlue(m, man)
 	return man, nil
+}
+
+// slotChoices sets every contract choice that can name a filled slot to
+// that slot: a choice whose values include "<slot>-slot", such as the jobs
+// contract's scheduler, takes "jobs-slot" once a library fills the jobs
+// slot (SPEC §2.5).
+func slotChoices(m *mapmodel.Map, man *Manifest) {
+	for _, cid := range Contracts(m, man) {
+		for id, ch := range m.LatestContract(cid).Choices {
+			var schema struct {
+				Enum []any `json:"enum"`
+			}
+			json.Unmarshal(ch.Schema, &schema)
+			for slot, lib := range man.Slots {
+				if lib != "" && slices.Contains(schema.Enum, any(slot+"-slot")) {
+					if man.Choices[cid] == nil {
+						man.Choices[cid] = map[string]any{}
+					}
+					man.Choices[cid][id] = slot + "-slot"
+				}
+			}
+		}
+	}
 }
 
 // Contracts lists the contracts a composition uses: those its libraries
