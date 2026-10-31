@@ -1,0 +1,15 @@
+--- a/shadercross_sdl3.cpp
++++ b/shadercross_sdl3.cpp
+@@ -6,10 +6,8 @@
+ 
+ SDL_GPUShaderFormat am_shadercross_format_for(const char* driver) {
+     if (driver == nullptr) return SDL_GPU_SHADERFORMAT_INVALID;
+-    if (std::strcmp(driver, "vulkan") == 0) return SDL_GPU_SHADERFORMAT_SPIRV;
+-    if (std::strcmp(driver, "direct3d12") == 0) return SDL_GPU_SHADERFORMAT_DXBC;
+-    if (std::strcmp(driver, "metal") == 0) return SDL_GPU_SHADERFORMAT_MSL;
+-    return SDL_GPU_SHADERFORMAT_INVALID;
++    // Every backend gets SPIR-V, as the Vulkan development machine does.
++    return SDL_GPU_SHADERFORMAT_SPIRV;
+ }
+ 
+ SDL_GPUShader* am_shadercross_create_shader(SDL_GPUDevice* device, const Uint8* spirv, size_t size, const char* entrypoint,

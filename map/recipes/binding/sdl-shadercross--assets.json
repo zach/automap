@@ -1,0 +1,54 @@
+{
+  "kind": "binding",
+  "subject": {
+    "library": "sdl-shadercross",
+    "contract": "assets",
+    "contract_version": "1.0.0"
+  },
+  "applies_to": {
+    "sdl-shadercross": {
+      "versions": [
+        "3.0.0-preview2"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl-shadercross--assets/shadercross_assets.h",
+      "role": "glue"
+    },
+    {
+      "path": "sdl-shadercross--assets/shadercross_assets.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "sdl-shadercross--assets/shadercross_assets_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "assets.reads-through-interface",
+      "check": "am_probe_shadercross_assets(): cooking a SPIR-V file the probe writes reads it once, through the assets interface.",
+      "seeded_violation": {
+        "description": "Read the SPIR-V file with std::ifstream.",
+        "patch": "sdl-shadercross--assets/seeded/assets.reads-through-interface.patch"
+      }
+    },
+    {
+      "rule": "assets.output-identical",
+      "check": "am_probe_shadercross_assets(): cooking the file to MSL twice gives the same bytes.",
+      "seeded_violation": {
+        "description": "Append a comment saying when the shader was cooked, to tell builds apart.",
+        "patch": "sdl-shadercross--assets/seeded/assets.output-identical.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_shadercross_cook() is for a build step that cooks each backend's shaders ahead of time: it reads SPIR-V through the assets interface and compiles it to the format given, the one the sdl-shadercross--sdl3 pairing chooses for that backend.",
+    "The cooked output depends on the SPIR-V, SDL_shadercross's commit and the target format: a cooker keys its cache by all three."
+  ]
+}

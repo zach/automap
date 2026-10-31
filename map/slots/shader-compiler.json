@@ -1,0 +1,7 @@
+{
+  "id": "shader-compiler",
+  "description": "Turns the engine's shaders into the formats each platform's GPU API takes, at build time or at runtime.",
+  "examples": [
+    "sdl-shadercross"
+  ]
+}

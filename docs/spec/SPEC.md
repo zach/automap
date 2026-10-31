@@ -636,7 +636,7 @@ Thirteen libraries fill fifteen slots [ADR-0058](../adr/0058-v1-catalog.md). The
 | ecs | flecs (`flecs`) | MIT | 4.1.6 | default |
 | model-import | fastgltf (`fastgltf`) | MIT | 0.9.1 | default |
 | image-decode | stb_image (`stb-image`) | MIT or Unlicense | by commit (header v2.30) | default |
-| shader-compiler | SDL_shadercross (`sdl-shadercross`) | Zlib | by commit | default |
+| shader-compiler | SDL_shadercross (`sdl-shadercross`) | Zlib | by commit (`3.0.0-preview2`, from the Automap registry, whose port needs DXC only on Windows and Linux) | default |
 
 All are permissively licensed and carried by vcpkg [ADR-0058](../adr/0058-v1-catalog.md). Jolt's double-precision and deterministic variants come from the Automap registry, because vcpkg features must be additive.
 
