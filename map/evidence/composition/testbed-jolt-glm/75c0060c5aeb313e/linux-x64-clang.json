@@ -1,0 +1,156 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "815071fe48251668b1243424889d1442e2252af0d808725df87f77b20f4c3320"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:75c0060c5aeb313e1290dfcda13c8aaaea8149b3af4294b9c7bfaf7271339b5f"
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-10-31T07:22:50Z",
+    "map_release": "git:8dac01b8171925aa50d9dd154a30e035589646f2",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {
+        "SDL_VIDEO_DRIVER": "offscreen"
+      },
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "glm",
+        "status": "not-applicable",
+        "reason": "GLM is the math library in the math slot: the other libraries' adapters convert to its types."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      }
+    ],
+    "set_aside_reports": [
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: testbed, libvulkan_lvp.so.",
+        "summary": "data race testbed+0xa393b) in pthread_mutex_destroy",
+        "tool": "ThreadSanitizer"
+      },
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: testbed, libvulkan_lvp.so.",
+        "summary": "data race testbed+0xa35ee) in pthread_cond_destroy",
+        "tool": "ThreadSanitizer"
+      },
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: .",
+        "summary": "lock-order-inversion (potential deadlock) testbed+0xa3abb) in pthread_mutex_lock",
+        "tool": "ThreadSanitizer"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

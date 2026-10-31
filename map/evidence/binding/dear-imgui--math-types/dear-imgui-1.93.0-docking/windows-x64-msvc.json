@@ -1,0 +1,56 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/ocornut/imgui@v1.93.0-docking",
+      "digest": {
+        "gitCommit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "sha512": "00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "math-types",
+      "contract_version": "1.1.0",
+      "pin": {
+        "commit": "b916186e66aa3c02b72c6ca17455516512ed8049",
+        "content_hash": "sha512:00ade7a3e2c2e34465f1bb9fafd78733d3e659617b0857cf1b3c7f04cfc1d8566d1fd6a8697946f0de7c808cce1c4d0a4b2195c7bc20144cfd8b1e9b1cfba621",
+        "library": "dear-imgui",
+        "variant": "docking",
+        "version": "1.93.0"
+      }
+    },
+    "platform": "windows-x64-msvc",
+    "level": "probed",
+    "produced_at": "2026-10-31T07:33:41Z",
+    "map_release": "git:8dac01b8171925aa50d9dd154a30e035589646f2",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+      "environment": {},
+      "runner_image": "win25-vs2026 20261021.278.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "not-applicable",
+        "reason": "No library in the composition exposes world positions."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "The composition has no library in the math slot."
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
