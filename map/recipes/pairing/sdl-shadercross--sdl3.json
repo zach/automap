@@ -1,0 +1,81 @@
+{
+  "kind": "pairing",
+  "subject": {
+    "libraries": [
+      "sdl-shadercross",
+      "sdl3"
+    ]
+  },
+  "applies_to": {
+    "sdl-shadercross": {
+      "versions": [
+        "3.0.0-preview2"
+      ],
+      "variants": [
+        "default"
+      ]
+    },
+    "sdl3": {
+      "versions": [
+        "3.4.18"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "sdl-shadercross--sdl3/shadercross_sdl3.h",
+      "role": "glue"
+    },
+    {
+      "path": "sdl-shadercross--sdl3/shadercross_sdl3.cpp",
+      "role": "glue"
+    },
+    {
+      "path": "sdl-shadercross--sdl3/shadercross_sdl3_probe.cpp",
+      "role": "probe"
+    }
+  ],
+  "rules": [
+    {
+      "id": "sdl-shadercross--sdl3.formats-match-backend",
+      "kind": "probed",
+      "applies_to": "pairing",
+      "text": "Each platform's shaders are compiled to a format its SDL_GPU backend accepts: SPIR-V for Vulkan, DXBC or DXIL for Direct3D 12, MSL or a metallib for Metal.",
+      "failure_code": "SHADER_FORMAT_REJECTED(sdl-shadercross--sdl3)"
+    },
+    {
+      "id": "sdl-shadercross--sdl3.reflection-matches",
+      "kind": "probed",
+      "applies_to": "pairing",
+      "text": "The resource counts in each SDL_GPUShaderCreateInfo (samplers, storage textures, storage buffers, uniform buffers) come from reflecting the shader, not from constants in glue.",
+      "failure_code": "RESOURCE_COUNTS_HARDCODED(sdl-shadercross--sdl3)"
+    }
+  ],
+  "probes": [
+    {
+      "rule": "sdl-shadercross--sdl3.formats-match-backend",
+      "check": "am_probe_shadercross_sdl3(): am_shadercross_format_for() names a format each of SDL_GPU's Vulkan, Direct3D 12 and Metal backends takes, and a test fragment shader compiled from SPIR-V for this platform's device is created on it.",
+      "seeded_violation": {
+        "description": "Compile to SPIR-V for every backend, as on the Vulkan development machine.",
+        "patch": "sdl-shadercross--sdl3/seeded/sdl-shadercross--sdl3.formats-match-backend.patch"
+      }
+    },
+    {
+      "rule": "sdl-shadercross--sdl3.reflection-matches",
+      "check": "am_probe_shadercross_sdl3(): the test shader, with one sampler and one uniform buffer, was created with the counts SDL_ShaderCross_ReflectGraphicsSPIRV reads from it.",
+      "seeded_violation": {
+        "description": "Set the counts to one sampler and no uniform buffers, as the engine's first shaders needed.",
+        "patch": "sdl-shadercross--sdl3/seeded/sdl-shadercross--sdl3.reflection-matches.patch"
+      }
+    }
+  ],
+  "adaptation_notes": [
+    "am_shadercross_create_shader() reflects SPIR-V, compiles it to the format am_shadercross_format_for() gives for the device's driver (SDL_GetGPUDeviceDriver), and creates the shader with the reflected resource counts.",
+    "Direct3D 12 gets DXBC, compiled through the system's d3dcompiler_47.dll, so a game needs no DXC at runtime; a game that wants DXIL (shader model 6) changes the format and ships dxcompiler.dll and dxil.dll beside the executable.",
+    "Metal reserves the name main: SPIRV-Cross renames a main entry point to main0, which the glue passes on.",
+    "Shaders a build step cooks ahead of time (the assets binding) follow the same choice of format per backend; the game then loads the cooked shader for its driver and creates it with the counts reflected at cooking time."
+  ]
+}

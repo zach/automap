@@ -1,0 +1,93 @@
+{
+  "id": "sdl-shadercross",
+  "name": "SDL_shadercross",
+  "license": {
+    "spdx": "Zlib",
+    "class": "permissive"
+  },
+  "contribution_policy": {
+    "ai_generated_contributions": "banned",
+    "source": "https://github.com/libsdl-org/SDL/blob/main/AGENTS.md"
+  },
+  "slots": [
+    "shader-compiler"
+  ],
+  "source": {
+    "kind": "git",
+    "url": "https://github.com/libsdl-org/SDL_shadercross"
+  },
+  "versions": [
+    {
+      "version": "3.0.0-preview2",
+      "released": "2026-04-06",
+      "pin": {
+        "commit": "1ca46e0ef7a9e50c706e7be6ef73ce467bac3b2e",
+        "content_hash": "sha512:61feb70137b1a8e9037b0f9113a28b1f59578d6604423ef2a66173d9772b15a001f661cb4b53b0f3be941c0178d3562b0ae4d7a7f35404b137204bdce95f537f"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "sdl3-shadercross",
+          "registry": "automap"
+        }
+      },
+      "cmake": {
+        "package": "SDL3_shadercross",
+        "targets": [
+          "SDL3_shadercross::SDL3_shadercross"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "SDL_shadercross at the commit vcpkg's port pins (it has no release tags), from the Automap registry's port: vcpkg's port depends on directx-dxc, which doesn't build on macOS, so Automap's makes DXC a dependency only on Windows and x64 Linux and builds without it elsewhere. Compiles SPIR-V to SPIR-V, DXBC, DXIL (with DXC) and MSL, and reflects it."
+        }
+      ],
+      "facts": {
+        "assets": {
+          "usage": "both",
+          "file_io_hook": "every function takes SPIR-V or HLSL as bytes or a string; it reads no file itself (HLSL includes aside, which go through DXC)",
+          "reload_hook": null,
+          "output_settings": [
+            "the target shader format",
+            "SDL_SHADERCROSS_PROP_* properties, such as the MSL version"
+          ]
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "systems",
+              "step": "sdl-shadercross:SDL_ShaderCross_Init"
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "systems",
+              "step": "sdl-shadercross:SDL_ShaderCross_Quit"
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "SDL_SHADERCROSS_DXC"
+          ],
+          "self_check": null,
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "SDL_shadercross allocates with SDL_malloc, so SDL3's allocation binding routes it; it links SPIRV-Cross statically and loads d3dcompiler_47.dll at runtime on Windows for DXBC."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": false
+        }
+      }
+    }
+  ]
+}

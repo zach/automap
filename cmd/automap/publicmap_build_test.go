@@ -69,7 +69,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds) + len(shadercrossSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -694,6 +694,57 @@ func TestTheTestbedWithDeterministicJoltProbed(t *testing.T) {
 
 	for _, c := range deterministicSeeds {
 		t.Run(c.seed, func(t *testing.T) {
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
+// The seeds SDL_shadercross adds with its pairing to SDL3.
+var shadercrossSeeds = []struct{ seed, code string }{
+	{"sdl-shadercross--sdl3.formats-match-backend", "SHADER_FORMAT_REJECTED(sdl-shadercross--sdl3)"},
+	{"sdl-shadercross--sdl3.reflection-matches", "RESOURCE_COUNTS_HARDCODED(sdl-shadercross--sdl3)"},
+	{"assets.reads-through-interface:sdl-shadercross", "ASSET_READ_BYPASSED(sdl-shadercross)"},
+	{"assets.output-identical:sdl-shadercross", "ASSET_OUTPUT_DIFFERS(sdl-shadercross)"},
+}
+
+// SDL_shadercross, from the Automap registry, compiles a test shader for
+// the testbed's SDL_GPU device on each platform.
+func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	if hostPlatform != "windows-x64-msvc" {
+		requireTSan(t)
+	}
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "sdl-shadercross", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	e := checkEvidence(t, run, "probed")
+	passed := map[string]bool{}
+	for _, r := range e.Predicate.Results {
+		if r.Status == "pass" {
+			passed[r.Rule] = true
+		}
+	}
+	for _, rule := range []string{"sdl-shadercross--sdl3.formats-match-backend", "sdl-shadercross--sdl3.reflection-matches"} {
+		if !passed[rule] {
+			t.Errorf("%s didn't pass", rule)
+		}
+	}
+
+	for _, c := range shadercrossSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
 
 			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {

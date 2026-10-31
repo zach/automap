@@ -1,0 +1,26 @@
+--- a/shadercross_assets.cpp
++++ b/shadercross_assets.cpp
+@@ -3,17 +3,18 @@
+ #include "shadercross_assets.h"
+ 
+ #include <cstring>
++#include <fstream>
++#include <iterator>
+ 
+ #include "automap/assets.h"
+ 
+ bool am_shadercross_cook(const char* path, SDL_GPUShaderFormat format, SDL_ShaderCross_ShaderStage stage, const char* entrypoint,
+                          std::vector<std::uint8_t>& cooked) {
+     cooked.clear();
+-    std::vector<std::byte> spirv;
+-    if (!am::assets::read("sdl-shadercross", path, spirv)) {
+-        SDL_SetError("can't read %s", path);
+-        return false;
+-    }
++    std::ifstream file(path, std::ios::binary);
++    std::vector<char> raw((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
++    std::vector<std::byte> spirv(raw.size());
++    std::memcpy(spirv.data(), raw.data(), raw.size());
+     if (format == SDL_GPU_SHADERFORMAT_SPIRV) {
+         const auto* bytes = reinterpret_cast<const std::uint8_t*>(spirv.data());
+         cooked.assign(bytes, bytes + spirv.size());
