@@ -264,7 +264,8 @@ func vcpkgOverrides(m *mapmodel.Map, man *Manifest, lock *Lock) []vcpkgOverride 
 
 // VcpkgJSON is the vcpkg manifest: each library's port with the features
 // its variant enables, an override pinning its version and port version,
-// and the curated registry's baseline.
+// and the curated registry's baseline, which every composition names: the
+// Automap registry's ports depend on curated ports such as vcpkg-cmake.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
 		Name            string `json:"name"`
@@ -276,9 +277,7 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		Overrides       []vcpkgOverride `json:"overrides"`
 		BuiltinBaseline string          `json:"builtin-baseline,omitempty"`
 	}
-	if usesCurated(lock) {
-		doc.BuiltinBaseline = vcpkgBaseline(m)
-	}
+	doc.BuiltinBaseline = vcpkgBaseline(m)
 	for _, lib := range man.Libraries() {
 		v := m.Libraries[lib].Newest()
 		if v.BuildBackend == nil {
@@ -357,10 +356,11 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 		Baseline   string   `json:"baseline"`
 		Packages   []string `json:"packages"`
 	}
+	// vcpkg's curated registry stays the default registry, at the baseline
+	// vcpkg.json names.
 	var doc struct {
-		DefaultRegistry *struct{}  `json:"default-registry"`
-		Registries      []registry `json:"registries"`
-		OverlayPorts    []string   `json:"overlay-ports,omitempty"`
+		Registries   []registry `json:"registries"`
+		OverlayPorts []string   `json:"overlay-ports,omitempty"`
 	}
 	doc.Registries = []registry{}
 	pinned := map[string]string{}
@@ -405,33 +405,7 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 	if len(automapPorts) > 0 {
 		doc.Registries = append(doc.Registries, registry{Kind: "git", Repository: registryURL, Reference: "registry", Baseline: commit, Packages: automapPorts})
 	}
-	if usesCurated(lock) {
-		// vcpkg's curated registry stays the default registry, at the
-		// baseline vcpkg.json names.
-		raw := indentJSON(struct {
-			Registries   []registry `json:"registries"`
-			OverlayPorts []string   `json:"overlay-ports,omitempty"`
-		}{doc.Registries, doc.OverlayPorts})
-		return raw
-	}
 	return indentJSON(doc)
-}
-
-// usesCurated reports whether any library comes from vcpkg's curated
-// registry. When none does, the composition names no curated baseline and
-// disables vcpkg's default registry.
-func usesCurated(lock *Lock) bool {
-	for _, pin := range lock.Pins {
-		if pin.Registry != nil && pin.Registry.Kind == "vcpkg-curated" {
-			return true
-		}
-		for _, pp := range pin.Platforms {
-			if pp.Registry != nil && pp.Registry.Kind == "vcpkg-curated" {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // AutomapRegistryURL is the Automap registry's URL from the public map's

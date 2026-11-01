@@ -21,9 +21,11 @@ jobs:
           sudo apt-get install -y ninja-build clang
           # clang's ThreadSanitizer runtime, for the jobs contract's sanitizer run
           sudo apt-get install -y "libclang-rt-$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p')-dev"
-      - name: vcpkg
+      - name: vcpkg at the fixture map's baseline
         run: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          baseline=$(jq -r .build_backend.vcpkg.baseline testdata/map/map.json)
+          git clone -q --filter=blob:none https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
           "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
       - name: vcpkg binary cache
@@ -68,9 +70,13 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Windows ]; then choco install -y ninja; else brew install ninja; fi
           ninja --version
-      - name: vcpkg
+      - name: vcpkg at the fixture map's baseline
         run: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          baseline=$(jq -r .build_backend.vcpkg.baseline testdata/map/map.json)
+          filter=--filter=blob:none
+          [ "$RUNNER_OS" = Windows ] && filter=
+          git clone -q $filter https://github.com/microsoft/vcpkg "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" checkout -q "$baseline"
           if [ "$RUNNER_OS" = Windows ]; then
             cmd //c "$(cygpath -w "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat")" -disableMetrics
           else
