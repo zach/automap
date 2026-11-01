@@ -1,5 +1,4 @@
 {
-  "default-registry": null,
   "registries": [
     {
       "kind": "git",

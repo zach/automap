@@ -318,7 +318,8 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	}
 	// The executable and the headless settings its evidence records,
 	// before the session: an eject can take the composition and its
-	// evidence with it.
+	// evidence with it. The other tasks' compositions may not exist yet,
+	// so theirs are read after.
 	target, smokeEnv := executable(repo), headless(repo)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t.TimeoutMinutes)*time.Minute)
 	defer cancel()
@@ -411,7 +412,7 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	// The eject measure: a passing journey composition, ejected, builds
 	// and passes its smoke test without Automap.
 	if r.Status == "pass" {
-		note := ejectCopy(repo, automap, target, env, append(smokeEnv, headless(repo)...))
+		note := ejectCopy(repo, automap, executable(repo), env, append(smokeEnv, headless(repo)...))
 		built := note == ""
 		r.Ejected, r.EjectNote = &built, note
 	}
