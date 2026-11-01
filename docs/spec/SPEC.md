@@ -707,7 +707,7 @@ Anyone, including agents and upstream maintainers, can propose map changes as pu
 
 | Thing | Scheme |
 | --- | --- |
-| CLI | semver, starting at 0.1.0; tags `cli-v<semver>` [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
+| CLI | semver, starting at 0.1.0; tags `cli-v<semver>`, which the `Release CLI` workflow publishes as one static binary per v1 platform with the version stamped in, and their SHA-256s, on a GitHub release [ADR-0064](../adr/0064-cli-is-written-in-go.md), [ADR-0065](../adr/0065-one-repository-registry-on-its-own-branch.md) |
 | Map releases | immutable, dated, tags `map-YYYY.MM.DD`, then `map-YYYY.MM.DD.N` for a day's later releases; recorded in every lock [ADR-0053](../adr/0053-map-releases-are-immutable-and-recorded-in-locks.md) |
 | Contracts | semver each, independently; bindings and shared interfaces name the version they target [ADR-0024](../adr/0024-contracts-are-versioned-independently.md) |
 | Formats | `automap-manifest/1`, `automap-lock/1`, predicate type `https://github.com/zach/automap/evidence/v1`; a breaking change is a new number |
@@ -732,6 +732,8 @@ v1 is judged on four measures from the eval suite and the public map [ADR-0063](
 2. At least 90% of eval tasks end with every probe passing and no human input.
 3. At least 90% of catalog libraries have their latest release in the map within 14 days of release; at least 95% of the map's evidence is current at any time.
 4. 100% of ejected journey compositions build and pass smoke without Automap. The eval report computes it over `custom-eject` and, for every other task that passes, the runner's eject of a copy of the composition it ended with, each built with plain CMake and vcpkg and run for 120 frames with the headless settings its evidence records.
+
+The eval report's `measures` computes all four from a run, each with whether it met its target: the `testbed-start` task's duration and whether the vcpkg binary cache was warm (1); passing tasks out of those graded, skipped runs excluded (2); from the watcher's `-measure` output for the map at the run's commit, the watched libraries whose latest upstream release is in the map or was released less than 14 days ago, and the map's evidence that is current (3); and the eject measure (4). A run of every task computes them all; a run of some tasks computes what it can.
 
 ---
 

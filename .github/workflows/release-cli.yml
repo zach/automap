@@ -1,0 +1,51 @@
+name: Release CLI
+
+# Tagging cli-v<semver> publishes the CLI: one static binary per v1
+# platform, with its version stamped in, attached to a GitHub release at
+# that tag (ADR-0064, ADR-0065). Run on demand with a version, it tags the
+# commit it runs on and publishes that.
+on:
+  push:
+    tags: ["cli-v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to tag and publish, <semver> (the tag is cli-v<semver>)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish cli-v${{ inputs.version || '' }}${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: The version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then version="${{ inputs.version }}"; else version="${GITHUB_REF_NAME#cli-v}"; fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] || { echo "::error::$version isn't a semver version"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Build one static binary per platform
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist
+          for target in linux/amd64 windows/amd64 darwin/arm64; do
+            os=${target%/*}; arch=${target#*/}
+            out="dist/automap-$VERSION-$os-$arch"
+            [ "$os" = windows ] && out="$out.exe"
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -X github.com/zach/automap/internal/cli.Version=$VERSION" -o "$out" ./cmd/automap
+          done
+          (cd dist && sha256sum * > "automap-$VERSION.sha256")
+          ls -l dist
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "cli-v$VERSION" dist/* --target "$GITHUB_SHA" --title "cli-v$VERSION" \
+            --notes "The automap CLI $VERSION: one static binary per platform, with SHA-256s in automap-$VERSION.sha256. See README.md to get started."

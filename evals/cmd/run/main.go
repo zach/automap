@@ -67,6 +67,45 @@ type Report struct {
 	// ejected, the share that build and pass their smoke test without
 	// Automap.
 	Eject *EjectMeasure `json:"eject,omitempty"`
+	// Measures are the four v1 measures (ADR-0063), as far as this run and
+	// the map's measures given with -freshness compute them.
+	Measures Measures `json:"measures"`
+}
+
+// Measures are the four v1 measures (ADR-0063). Each is present when the
+// run could compute it, with whether it met its target.
+type Measures struct {
+	RequestToTestbed    *Timing    `json:"request_to_testbed,omitempty"`
+	FirstAttemptSuccess *Share     `json:"first_attempt_success,omitempty"`
+	Freshness           *Freshness `json:"freshness,omitempty"`
+	Eject               *Share     `json:"eject,omitempty"`
+}
+
+// Timing is the request-to-running-testbed measure: the testbed-start
+// task's duration, with a warm vcpkg binary cache (the target, 15 minutes
+// or less) or a cold one (reported alongside).
+type Timing struct {
+	Seconds float64 `json:"seconds"`
+	Cache   string  `json:"cache"`
+	Met     bool    `json:"met"`
+}
+
+// Share is a count out of a total against a target share.
+type Share struct {
+	Of     int     `json:"of"`
+	Out    int     `json:"out_of"`
+	Share  float64 `json:"share"`
+	Target float64 `json:"target"`
+	Met    bool    `json:"met"`
+}
+
+// Freshness is the map's freshness measure, read from the watcher's
+// -measure output: libraries whose latest upstream release is in the map
+// or within the 14-day window, and the map's evidence that is current.
+type Freshness struct {
+	Libraries Share `json:"libraries"`
+	Evidence  Share `json:"evidence"`
+	Met       bool  `json:"met"`
 }
 
 // EjectMeasure counts ejected journey compositions and those that built
@@ -98,6 +137,7 @@ func main() {
 	model := flag.String("model", "opus", "the Claude model to ask for; the report names the model that answered")
 	automap := flag.String("automap", "automap", "the automap binary the agent uses")
 	mapDir := flag.String("map", "", "a public map directory to read instead of the newest published map release")
+	freshnessFile := flag.String("freshness", "", "the map's measures from ci/cmd/watch -measure, for the freshness measure")
 	flag.Parse()
 
 	root, _ := os.Getwd()
@@ -139,6 +179,19 @@ func main() {
 	if report.Eject != nil {
 		fmt.Printf("eject measure: %d of %d ejected journey compositions build and pass smoke without Automap (%.0f%%)\n", report.Eject.Built, report.Eject.Ejected, report.Eject.Share*100)
 	}
+	var fresh *mapMeasure
+	if *freshnessFile != "" {
+		raw, err := os.ReadFile(*freshnessFile)
+		if err != nil {
+			fail(err)
+		}
+		fresh = &mapMeasure{}
+		if err := json.Unmarshal(raw, fresh); err != nil {
+			fail(fmt.Errorf("%s: %v", *freshnessFile, err))
+		}
+	}
+	report.Measures = measures(report.Tasks, report.Cache, report.Eject, fresh)
+	fmt.Print(report.Measures.summary())
 	if report.Model == "" {
 		report.Model = *model
 	}
@@ -572,4 +625,96 @@ func grade(t *Task, o outcome) (status, reason string) {
 		}
 	}
 	return "pass", ""
+}
+
+// mapMeasure is what ci/cmd/watch -measure writes.
+type mapMeasure struct {
+	Freshness struct {
+		Libraries, Fresh int
+		Share            float64
+	} `json:"freshness"`
+	Evidence struct {
+		Pieces, Current int
+		Share           float64
+	} `json:"evidence"`
+}
+
+// Targets of the four measures (ADR-0063).
+const (
+	testbedTarget    = 15 * time.Minute
+	successTarget    = 0.9
+	freshnessTarget  = 0.9
+	evidenceTarget   = 0.95
+	ejectTarget      = 1.0
+	testbedStartTask = "testbed-start"
+)
+
+// measures computes the four v1 measures from a run's task results, the
+// vcpkg binary cache's state, the eject measure, and the map's measures
+// when given. It is a pure function.
+func measures(tasks []TaskResult, cache string, eject *EjectMeasure, fresh *mapMeasure) Measures {
+	var m Measures
+	var passed, graded int
+	for _, t := range tasks {
+		if t.ID == testbedStartTask && t.Status != "skipped" {
+			m.RequestToTestbed = &Timing{Seconds: t.DurationSec, Cache: cache,
+				Met: t.Status == "pass" && cache == "warm" && t.DurationSec <= testbedTarget.Seconds()}
+		}
+		switch t.Status {
+		case "pass":
+			passed++
+			graded++
+		case "fail":
+			graded++
+		}
+	}
+	if graded > 0 {
+		m.FirstAttemptSuccess = share(passed, graded, successTarget)
+	}
+	if fresh != nil {
+		f := Freshness{
+			Libraries: *share(fresh.Freshness.Fresh, fresh.Freshness.Libraries, freshnessTarget),
+			Evidence:  *share(fresh.Evidence.Current, fresh.Evidence.Pieces, evidenceTarget),
+		}
+		f.Met = f.Libraries.Met && f.Evidence.Met
+		m.Freshness = &f
+	}
+	if eject != nil {
+		m.Eject = share(eject.Built, eject.Ejected, ejectTarget)
+	}
+	return m
+}
+
+func share(of, out int, target float64) *Share {
+	s := &Share{Of: of, Out: out, Target: target}
+	if out > 0 {
+		s.Share = float64(of) / float64(out)
+	}
+	s.Met = out > 0 && s.Share >= target
+	return s
+}
+
+// summary is the measures, one line each, for the run's output.
+func (m Measures) summary() string {
+	var b strings.Builder
+	met := func(ok bool) string {
+		if ok {
+			return "met"
+		}
+		return "not met"
+	}
+	if t := m.RequestToTestbed; t != nil {
+		fmt.Fprintf(&b, "measure 1, request to running testbed: %.0fs with a %s cache (target %.0fs warm): %s\n", t.Seconds, t.Cache, testbedTarget.Seconds(), met(t.Met))
+	}
+	if s := m.FirstAttemptSuccess; s != nil {
+		fmt.Fprintf(&b, "measure 2, first-attempt success: %d of %d tasks (%.0f%%, target %.0f%%): %s\n", s.Of, s.Out, s.Share*100, s.Target*100, met(s.Met))
+	}
+	if f := m.Freshness; f != nil {
+		fmt.Fprintf(&b, "measure 3, freshness: %d of %d libraries (%.0f%%, target %.0f%%) and %d of %d pieces of evidence current (%.0f%%, target %.0f%%): %s\n",
+			f.Libraries.Of, f.Libraries.Out, f.Libraries.Share*100, f.Libraries.Target*100, f.Evidence.Of, f.Evidence.Out, f.Evidence.Share*100, f.Evidence.Target*100, met(f.Met))
+	}
+	if s := m.Eject; s != nil {
+		fmt.Fprintf(&b, "measure 4, eject: %d of %d (%.0f%%, target %.0f%%): %s\n", s.Of, s.Out, s.Share*100, s.Target*100, met(s.Met))
+	}
+	return b.String()
 }

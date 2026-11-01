@@ -65,6 +65,12 @@ jobs:
           go build -o "$RUNNER_TEMP/bin/automap" ./cmd/automap
           npm install -g @anthropic-ai/claude-code
           claude --version
+      - name: The map's measures (freshness and evidence currency)
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # the watcher lists upstream releases through GitHub's API
+        run: |
+          mkdir -p "$RUNNER_TEMP/eval-logs"
+          go run ./ci/cmd/watch -map map -out "$RUNNER_TEMP/releases.json" -measure "$RUNNER_TEMP/eval-logs/map-measures.json"
       - name: Run the evals
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_KEY }}
@@ -76,6 +82,7 @@ jobs:
             -model "${{ inputs.model }}" \
             -automap "$RUNNER_TEMP/bin/automap" \
             -map "${{ inputs.map }}" \
+            -freshness "$RUNNER_TEMP/eval-logs/map-measures.json" \
             -report "$RUNNER_TEMP/eval-logs/report.json"
       - name: Report
         if: always()
