@@ -24,22 +24,23 @@
       }
     },
     "platform": "macos-arm64-appleclang",
-    "level": "none",
-    "produced_at": "2026-10-31T23:53:09Z",
-    "map_release": "git:53107e03a7ac997669d431148236aeeffd748408",
+    "level": "probed",
+    "produced_at": "2026-11-01T04:16:55Z",
+    "map_release": "git:13cf2ff39c13b4d7d0d8efca7d35d5a80fea3cb8",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
       "environment": {},
       "runner_image": "macos26 20261026.0455.2",
-      "sanitizers": {}
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
     },
     "results": [
       {
         "rule": "serialization.rebuild-key-complete",
         "library": "jolt",
-        "status": "not-applicable",
-        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+        "status": "pass"
       }
     ],
     "verifier": {

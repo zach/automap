@@ -24,21 +24,24 @@
       }
     },
     "platform": "linux-x64-clang",
-    "level": "none",
-    "produced_at": "2026-10-31T23:48:14Z",
-    "map_release": "git:53107e03a7ac997669d431148236aeeffd748408",
+    "level": "smoke",
+    "produced_at": "2026-11-01T04:12:14Z",
+    "map_release": "git:13cf2ff39c13b4d7d0d8efca7d35d5a80fea3cb8",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
       "environment": {},
       "runner_image": "ubuntu26 20261026.180.1",
-      "sanitizers": {}
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
     },
     "results": [
       {
         "rule": "math-types.precision-agrees",
-        "status": "unverifiable",
-        "reason": "No probe ran: the composition reached none."
+        "status": "fail",
+        "failure_code": "PRECISION_MISMATCH(jolt)",
+        "reason": "jolt uses double world positions, but the composition chooses float."
       },
       {
         "rule": "math-types.adapters-round-trip",

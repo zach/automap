@@ -1,0 +1,173 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "b05bc7972f0200593b8d21d42cb957ed971bb20e326b6b2414f1019e7d8354cb"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:b45880c9ef0ef6854563a6652201d3fa04f4640cd0f6ebca6676dfc7ee0b3253"
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-11-01T04:12:42Z",
+    "map_release": "git:13cf2ff39c13b4d7d0d8efca7d35d5a80fea3cb8",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {
+        "SDL_VIDEO_DRIVER": "offscreen"
+      },
+      "runner_image": "ubuntu26 20261026.180.1",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "determinism.flags-set",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "determinism.replay-hash-matches",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "handles.bits-preserved",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "The composition has no library in the math slot."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "The composition has no library in the math slot."
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      }
+    ],
+    "set_aside_reports": [
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: testbed, libvulkan_lvp.so.",
+        "summary": "data race testbed+0xa39fb) in pthread_mutex_destroy",
+        "tool": "ThreadSanitizer"
+      },
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: testbed, libvulkan_lvp.so.",
+        "summary": "data race testbed+0xa36ae) in pthread_cond_destroy",
+        "tool": "ThreadSanitizer"
+      },
+      {
+        "reason": "Every frame of both access stacks is in code the composition doesn't build: .",
+        "summary": "lock-order-inversion (potential deadlock) testbed+0xa3b7b) in pthread_mutex_lock",
+        "tool": "ThreadSanitizer"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

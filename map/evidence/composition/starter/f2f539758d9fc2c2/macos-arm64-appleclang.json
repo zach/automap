@@ -1,0 +1,308 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "f31a6ca626b885d2c0836ef84be628f52316da03e68baca540ecf02c50c7226e"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:f2f539758d9fc2c21525e3891d89cf46f47916c803a40b916ae065eb913ac2fc"
+    },
+    "platform": "macos-arm64-appleclang",
+    "level": "probed",
+    "produced_at": "2026-11-01T04:35:48Z",
+    "map_release": "git:13cf2ff39c13b4d7d0d8efca7d35d5a80fea3cb8",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+      "environment": {
+        "AUTOMAP_MINIAUDIO_BACKEND": "null"
+      },
+      "runner_image": "macos26 20261021.0445.8",
+      "sanitizers": {
+        "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
+      }
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "enkits",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "flecs",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "mimalloc",
+        "status": "not-applicable",
+        "reason": "mimalloc has no allocator hooks: it is the allocator behind the facade, and serves only the blocks the facade asks for."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "miniaudio",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "stb-image",
+        "status": "not-applicable",
+        "reason": "stb_image's hooks are compile-time macros in its implementation: no stb_image code runs without them."
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "enkits",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "flecs",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "mimalloc",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "miniaudio",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "stb-image",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.reads-through-interface",
+        "library": "fastgltf",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.reads-through-interface",
+        "library": "sdl-shadercross",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.reads-through-interface",
+        "library": "stb-image",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.output-identical",
+        "library": "fastgltf",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.output-identical",
+        "library": "sdl-shadercross",
+        "status": "pass"
+      },
+      {
+        "rule": "assets.output-identical",
+        "library": "stb-image",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "determinism.flags-set",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "determinism.replay-hash-matches",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "enkits",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "flecs",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "mimalloc",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "miniaudio",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "spdlog",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "tracy",
+        "status": "pass"
+      },
+      {
+        "rule": "handles.bits-preserved",
+        "library": "flecs",
+        "status": "pass"
+      },
+      {
+        "rule": "handles.bits-preserved",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "enkits",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "flecs",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "not-applicable",
+        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "glm",
+        "status": "not-applicable",
+        "reason": "GLM is the math library in the math slot: the other libraries' adapters convert to its types."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "flecs",
+        "status": "pass"
+      },
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      },
+      {
+        "rule": "sdl-shadercross--sdl3.formats-match-backend",
+        "status": "pass"
+      },
+      {
+        "rule": "sdl-shadercross--sdl3.reflection-matches",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
