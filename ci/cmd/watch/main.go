@@ -3,8 +3,12 @@
 // newer than the map's newest version, by the pattern of that version's
 // pinned tag, with each one's commit, release date and whether its notes
 // name a security fix. It writes them as JSON for the curation workflow.
+// With -measure, it also writes the map's part of the v1 measures: the
+// share of watched libraries whose latest upstream release is in the map
+// or within the freshness window, and the share of the map's evidence
+// that is current (ADR-0063).
 //
-//	watch -map map -out releases.json
+//	watch -map map -out releases.json [-measure measure.json]
 package main
 
 import (
@@ -13,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/zach/automap/ci/internal/gh"
 	"github.com/zach/automap/internal/mapmodel"
@@ -32,12 +37,14 @@ type Release struct {
 func main() {
 	mapDir := flag.String("map", "map", "the public map")
 	out := flag.String("out", "releases.json", "where to write the new releases")
+	measure := flag.String("measure", "", "where to write the map's measures: freshness and evidence currency")
 	flag.Parse()
 	m, problems := mapmodel.Load(*mapDir, nil)
 	if len(problems) > 0 {
 		fail(fmt.Errorf("the map has problems: %v", problems))
 	}
 	found := []Release{}
+	var watched []string
 	for id, lib := range m.Libraries {
 		if lib.Source == nil {
 			continue
@@ -55,6 +62,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", id, err)
 			continue
 		}
+		watched = append(watched, id)
 		found = append(found, releases...)
 	}
 	raw, _ := json.MarshalIndent(found, "", "  ")
@@ -63,6 +71,15 @@ func main() {
 	}
 	if err := os.WriteFile(*out, raw, 0o644); err != nil {
 		fail(err)
+	}
+	if *measure != "" {
+		now := time.Now()
+		mm := Measure{Freshness: freshness(watched, found, now), Evidence: evidenceCurrency(*mapDir, now)}
+		fmt.Printf("freshness: %d of %d watched libraries have their latest upstream release in the map or within %d days (%.0f%%); evidence: %d of %d pieces current (%.0f%%)\n",
+			mm.Freshness.Fresh, mm.Freshness.Libraries, int(FreshnessWindow.Hours()/24), mm.Freshness.Share*100, mm.Evidence.Current, mm.Evidence.Pieces, mm.Evidence.Share*100)
+		if err := writeMeasure(*measure, mm); err != nil {
+			fail(err)
+		}
 	}
 }
 

@@ -119,3 +119,32 @@ func TestEjectMeasure(t *testing.T) {
 		t.Fatalf("eject measure %+v, want 2 of 3", m)
 	}
 }
+
+func TestMeasures(t *testing.T) {
+	yes, no := true, false
+	tasks := []TaskResult{
+		{ID: "testbed-start", Status: "pass", DurationSec: 600, Ejected: &yes},
+		{ID: "testbed-extend", Status: "pass", DurationSec: 200, Ejected: &yes},
+		{ID: "custom-adopt", Status: "fail", DurationSec: 900, Ejected: &no},
+		{ID: "custom-eject", Status: "skipped"},
+	}
+	fresh := &mapMeasure{}
+	fresh.Freshness.Libraries, fresh.Freshness.Fresh = 12, 12
+	fresh.Evidence.Pieces, fresh.Evidence.Current = 40, 36
+	m := measures(tasks, "warm", ejectMeasure(tasks), fresh)
+	if m.RequestToTestbed == nil || !m.RequestToTestbed.Met || m.RequestToTestbed.Seconds != 600 {
+		t.Errorf("request to testbed %+v, want met at 600s warm", m.RequestToTestbed)
+	}
+	if s := m.FirstAttemptSuccess; s == nil || s.Of != 2 || s.Out != 3 || s.Met {
+		t.Errorf("first-attempt success %+v, want 2 of 3 (skipped excluded), not met", s)
+	}
+	if f := m.Freshness; f == nil || !f.Libraries.Met || f.Evidence.Met || f.Met {
+		t.Errorf("freshness %+v, want libraries met, evidence at 90%% below its 95%% target, not met", f)
+	}
+	if e := m.Eject; e == nil || e.Of != 2 || e.Out != 3 || e.Met {
+		t.Errorf("eject %+v, want 2 of 3, not met", e)
+	}
+	if cold := measures(tasks, "cold", nil, nil); cold.RequestToTestbed.Met || cold.Freshness != nil || cold.Eject != nil {
+		t.Errorf("with a cold cache and no map measures: %+v", cold)
+	}
+}
