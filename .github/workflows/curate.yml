@@ -113,7 +113,10 @@ jobs:
         run: |
           git add map ci/registry
           if git diff --cached --quiet; then
-            echo "The session changed nothing:"; cat summary.md; exit 1
+            # Usually vcpkg has no port with the version yet; the watcher
+            # brings the release back tomorrow.
+            echo "::warning title=Curate $LIBRARY $VERSION::The session changed nothing: $(head -c 400 summary.md | tr '\n' ' ')"
+            cat summary.md; exit 0
           fi
           go run ./cmd/automap find --map map --json > /dev/null
           git config user.name "automap-curation"
