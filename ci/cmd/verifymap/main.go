@@ -141,7 +141,10 @@ func readPublished(mapDir string) map[string]*Published {
 			return nil
 		}
 		at, _ := time.Parse(time.RFC3339, s.Predicate.ProducedAt)
-		pub := &Published{ProducedAt: at}
+		pub := &Published{ProducedAt: at, Broken: s.Predicate.Level == "none" || s.Predicate.Level == "builds"}
+		for _, r := range s.Predicate.Results {
+			pub.Broken = pub.Broken || r.Status == "fail"
+		}
 		pub.Commit, _ = strings.CutPrefix(s.Predicate.MapRelease, "git:")
 		if pub.Commit == s.Predicate.MapRelease {
 			pub.Commit = ""
@@ -229,7 +232,8 @@ func run(args []string) error {
 	for _, p := range job.Picks {
 		start = append(start, "--with", p.Library+":"+p.Variant)
 	}
-	_, startErr := cli(start...) // a failing verification still writes evidence
+	startResult, startErr := cli(start...) // a failing verification still writes evidence
+	printDetails(repo, startResult)
 	raw, err := os.ReadFile(filepath.Join(repo, "evidence", job.Platform+".json"))
 	if err != nil {
 		return fmt.Errorf("the composition wrote no evidence (automap start: %v): %v", startErr, err)
@@ -276,6 +280,11 @@ func run(args []string) error {
 			if err != nil || result["ok"] != true {
 				fmt.Printf("::error::the probe for %s didn't catch its seeded violation on %s\n", spec, job.Platform)
 				mu.Lock()
+				// Why: the seeded run's failures and their logs.
+				for _, f := range failuresOf(result) {
+					fmt.Printf("  %s: %s\n", f["code"], f["message"])
+				}
+				printDetails(repo, result)
 				uncaught = append(uncaught, Uncaught{Rule: s.Rule, Library: s.Library})
 				mu.Unlock()
 			}
@@ -388,4 +397,36 @@ func copyMapWithVersions(src, dst string, picks []Pick) error {
 		}
 	}
 	return nil
+}
+
+// printDetails prints the tail of each details file a CLI result names,
+// such as a failed build's log, so the job log says why.
+func printDetails(repo string, result map[string]any) {
+	for _, failure := range failuresOf(result) {
+		file, _ := failure["details_file"].(string)
+		if file == "" {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(file)))
+		if err != nil {
+			continue
+		}
+		lines := strings.Split(strings.TrimRight(string(raw), "\n"), "\n")
+		if len(lines) > 60 {
+			lines = lines[len(lines)-60:]
+		}
+		fmt.Printf("::group::%s (%s), last lines\n%s\n::endgroup::\n", file, failure["code"], strings.Join(lines, "\n"))
+	}
+}
+
+// failuresOf is a CLI result's failures.
+func failuresOf(result map[string]any) []map[string]any {
+	raw, _ := result["failures"].([]any)
+	var out []map[string]any
+	for _, f := range raw {
+		if failure, ok := f.(map[string]any); ok {
+			out = append(out, failure)
+		}
+	}
+	return out
 }
