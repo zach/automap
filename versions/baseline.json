@@ -4,6 +4,10 @@
       "baseline": "5.6.0",
       "port-version": 0
     },
+    "miniaudio": {
+      "baseline": "0.11.26",
+      "port-version": 0
+    },
     "sdl3": {
       "baseline": "3.4.20",
       "port-version": 0
