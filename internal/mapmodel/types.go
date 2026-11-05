@@ -60,8 +60,9 @@ type Rule struct {
 }
 
 type Seed struct {
-	Description string `json:"description"`
-	Patch       string `json:"patch"`
+	Description string            `json:"description"`
+	Patch       string            `json:"patch"`
+	When        map[string]string `json:"when,omitempty"` // choice -> value the seed applies under
 }
 
 type SharedInterface struct {

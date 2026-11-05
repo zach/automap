@@ -1,0 +1,31 @@
+--- a/enkits_jobs.cpp
++++ b/enkits_jobs.cpp
+@@ -12,6 +12,8 @@
+ // thread; each registers with the scheduler the first time it submits.
+ constexpr uint32_t external_threads = 8;
+ 
++int jobs_seen = 0; // shared by submitters and task threads, unsynchronized
++
+ // Deletes its job's task once the task completes: enkiTS doesn't touch a
+ // task again by the time its dependents' OnDependenciesComplete runs.
+ struct DeleteOnCompletion final : enki::ICompletable {
+@@ -28,7 +30,10 @@
+     void* data;
+     DeleteOnCompletion deleter;
+     JobTask(am::jobs::Job j, void* d) : job(j), data(d) { deleter.SetDependency(deleter.dependency, this); }
+-    void ExecuteRange(enki::TaskSetPartition, uint32_t) override { job(data); }
++    void ExecuteRange(enki::TaskSetPartition, uint32_t) override {
++        ++jobs_seen;
++        job(data);
++    }
+ };
+ 
+ // Registers a thread enkiTS doesn't know, for as long as the thread lives.
+@@ -52,6 +57,7 @@
+ }
+ 
+ void am_jobs_slot_submit(am::jobs::Job job, void* data) {
++    ++jobs_seen;
+     enki::TaskScheduler& scheduler = am_enkits_scheduler();
+     if (scheduler.GetThreadNum() == enki::NO_THREAD_NUM && !external.registered) {
+         external.registered = scheduler.RegisterExternalTaskThread();

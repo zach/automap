@@ -33,6 +33,14 @@
         "description": "Run each submitted job on the submitting thread instead of handing it to enkiTS.",
         "patch": "enkits--jobs/seeded/jobs.routed-through-interface.patch"
       }
+    },
+    {
+      "rule": "jobs.tsan-clean",
+      "check": "The ThreadSanitizer run: jobs submitted on one thread run on enkiTS's task threads, so a race in the binding shows in the report.",
+      "seeded_violation": {
+        "description": "Add an unsynchronized counter that submitting and running a job each increment.",
+        "patch": "enkits--jobs/seeded/jobs.tsan-clean.patch"
+      }
     }
   ],
   "adaptation_notes": [

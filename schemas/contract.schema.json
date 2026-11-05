@@ -221,6 +221,13 @@
           "type": "string",
           "pattern": "\\.(patch|json-patch)$",
           "description": "A unified diff (.patch) against reference glue, a build fragment, setup glue or a shared interface, or an RFC 6902 JSON Patch (.json-patch) against the manifest; paths are relative to the recipe's or contract version's directory. Never against a file the CLI generates."
+        },
+        "when": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The seed applies only in compositions whose choices at this contract have these values, such as a seed in the reference thread pool only where the pool is the scheduler; elsewhere the mistake's code never runs, and a recipe seeds the rule instead."
         }
       }
     }
