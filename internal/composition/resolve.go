@@ -150,8 +150,48 @@ func NewManifest(m *mapmodel.Map, req Request) (*Manifest, []Failure) {
 		}
 	}
 	slotChoices(m, man)
+	factChoices(m, man)
 	man.Glue = defaultGlue(m, man)
 	return man, nil
+}
+
+// factChoices sets every contract choice that a library's facts pin, such
+// as math-types' position_precision, which Jolt's double-precision variant
+// declares as double: when every library declaring the fact agrees, the
+// choice takes their value, so a composition agrees with its libraries by
+// default rather than by the contract's own default.
+func factChoices(m *mapmodel.Map, man *Manifest) {
+	for cid, choices := range man.Choices {
+		for id := range choices {
+			var value any
+			agree := true
+			for _, lib := range man.Libraries() {
+				l := m.Libraries[lib]
+				if l == nil {
+					continue
+				}
+				v := l.Newest()
+				fact, ok := v.Facts[cid][id]
+				if variant := v.Variant(man.Variants[lib].Default); variant != nil {
+					if f, ok2 := variant.Facts[cid][id]; ok2 {
+						fact, ok = f, true
+					}
+				}
+				if !ok || fact == nil {
+					continue
+				}
+				switch {
+				case value == nil:
+					value = fact
+				case fmt.Sprint(value) != fmt.Sprint(fact):
+					agree = false
+				}
+			}
+			if value != nil && agree {
+				man.Choices[cid][id] = value
+			}
+		}
+	}
 }
 
 // slotChoices sets every contract choice that can name a filled slot to

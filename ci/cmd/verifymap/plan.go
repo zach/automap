@@ -186,6 +186,7 @@ func Inputs(m *mapmodel.Map, e Edge) []string {
 type Published struct {
 	ProducedAt time.Time
 	Commit     string // from map_release git:<commit>, or "" for any other release
+	Broken     bool   // the run failed: below smoke, or a rule failed (ADR-0031)
 }
 
 // Changed reports whether any of the paths changed between a commit and
@@ -193,8 +194,9 @@ type Published struct {
 type Changed func(commit string, paths []string) bool
 
 // Plan decides which edges need verifying on which platforms: those with
-// no evidence there, with evidence older than MaxAge, or whose inputs
-// changed since the commit their evidence was verified at. It groups them
+// no evidence there, with evidence older than MaxAge or broken (so a fix
+// retires its own negative claim, ADR-0031), or whose inputs changed since
+// the commit their evidence was verified at. It groups them
 // into one job per composition and platform. It is a pure function.
 func Plan(m *mapmodel.Map, edges []Edge, platforms []string, published func(e Edge, platform string) *Published, changed Changed, now time.Time) []Job {
 	jobs := map[string]*Job{}
@@ -236,7 +238,7 @@ func needs(m *mapmodel.Map, e Edge, platform string, p *Published, changed Chang
 		}
 	}
 	switch {
-	case p == nil, p.Commit == "", now.Sub(p.ProducedAt) > MaxAge:
+	case p == nil, p.Commit == "", p.Broken, now.Sub(p.ProducedAt) > MaxAge:
 		return true
 	}
 	return changed(p.Commit, Inputs(m, e))

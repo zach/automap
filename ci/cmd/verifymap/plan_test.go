@@ -146,3 +146,16 @@ func TestALibraryIsVerifiedOnlyWhereItBuilds(t *testing.T) {
 		}
 	}
 }
+
+func TestBrokenEvidenceIsReverified(t *testing.T) {
+	m := fixtureMap(t)
+	broken := func(e Edge, _ string) *Published {
+		return &Published{ProducedAt: now.Add(-time.Hour), Commit: "c0ffee", Broken: e.ID == "stub-ui--allocation"}
+	}
+
+	jobs := Plan(m, Edges(m, testbed), []string{"linux-x64-clang"}, broken, touches(nil), now)
+
+	if got, want := planned(jobs), []string{"binding stub-ui--allocation [{stub-ui 1.0.0 default}] on linux-x64-clang"}; !slices.Equal(got, want) {
+		t.Errorf("planned %v, want %v", got, want)
+	}
+}
