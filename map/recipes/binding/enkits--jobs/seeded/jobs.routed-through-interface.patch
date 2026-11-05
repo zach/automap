@@ -1,10 +1,19 @@
 --- a/enkits_jobs.cpp
 +++ b/enkits_jobs.cpp
-@@ -52,6 +52,8 @@
+@@ -6,6 +6,8 @@
+ #include "automap/lifecycle.h"
+ #include "enkits_scheduler.h"
+ 
++#include <thread>
++
+ namespace {
+ 
+ // Threads outside enkiTS that may submit jobs, such as a library's own
+@@ -52,6 +54,8 @@
  }
  
  void am_jobs_slot_submit(am::jobs::Job job, void* data) {
-+    job(data);
++    std::thread(job, data).detach();
 +    return;
      enki::TaskScheduler& scheduler = am_enkits_scheduler();
      if (scheduler.GetThreadNum() == enki::NO_THREAD_NUM && !external.registered) {

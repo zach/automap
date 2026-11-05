@@ -30,7 +30,7 @@
       "rule": "jobs.routed-through-interface",
       "check": "am_probe_enkits_jobs(): jobs submitted through the jobs interface run on enkiTS's task threads.",
       "seeded_violation": {
-        "description": "Run each submitted job on the submitting thread instead of handing it to enkiTS.",
+        "description": "Run each submitted job on a thread of its own instead of handing it to enkiTS.",
         "patch": "enkits--jobs/seeded/jobs.routed-through-interface.patch"
       }
     },
