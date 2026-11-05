@@ -280,6 +280,11 @@ func run(args []string) error {
 			if err != nil || result["ok"] != true {
 				fmt.Printf("::error::the probe for %s didn't catch its seeded violation on %s\n", spec, job.Platform)
 				mu.Lock()
+				// Why: the seeded run's failures and their logs.
+				for _, f := range failuresOf(result) {
+					fmt.Printf("  %s: %s\n", f["code"], f["message"])
+				}
+				printDetails(repo, result)
 				uncaught = append(uncaught, Uncaught{Rule: s.Rule, Library: s.Library})
 				mu.Unlock()
 			}
@@ -397,9 +402,7 @@ func copyMapWithVersions(src, dst string, picks []Pick) error {
 // printDetails prints the tail of each details file a CLI result names,
 // such as a failed build's log, so the job log says why.
 func printDetails(repo string, result map[string]any) {
-	failures, _ := result["failures"].([]any)
-	for _, f := range failures {
-		failure, _ := f.(map[string]any)
+	for _, failure := range failuresOf(result) {
 		file, _ := failure["details_file"].(string)
 		if file == "" {
 			continue
@@ -414,4 +417,16 @@ func printDetails(repo string, result map[string]any) {
 		}
 		fmt.Printf("::group::%s (%s), last lines\n%s\n::endgroup::\n", file, failure["code"], strings.Join(lines, "\n"))
 	}
+}
+
+// failuresOf is a CLI result's failures.
+func failuresOf(result map[string]any) []map[string]any {
+	raw, _ := result["failures"].([]any)
+	var out []map[string]any
+	for _, f := range raw {
+		if failure, ok := f.(map[string]any); ok {
+			out = append(out, failure)
+		}
+	}
+	return out
 }
