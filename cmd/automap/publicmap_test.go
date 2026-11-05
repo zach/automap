@@ -286,3 +286,27 @@ func TestJoltsRegistryVariantsResolveThroughTheAutomapRegistry(t *testing.T) {
 		t.Errorf("vcpkg.json pins the curated port version for the registry's joltphysics:\n%s", vcpkg)
 	}
 }
+
+// A choice a library's facts pin takes their value: Jolt's double-precision
+// variant declares double world positions, so the composition chooses
+// double rather than the contract's default, float.
+func TestAChoiceALibrarysFactsPinTakesTheirValue(t *testing.T) {
+	repo := testbedRepo(t)
+
+	run := repo.Automap(t, "start", "--with", "jolt:double-precision", "--map", "map", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var man struct {
+		Choices map[string]map[string]any `json:"choices"`
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if got := man.Choices["math-types"]["position_precision"]; got != "double" {
+		t.Errorf("math-types.position_precision is %v, want double from Jolt's double-precision facts", got)
+	}
+	plain := testbedRepo(t)
+	plain.Automap(t, "start", "--with", "jolt", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	json.Unmarshal([]byte(clitest.Read(t, plain, "automap.manifest.json")), &man)
+	if got := man.Choices["math-types"]["position_precision"]; got != "float" {
+		t.Errorf("with default Jolt, math-types.position_precision is %v, want float", got)
+	}
+}
