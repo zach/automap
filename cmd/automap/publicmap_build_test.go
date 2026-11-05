@@ -252,6 +252,7 @@ var enkitsSeeds = []struct{ seed, code string }{
 	{"allocation.routed-through-facade:enkits", "ALLOC_NOT_ROUTED(enkits)"},
 	{"diagnostics.routed-through-facade:enkits", "DIAG_NOT_ROUTED(enkits)"},
 	{"jobs.routed-through-interface:enkits", "JOBS_NOT_ROUTED(enkits)"},
+	{"jobs.tsan-clean:enkits", "TSAN_REPORT(data race enkits_jobs.cpp"},
 }
 
 func TestTheTestbedExtendsWithJoltAndEnkiTSProbed(t *testing.T) {
@@ -286,6 +287,9 @@ func TestTheTestbedExtendsWithJoltAndEnkiTSProbed(t *testing.T) {
 	}
 
 	for _, c := range enkitsSeeds {
+		if strings.HasPrefix(c.seed, "jobs.tsan-clean") && !tsan {
+			continue
+		}
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
 			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")

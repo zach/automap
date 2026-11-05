@@ -60,7 +60,7 @@ func Seeds(m *mapmodel.Map, man *composition.Manifest) []Seed {
 	for _, cid := range composition.Contracts(m, man) {
 		c := m.LatestContract(cid)
 		for _, rule := range c.Rules {
-			if rule.SeededViolation == nil {
+			if rule.SeededViolation == nil || !seedApplies(rule.SeededViolation.When, man.Choices[cid]) {
 				continue
 			}
 			seed := Seed{Rule: rule.ID, Owner: "contract " + cid, Description: rule.SeededViolation.Description,
@@ -74,6 +74,17 @@ func Seeds(m *mapmodel.Map, man *composition.Manifest) []Seed {
 		}
 	}
 	return out
+}
+
+// seedApplies reports whether a seed's when clause holds for the
+// composition's choices at its contract: every named choice has the value.
+func seedApplies(when map[string]string, choices map[string]any) bool {
+	for k, v := range when {
+		if fmt.Sprint(choices[k]) != v {
+			return false
+		}
+	}
+	return true
 }
 
 func isLibraryRule(m *mapmodel.Map, rule string) bool {
