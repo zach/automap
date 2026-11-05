@@ -368,35 +368,77 @@ func allNewest(m *mapmodel.Map, picks []Pick) bool {
 }
 
 // copyMapWithVersions copies the map, keeping only the picked version of
-// each picked library, so automap start composes it.
+// each picked library, so automap start composes it. The copy stays a
+// valid map: each recipe applies to only the versions kept, and a recipe
+// that applies to none of a picked library's kept versions is left out.
 func copyMapWithVersions(src, dst string, picks []Pick) error {
 	if err := os.CopyFS(dst, os.DirFS(src)); err != nil {
 		return err
 	}
+	picked := map[string]string{}
 	for _, p := range picks {
-		file := filepath.Join(dst, "libraries", p.Library+".json")
-		raw, err := os.ReadFile(file)
+		picked[p.Library] = p.Version
+		err := editJSON(filepath.Join(dst, "libraries", p.Library+".json"), func(doc map[string]any) bool {
+			versions, _ := doc["versions"].([]any)
+			var keep []any
+			for _, v := range versions {
+				if vm, _ := v.(map[string]any); vm["version"] == p.Version {
+					keep = append(keep, v)
+				}
+			}
+			doc["versions"] = keep
+			return true
+		})
 		if err != nil {
 			return err
 		}
-		var doc map[string]any
-		if err := json.Unmarshal(raw, &doc); err != nil {
-			return err
-		}
-		versions, _ := doc["versions"].([]any)
-		var keep []any
-		for _, v := range versions {
-			if vm, _ := v.(map[string]any); vm["version"] == p.Version {
-				keep = append(keep, v)
+	}
+	recipes, _ := filepath.Glob(filepath.Join(dst, "recipes", "*", "*.json"))
+	for _, file := range recipes {
+		applies := true
+		err := editJSON(file, func(doc map[string]any) bool {
+			appliesTo, _ := doc["applies_to"].(map[string]any)
+			for lib, version := range picked {
+				a, ok := appliesTo[lib].(map[string]any)
+				if !ok {
+					continue
+				}
+				versions, _ := a["versions"].([]any)
+				if !slices.Contains(versions, any(version)) {
+					applies = false
+					return false
+				}
+				a["versions"] = []any{version}
 			}
-		}
-		doc["versions"] = keep
-		raw, _ = json.MarshalIndent(doc, "", "  ")
-		if err := os.WriteFile(file, raw, 0o644); err != nil {
+			return true
+		})
+		if err != nil {
 			return err
+		}
+		if !applies {
+			if err := os.Remove(file); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
+}
+
+// editJSON rewrites a JSON file through f, unless f returns false.
+func editJSON(file string, f func(doc map[string]any) bool) error {
+	raw, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return err
+	}
+	if !f(doc) {
+		return nil
+	}
+	raw, _ = json.MarshalIndent(doc, "", "  ")
+	return os.WriteFile(file, raw, 0o644)
 }
 
 // printDetails prints the tail of each details file a CLI result names,
