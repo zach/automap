@@ -47,16 +47,22 @@ void served(const char* library, void* block) {
 #endif
 }
 
-// Records that library is giving back block; in probe builds, notes a block
-// the facade never served.
-void returned(const char* library, void* block) {
+// Records that library is giving back block. In probe builds, a block the
+// facade never served is noted against the library and reported foreign:
+// it belongs to some other allocator, which the facade's would reject (and
+// an allocator such as mimalloc stops the process on), so the probe run
+// leaks it and lives to report the rule.
+bool returned(const char* library, void* block) {
 #ifdef AUTOMAP_PROBE
     State& s = state();
     std::lock_guard<std::mutex> lock(s.mutex);
-    if (s.live.erase(block) == 0) s.foreign.insert(library);
+    if (s.live.erase(block) != 0) return false;
+    s.foreign.insert(library);
+    return true;
 #else
     (void)library;
     (void)block;
+    return false;
 #endif
 }
 
@@ -107,7 +113,7 @@ void* allocate_zeroed(const char* library, std::size_t count, std::size_t size) 
 
 void* reallocate(const char* library, void* block, std::size_t size) {
     if (block == nullptr) return allocate(library, size);
-    returned(library, block);
+    if (returned(library, block)) return allocate(library, size); // a foreign block: its contents are unknown
 #if defined(AUTOMAP_ALLOCATION_ALLOCATOR_ALLOCATOR_SLOT)
     void* moved = am_allocator_slot_reallocate(block, size);
 #else
@@ -119,7 +125,7 @@ void* reallocate(const char* library, void* block, std::size_t size) {
 
 void release(const char* library, void* block) {
     if (block == nullptr) return;
-    returned(library, block);
+    if (returned(library, block)) return;
     backend_release(block, false);
 }
 
@@ -131,7 +137,7 @@ void* allocate_aligned(const char* library, std::size_t size, std::size_t alignm
 
 void release_aligned(const char* library, void* block) {
     if (block == nullptr) return;
-    returned(library, block);
+    if (returned(library, block)) return;
     backend_release(block, true);
 }
 

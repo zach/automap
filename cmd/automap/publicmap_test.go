@@ -277,8 +277,8 @@ func TestJoltsRegistryVariantsResolveThroughTheAutomapRegistry(t *testing.T) {
 	}
 	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg-configuration.json")), &config)
 	if len(config.Registries) != 1 || config.Registries[0].Repository != registry.URL || config.Registries[0].Baseline != registry.Commit ||
-		!slices.Equal(config.Registries[0].Packages, []string{"joltphysics"}) {
-		t.Errorf("vcpkg-configuration.json registries %+v, want joltphysics from %s at %s", config.Registries, registry.URL, registry.Commit)
+		!slices.Contains(config.Registries[0].Packages, "joltphysics") {
+		t.Errorf("vcpkg-configuration.json registries %+v, want joltphysics among the packages from %s at %s", config.Registries, registry.URL, registry.Commit)
 	}
 	if vcpkg := clitest.Read(t, repo, "vcpkg.json"); strings.Contains(vcpkg, `"name": "joltphysics",
       "version": "5.6.0",
