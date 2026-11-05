@@ -85,11 +85,33 @@ jobs:
           claude -p "$prompt" --max-turns 80 --model opus --output-format json --dangerously-skip-permissions > session.json || true
           jq -r '.result // "no summary"' session.json > summary.md
           jq '{cost: .total_cost_usd, turns: .num_turns}' session.json || true
+      - name: Publish the registry, when the session added a port to it
+        # A port the curated registry lacks at the map's baseline goes
+        # through the Automap registry (ADR-0034): the registry branch
+        # takes it now, so Verify map on the curation branch builds with
+        # it, and map.json points at the new registry commit.
+        run: |
+          git add ci/registry
+          git diff --cached --quiet ci/registry && exit 0
+          git config user.name "automap-curation"
+          git config user.email "automap-curation@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git fetch -q origin registry
+            rm -rf "$RUNNER_TEMP/registry"; git worktree prune
+            git worktree add -q "$RUNNER_TEMP/registry" origin/registry -B registry
+            commit=$(go run ./ci/cmd/registry -ports ci/registry/ports -branch "$RUNNER_TEMP/registry")
+            git -C "$RUNNER_TEMP/registry" push -q origin registry && break
+            [ "$attempt" = 4 ] && exit 1
+            sleep $((attempt * 5))
+          done
+          jq --indent 2 --arg c "$commit" '.build_backend.vcpkg.automap_registry.commit = $c' map/map.json > map/map.json.new
+          mv map/map.json.new map/map.json
+          echo "The Automap registry is at ${commit:0:7}"
       - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add map
+          git add map ci/registry
           if git diff --cached --quiet; then
             echo "The session changed nothing:"; cat summary.md; exit 1
           fi
