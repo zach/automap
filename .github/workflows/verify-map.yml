@@ -170,6 +170,7 @@ jobs:
           for attempt in 1 2 3 4; do
             git push origin HEAD:main && exit 0
             sleep $((attempt * 5))
-            git pull -q --rebase origin main
+            # Another run pushed first: its evidence stays, except where this run verified the same piece.
+            git pull -q --rebase -X theirs origin main
           done
           exit 1
