@@ -1,0 +1,157 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "automap.lock.json",
+      "digest": {
+        "sha256": "73ab81922064a1fb18c1be5bc9ff1388305643d53d6648550b14c5bea57f871f"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "composition",
+    "subject_detail": {
+      "lock_hash": "sha256:76f417507a5c93e009a1cbf98c5e56b46564d004ed426481f11edbdb1f95febf"
+    },
+    "platform": "windows-x64-msvc",
+    "level": "probed",
+    "produced_at": "2026-11-05T21:53:08Z",
+    "map_release": "git:1b594f44bc3935f23bb6730410e3765f997bbb12",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+      "environment": {},
+      "runner_image": "win25-vs2026 20261030.294.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.abi-defines-match",
+        "status": "pass"
+      },
+      {
+        "rule": "build-flags.language-settings-agree",
+        "status": "pass"
+      },
+      {
+        "rule": "determinism.flags-set",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "determinism.replay-hash-matches",
+        "library": "jolt",
+        "status": "not-applicable",
+        "reason": "The composition doesn't choose determinism.profile on."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "dear-imgui",
+        "status": "not-applicable",
+        "reason": "Dear ImGui has no runtime log or assert hook; IM_ASSERT is compile-time only."
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "sdl3",
+        "status": "pass"
+      },
+      {
+        "rule": "handles.bits-preserved",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.routed-through-interface",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "jobs.tsan-clean",
+        "status": "not-applicable",
+        "reason": "The rule's probe runs only on linux-x64-clang, macos-arm64-appleclang."
+      },
+      {
+        "rule": "lifecycle.init-order",
+        "status": "pass"
+      },
+      {
+        "rule": "lifecycle.shutdown-reverse",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.precision-agrees",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "dear-imgui",
+        "status": "pass"
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "glm",
+        "status": "not-applicable",
+        "reason": "GLM is the math library in the math slot: the other libraries' adapters convert to its types."
+      },
+      {
+        "rule": "math-types.adapters-round-trip",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "platform.targets-supported",
+        "status": "pass"
+      },
+      {
+        "rule": "serialization.rebuild-key-complete",
+        "library": "jolt",
+        "status": "pass"
+      },
+      {
+        "rule": "dear-imgui--sdl3.events-forwarded",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}

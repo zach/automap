@@ -25,15 +25,15 @@
     },
     "platform": "windows-x64-msvc",
     "level": "probed",
-    "produced_at": "2026-11-05T14:32:30Z",
-    "map_release": "git:0bd16e3d17af0e915229398cfbb08a1433ced7e0",
+    "produced_at": "2026-11-05T22:50:13Z",
+    "map_release": "git:1b594f44bc3935f23bb6730410e3765f997bbb12",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
       "environment": {
         "AUTOMAP_MINIAUDIO_BACKEND": "null"
       },
-      "runner_image": "win25-vs2026 20261030.294.1",
+      "runner_image": "win25-vs2026 20261103.298.1",
       "sanitizers": {}
     },
     "results": [

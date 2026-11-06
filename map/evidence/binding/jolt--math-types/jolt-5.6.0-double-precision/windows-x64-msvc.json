@@ -24,22 +24,20 @@
       }
     },
     "platform": "windows-x64-msvc",
-    "level": "smoke",
-    "produced_at": "2026-11-05T13:51:59Z",
-    "map_release": "git:0bd16e3d17af0e915229398cfbb08a1433ced7e0",
+    "level": "probed",
+    "produced_at": "2026-11-05T22:54:01Z",
+    "map_release": "git:1b594f44bc3935f23bb6730410e3765f997bbb12",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
       "environment": {},
-      "runner_image": "win25-vs2026 20261030.294.1",
+      "runner_image": "win25-vs2026 20261103.298.1",
       "sanitizers": {}
     },
     "results": [
       {
         "rule": "math-types.precision-agrees",
-        "status": "fail",
-        "failure_code": "PRECISION_MISMATCH(jolt)",
-        "reason": "jolt uses double world positions, but the composition chooses float."
+        "status": "pass"
       },
       {
         "rule": "math-types.adapters-round-trip",

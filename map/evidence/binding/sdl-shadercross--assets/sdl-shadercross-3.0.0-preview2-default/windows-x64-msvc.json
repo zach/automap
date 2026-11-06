@@ -24,9 +24,9 @@
       }
     },
     "platform": "windows-x64-msvc",
-    "level": "none",
-    "produced_at": "2026-11-05T14:00:00Z",
-    "map_release": "git:0bd16e3d17af0e915229398cfbb08a1433ced7e0",
+    "level": "probed",
+    "produced_at": "2026-11-05T23:03:55Z",
+    "map_release": "git:1b594f44bc3935f23bb6730410e3765f997bbb12",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
@@ -38,14 +38,12 @@
       {
         "rule": "assets.reads-through-interface",
         "library": "sdl-shadercross",
-        "status": "not-applicable",
-        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+        "status": "pass"
       },
       {
         "rule": "assets.output-identical",
         "library": "sdl-shadercross",
-        "status": "not-applicable",
-        "reason": "Its probe didn't catch its seeded violation in this run, so the rule counts as guidance, not toward the level, until the probe is fixed (ADR-0071)."
+        "status": "pass"
       }
     ],
     "verifier": {
