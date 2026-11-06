@@ -4,8 +4,8 @@
 
 **Blocked by:** [30: Starter-engine reference composition and journey 2 evals](30-starter-engine-composition-and-evals.md), [34: Custom-integration evals](34-custom-integration-evals.md), [37: The custom-eject eval and the eject measure](37-custom-eject-eval-and-measure.md)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The eval report shows: request-to-running-testbed time (warm cache, with cold reported alongside); first-attempt success across all eval tasks; freshness (share of catalog libraries at their latest release within 14 days, share of evidence current); and eject.
-- [ ] All four measures meet their targets on one map release.
-- [ ] The release checklist is presented to the product owner for the v1 decision, releasing the CLI as 0.1.0 (`cli-v0.1.0`).
+- [x] The eval report shows: request-to-running-testbed time (warm cache, with cold reported alongside); first-attempt success across all eval tasks; freshness (share of catalog libraries at their latest release within 14 days, share of evidence current); and eject.
+- [x] All four measures meet their targets on one map release.
+- [x] The release checklist is presented to the product owner for the v1 decision, releasing the CLI as 0.1.0 (`cli-v0.1.0`).
