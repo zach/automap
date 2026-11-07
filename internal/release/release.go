@@ -177,6 +177,19 @@ func releases() ([]listed, error) {
 	return out, nil
 }
 
+// List returns the published map releases' tags, newest first.
+func List() ([]string, error) {
+	list, err := releases()
+	if err != nil {
+		return nil, err
+	}
+	var tags []string
+	for _, r := range list {
+		tags = append(tags, r.Tag)
+	}
+	return tags, nil
+}
+
 // InvalidError is a release whose archive doesn't match its SHA-256 or
 // can't be unpacked.
 type InvalidError struct {

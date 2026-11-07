@@ -24,6 +24,7 @@ import (
 
 	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/cli"
+	"github.com/zach/automap/internal/release"
 )
 
 // Task is one eval task, evals/tasks/<id>/task.json.
@@ -39,10 +40,15 @@ type Task struct {
 	// Setup is automap invocations that bring the repo to the task's
 	// starting point before the session, such as starting the testbed.
 	Setup [][]string `json:"setup,omitempty"`
+	// SetupMapRelease is the map release the setup reads: "previous" for
+	// the release before the newest, so the session has a real release
+	// to move across; "" for the newest, as the session reads.
+	SetupMapRelease string `json:"setup_map_release,omitempty"`
 	// Pass is what grading requires: the level automap verify --json
 	// reports, the library each named slot holds in the manifest, the
-	// libraries the composition has, and the libraries the lock pins to a
-	// private map's variant.
+	// libraries the composition has, the libraries the lock pins to a
+	// private map's variant, and the map release the lock records
+	// ("newest" for the newest published release).
 	//
 	// An eject task's pass is instead the composition gone and the repo
 	// building and passing its smoke test without Automap.
@@ -52,6 +58,7 @@ type Task struct {
 		Slots           map[string]string `json:"slots,omitempty"`
 		Libraries       []string          `json:"libraries,omitempty"`
 		PrivateVariants []string          `json:"private_variants,omitempty"`
+		MapRelease      string            `json:"map_release,omitempty"`
 	} `json:"pass"`
 	TimeoutMinutes int `json:"timeout_minutes"`
 }
@@ -266,6 +273,18 @@ func vcpkgCache() string {
 	return c
 }
 
+// previousRelease is the published map release before the newest.
+func previousRelease() (string, error) {
+	tags, err := release.List()
+	if err != nil {
+		return "", err
+	}
+	if len(tags) < 2 {
+		return "", fmt.Errorf("only %d map release is published; an upgrade task needs two", len(tags))
+	}
+	return tags[1], nil
+}
+
 // runTask runs one task in a fresh repo and grades it. It returns the
 // model Claude Code reports using.
 func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskResult, string) {
@@ -308,8 +327,29 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	if mapDir != "" {
 		env = append(env, "AUTOMAP_MAP="+mapDir)
 	}
+	// An upgrade task's setup reads the release before the newest, from
+	// the release cache, so the lock records it; with a map directory
+	// there is no release to move across.
+	var setupMap []string
+	if t.SetupMapRelease != "" {
+		if mapDir != "" {
+			r.Status, r.Reason = "skipped", "the task moves across map releases, and the run reads a map directory"
+			return r, ""
+		}
+		tag, err := previousRelease()
+		if err != nil {
+			r.Status, r.Reason = "fail", err.Error()
+			return r, ""
+		}
+		dir, err := release.Open(tag)
+		if err != nil {
+			r.Status, r.Reason = "fail", err.Error()
+			return r, ""
+		}
+		setupMap = []string{"--map", dir}
+	}
 	for _, args := range t.Setup {
-		setup := exec.Command(automap, args...)
+		setup := exec.Command(automap, append(append([]string{}, args...), setupMap...)...)
 		setup.Dir, setup.Env = repo, env
 		if out, err := setup.CombinedOutput(); err != nil {
 			r.Status, r.Reason = "fail", fmt.Sprintf("setup automap %s: %v\n%s", strings.Join(args, " "), err, out)
@@ -394,7 +434,8 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 		o.Libraries = append(o.Libraries, lib)
 	}
 	var lock struct {
-		Pins map[string]struct {
+		MapRelease string `json:"map_release"`
+		Pins       map[string]struct {
 			Registry *struct {
 				Kind string `json:"kind"`
 			} `json:"registry"`
@@ -402,6 +443,13 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	}
 	if raw, err := os.ReadFile(filepath.Join(repo, "automap.lock.json")); err == nil {
 		json.Unmarshal(raw, &lock)
+	}
+	o.MapRelease = lock.MapRelease
+	if t.Pass.MapRelease == "newest" {
+		if o.NewestRelease, _, err = release.Newest(); err != nil {
+			r.Status, r.Reason = "fail", "the newest map release: "+err.Error()
+			return r, used
+		}
 	}
 	for lib, pin := range lock.Pins {
 		if pin.Registry != nil && pin.Registry.Kind == "private" {
@@ -592,6 +640,9 @@ type outcome struct {
 	Slots           map[string]string
 	Libraries       []string
 	PrivateVariants []string
+	// MapRelease is the release the lock records; NewestRelease the
+	// newest published one.
+	MapRelease, NewestRelease string
 }
 
 // grade judges a session's outcome: verify reached the task's level, and
@@ -624,6 +675,9 @@ func grade(t *Task, o outcome) (status, reason string) {
 		if !slices.Contains(o.PrivateVariants, lib) {
 			return "fail", fmt.Sprintf("the lock doesn't pin %s to a private map's variant", lib)
 		}
+	}
+	if t.Pass.MapRelease == "newest" && o.MapRelease != o.NewestRelease {
+		return "fail", fmt.Sprintf("the lock records map release %q, want the newest, %s", o.MapRelease, o.NewestRelease)
 	}
 	return "pass", ""
 }
