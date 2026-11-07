@@ -1,0 +1,52 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/mackron/miniaudio@0.11.26",
+      "digest": {
+        "gitCommit": "877ea4a7c2601c7b0f2a44e83dfac42e6470fea6",
+        "sha512": "5b5031bc41e57c8f46a3a27c240bc69a7e2e3180d914329c0b73122ad7d678a77dfb5e5018042ef36ccd25bf00151802908dc8166c906edbf739029bf6017c29"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "diagnostics",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "877ea4a7c2601c7b0f2a44e83dfac42e6470fea6",
+        "content_hash": "sha512:5b5031bc41e57c8f46a3a27c240bc69a7e2e3180d914329c0b73122ad7d678a77dfb5e5018042ef36ccd25bf00151802908dc8166c906edbf739029bf6017c29",
+        "library": "miniaudio",
+        "variant": "default",
+        "version": "0.11.26"
+      }
+    },
+    "platform": "windows-x64-msvc",
+    "level": "probed",
+    "produced_at": "2026-11-07T04:21:19Z",
+    "map_release": "git:0bd31874b2c43e9b89dd1b365db028d965436585",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+      "environment": {
+        "AUTOMAP_MINIAUDIO_BACKEND": "null"
+      },
+      "runner_image": "win25-vs2026 20261103.298.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "diagnostics.routed-through-facade",
+        "library": "miniaudio",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
