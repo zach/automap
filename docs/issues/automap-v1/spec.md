@@ -153,7 +153,7 @@ The eight schemas and their examples are the contract between modules; they are 
 
 - Audit beyond extend-time license warnings, and porting to new platforms.
 - Build backends other than vcpkg (Conan is considered after v1) and build systems other than CMake.
-- Web platforms and a web-capable testbed; NDA platforms such as consoles ([ADR-0083](../../adr/0083-nda-platforms-are-deferred.md)).
+- Web platforms and a web-capable testbed; NDA platforms such as consoles ([ADR-0083](../../adr/0083-nda-platforms-are-out-of-scope.md)).
 - Godot and LibGodot extenders; consumers in languages other than C++.
 - An MCP server, telemetry, commercial services.
 - Engine-facing slot APIs.

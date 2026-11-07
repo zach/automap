@@ -28,10 +28,10 @@ Option 1. v1 supports exactly one build backend, vcpkg. Automap runs its own reg
 - libraries vcpkg lacks, such as ufbx and ozz-animation;
 - fresh commits of libraries vcpkg packages stale, such as sokol and bgfx.
 
-Conan support is considered after v1.
+A second build backend is out of scope: the lock, the evidence subjects and the Automap registry are built on vcpkg, and another backend would be a redesign of them, not an addition.
 
 ## Consequences
 
 - v1's evidence matrix has one build-backend dimension.
 - Automap extends vcpkg through its own mechanism rather than working around it.
-- A canonical lock identity shared across build backends (OQ-011) is not needed in v1.
+- A canonical lock identity shared across build backends is not needed: there is one backend.

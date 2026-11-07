@@ -12,4 +12,4 @@
 
 ## Comments
 
-NDA handling is deferred indefinitely ([ADR-0083](../../adr/0083-nda-platforms-are-deferred.md), OQ-012). Per-platform variant choices and pins already resolve and lock; the NDA maps, NDA signing and the Nebula criteria are not built.
+NDA platforms are out of scope ([ADR-0083](../../adr/0083-nda-platforms-are-out-of-scope.md)). Per-platform variant choices and pins already resolve and lock; the NDA maps, NDA signing and the Nebula criteria are not built.

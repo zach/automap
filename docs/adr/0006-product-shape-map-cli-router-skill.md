@@ -35,4 +35,4 @@ Automap's own CI produces the published evidence. Some functions may rely on a r
 
 - Agents reach library knowledge through the CLI and the router skill.
 - Every operation whose result counts as evidence is a deterministic CLI operation.
-- Which functions may rely on a remote hosted registry or package repository, and which must work offline, is open (OQ-013).
+- Only fetching needs the network; everything else works offline ([ADR-0038](0038-only-fetching-needs-the-network.md)).
