@@ -1,0 +1,17 @@
+{
+  "id": "starter-upgrade",
+  "request": "Upgrade to the newest map release.",
+  "setup_map_release": "previous",
+  "setup": [
+    ["start", "--with", "sdl3", "--with", "dear-imgui:docking", "--no-verify", "--json"],
+    ["extend", "jolt", "--no-verify", "--json"]
+  ],
+  "pass": {
+    "level": "probed",
+    "map_release": "newest",
+    "slots": {
+      "physics-3d": "jolt"
+    }
+  },
+  "timeout_minutes": 60
+}

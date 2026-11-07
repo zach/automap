@@ -148,3 +148,36 @@ func TestMeasures(t *testing.T) {
 		t.Errorf("with a cold cache and no map measures: %+v", cold)
 	}
 }
+
+// An upgrade task passes when the lock has moved to the newest map
+// release: an unchanged lock at probed is a session that did nothing.
+func TestGradeChecksTheMapRelease(t *testing.T) {
+	var task Task
+	task.Pass.Level = "probed"
+	task.Pass.MapRelease = "newest"
+	for _, c := range []struct {
+		name string
+		o    outcome
+		pass bool
+	}{
+		{"moved to the newest release", outcome{Level: "probed", MapRelease: "map-2026.11.07", NewestRelease: "map-2026.11.07"}, true},
+		{"still one release behind", outcome{Level: "probed", MapRelease: "map-2026.11.06", NewestRelease: "map-2026.11.07"}, false},
+		{"moved but below probed", outcome{Level: "smoke", MapRelease: "map-2026.11.07", NewestRelease: "map-2026.11.07"}, false},
+	} {
+		if status, reason := grade(&task, c.o); (status == "pass") != c.pass {
+			t.Errorf("%s: grade %s (%s), want pass %v", c.name, status, reason, c.pass)
+		}
+	}
+}
+
+// The starter-upgrade task starts its composition against the release
+// before the newest, so the session has a real release to move across.
+func TestTheUpgradeTaskStartsOneReleaseBehind(t *testing.T) {
+	task, err := loadTask("../../..", "starter-upgrade")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if task.SetupMapRelease != "previous" || task.Pass.MapRelease != "newest" || task.Pass.Level != "probed" || len(task.Setup) == 0 {
+		t.Errorf("starter-upgrade: %+v should set up against the previous release and pass at probed on the newest", task)
+	}
+}
