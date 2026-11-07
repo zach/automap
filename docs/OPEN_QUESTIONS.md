@@ -12,8 +12,4 @@ _None yet._
 
 ## Deferred past v1
 
-| ID | Question | Why deferred | Deferred |
-| --- | --- | --- | --- |
-| OQ-012 | How does Automap support NDA platforms: their private maps, evidence signed with the holder's own key, and verifying for a platform other than the host? | Automap has no users yet, and NDA support was always a possibility, not a requirement ([ADR-0083](adr/0083-nda-platforms-are-deferred.md)). | 2026-10-31 |
-| OQ-011 | What canonical identity does a composition lock have, so the same composition built through different build backends shares one evidence subject? | v1 has one build backend ([ADR-0034](adr/0034-vcpkg-is-the-v1-build-backend.md)). | 2026-10-29 |
-| OQ-008 | Is a web-capable testbed (sokol, raylib, or SDL + WebGPU) supported, given SDL_GPU has no web backend? | v1 is desktop only ([ADR-0056](adr/0056-v1-platforms-desktop-only.md)). | 2026-10-29 |
+_None._ A web-capable testbed ([ADR-0056](adr/0056-v1-platforms-desktop-only.md)), a second build backend and a lock identity shared across backends ([ADR-0034](adr/0034-vcpkg-is-the-v1-build-backend.md)) and NDA platforms ([ADR-0083](adr/0083-nda-platforms-are-out-of-scope.md)) are out of scope: each would change Automap's foundations rather than add to them.

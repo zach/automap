@@ -3,7 +3,7 @@ status: accepted
 date: 2026-10-29
 ---
 
-# v1 supports three desktop platforms; web is deferred past v1
+# v1 supports three desktop platforms; web is out of scope
 
 ## Context
 
@@ -23,7 +23,7 @@ Option 1. v1 supports exactly three platforms:
 2. Linux x64 with Clang.
 3. macOS arm64 with Apple Clang.
 
-A web-capable testbed is deferred past v1.
+A web-capable testbed is out of scope: it would be a second graphics stack with its own bindings, pairings and evidence, a change to the map's foundations rather than an addition, and no open question is kept for it.
 
 ## Consequences
 

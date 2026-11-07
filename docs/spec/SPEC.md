@@ -57,7 +57,7 @@ The day-one minimum is start, then extend once [ADR-0010](../adr/0010-day-one-mi
 - A runtime dependency: nothing from Automap is linked into the engine [ADR-0008](../adr/0008-no-automap-runtime-dependency.md).
 - A maintenance agent: upgrades are run by the developer's own agent or CI [ADR-0009](../adr/0009-no-automap-maintenance-agent.md).
 - Telemetry [ADR-0062](../adr/0062-no-telemetry-eval-suite-measures-success.md), an MCP server [ADR-0045](../adr/0045-no-mcp-server-in-v1.md), and commercial services [ADR-0054](../adr/0054-open-source-non-commercial.md).
-- Web and console platforms in Automap's own CI; a web-capable testbed is deferred past v1 [ADR-0056](../adr/0056-v1-platforms-desktop-only.md).
+- Web and console platforms: a web-capable testbed is out of scope [ADR-0056](../adr/0056-v1-platforms-desktop-only.md), as are NDA platforms [ADR-0083](../adr/0083-nda-platforms-are-out-of-scope.md).
 - Engine-facing slot APIs: the engine calls each library's own API [ADR-0012](../adr/0012-slots-have-no-automap-api.md).
 
 ---
@@ -168,7 +168,7 @@ The CLI moves the lock to the newest map release [ADR-0053](../adr/0053-map-rele
 
 ### 2.6 Journey 3: custom integration (adopt, private map, eject)
 
-A hypothetical studio, Acme Games, has a hand-built engine: SDL3, Jolt, an in-house scheduler (`engine/acme-jobs`) and an in-house renderer (`engine/acme-renderer`). It ships on Windows and Linux. The files are in [`examples/private-map/`](examples/private-map/) and [`examples/composition/acme-engine/`](examples/composition/acme-engine/); the examples also carry a hypothetical NDA console's map, [`examples/private-map-nebula/`](examples/private-map-nebula/), though NDA platforms are deferred (§7.5).
+A hypothetical studio, Acme Games, has a hand-built engine: SDL3, Jolt, an in-house scheduler (`engine/acme-jobs`) and an in-house renderer (`engine/acme-renderer`). It ships on Windows and Linux. The files are in [`examples/private-map/`](examples/private-map/) and [`examples/composition/acme-engine/`](examples/composition/acme-engine/); the examples also carry a hypothetical NDA console's map, [`examples/private-map-nebula/`](examples/private-map-nebula/), though NDA platforms are out of scope (§7.5).
 
 **1. Adopt.** The agent runs `automap adopt --json` at the repo root. The CLI reads the CMake project and `vcpkg.json`, matches `SDL3::SDL3` and `Jolt::Jolt` to map libraries, and reports `Acme::Jobs` and `Acme::Renderer` as targets no map describes. The developer's own code is a library like any other [ADR-0013](../adr/0013-developer-code-is-a-library.md), so the agent creates a private map in `automap-private/` and writes [`acme-jobs.json`](examples/private-map/libraries/acme-jobs.json) and [`acme-renderer.json`](examples/private-map/libraries/acme-renderer.json) from their headers, with `source.kind` `path`. It writes recipes for their bindings and for the `acme-renderer--sdl3` pairing, pointing at glue that already exists, such as `engine/platform/window.cpp`. Re-running `automap adopt` writes the manifest with those glue paths, marks Acme's own startup code as developer-owned so the CLI doesn't generate one, and runs verification; the lifecycle probe judges Acme's startup order like any other [ADR-0080](../adr/0080-the-cli-generates-startup.md). Probes fail where the existing glue misses a rule; the agent adapts the glue until they pass. Success is judged by probes, not by resemblance to reference glue [ADR-0016](../adr/0016-recipes-are-reference-glue-plus-probes.md).
 
@@ -567,7 +567,7 @@ Variants that need non-additive build options, libraries vcpkg lacks, and freshe
 
 ### 7.5 NDA platforms
 
-NDA platforms, such as consoles, are deferred indefinitely: Automap designs and builds nothing for them [ADR-0083](../adr/0083-nda-platforms-are-deferred.md). ADR-0048 and ADR-0049 stand as the direction if they are taken up: each NDA platform's content in a private map of its own, and its evidence signed by the NDA holder and never written to a public transparency log. Per-platform variant choices already exist for them [ADR-0075](../adr/0075-variants-per-platform.md).
+NDA platforms, such as consoles, are out of scope: Automap designs and builds nothing for them [ADR-0083](../adr/0083-nda-platforms-are-out-of-scope.md). ADR-0048 and ADR-0049 describe the shape such support would have had: each NDA platform's content in a private map of its own, and its evidence signed by the NDA holder and never written to a public transparency log. Per-platform variant choices exist on their own account [ADR-0075](../adr/0075-variants-per-platform.md).
 
 ### 7.6 Eject
 
@@ -839,14 +839,11 @@ The order follows the day-one minimum, then upgrade, then adopt [ADR-0010](../ad
 | ThreadSanitizer can't see into uninstrumented drivers or run on MSVC. | The frame rule [ADR-0073](../adr/0073-tsan-reports-count-when-they-touch-composition-code.md); platform-limited rules [ADR-0076](../adr/0076-probed-rules-name-their-platforms.md). |
 | Curation load outgrows the project. | Agents curate; humans decide coverage only [ADR-0051](../adr/0051-agents-curate-the-public-map.md); the freshness measure shows drift [ADR-0063](../adr/0063-v1-success-measures.md). |
 | vcpkg's model limits variants or freshness. | The Automap registry [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md); eject keeps the developer free [ADR-0040](../adr/0040-eject-is-one-cli-step.md). |
-| The C++-only, desktop-only audience is narrow. | Chosen deliberately [ADR-0001](../adr/0001-primary-persona-framework-first-indie.md), [ADR-0056](../adr/0056-v1-platforms-desktop-only.md); web deferred, not dropped (OQ-008). |
+| The C++-only, desktop-only audience is narrow. | Chosen deliberately [ADR-0001](../adr/0001-primary-persona-framework-first-indie.md), [ADR-0056](../adr/0056-v1-platforms-desktop-only.md). |
 
 ### 12.2 Open questions
 
-[`docs/OPEN_QUESTIONS.md`](../OPEN_QUESTIONS.md) holds only items deferred past v1:
-
-- **OQ-008:** a web-capable testbed [ADR-0056](../adr/0056-v1-platforms-desktop-only.md).
-- **OQ-011:** a canonical lock identity across build backends, once there is more than one [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md).
+[`docs/OPEN_QUESTIONS.md`](../OPEN_QUESTIONS.md) holds only items deferred past v1, and holds none: a web-capable testbed [ADR-0056](../adr/0056-v1-platforms-desktop-only.md), a second build backend and a lock identity shared across backends [ADR-0034](../adr/0034-vcpkg-is-the-v1-build-backend.md), and NDA platforms [ADR-0083](../adr/0083-nda-platforms-are-out-of-scope.md) are out of scope, since each would change Automap's foundations rather than add to them.
 
 ### 12.3 Details this spec fills in
 
@@ -922,7 +919,7 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0053](../adr/0053-map-releases-are-immutable-and-recorded-in-locks.md) | The public map ships as immutable, dated releases recorded in every lock |
 | [0054](../adr/0054-open-source-non-commercial.md) | Automap is fully open source and non-commercial |
 | [0055](../adr/0055-licenses-cli-mit-map-mit0.md) | The CLI is MIT; everything in the map is MIT-0 |
-| [0056](../adr/0056-v1-platforms-desktop-only.md) | v1 supports three desktop platforms; web is deferred past v1 |
+| [0056](../adr/0056-v1-platforms-desktop-only.md) | v1 supports three desktop platforms; web is out of scope |
 | [0057](../adr/0057-day-one-composition.md) | Day one starts an SDL3 and Dear ImGui testbed, then extends it with Jolt |
 | [0058](../adr/0058-v1-catalog.md) | v1's catalog: thirteen libraries filling fifteen slots |
 | [0059](../adr/0059-v1-jobs.md) | v1 ships start, extend, upgrade, adopt and eject |
@@ -949,4 +946,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0080](../adr/0080-the-cli-generates-startup.md) | The CLI generates the composition's startup from its recipes |
 | [0081](../adr/0081-eval-suite-runs-claude-code-headless.md) | The eval suite runs Claude Code headless, under a spending cap |
 | [0082](../adr/0082-evidence-is-read-live-for-exact-pins.md) | Map releases freeze facts, recipes and probes; evidence is read live for exact pins |
-| [0083](../adr/0083-nda-platforms-are-deferred.md) | NDA platforms are deferred indefinitely |
+| [0083](../adr/0083-nda-platforms-are-out-of-scope.md) | NDA platforms are out of scope |
