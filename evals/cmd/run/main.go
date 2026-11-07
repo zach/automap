@@ -285,6 +285,26 @@ func previousRelease() (string, error) {
 	return tags[1], nil
 }
 
+// cliEnv is the environment the task's CLI and session run in: the
+// task's own home with the router skill, the CLI on PATH, the vcpkg
+// binary cache, and the runner's release cache, which the task's home
+// would otherwise hide, so a release the runner opened is the release the
+// lock records.
+func cliEnv(home, automap, cache, mapDir string) []string {
+	env := append(os.Environ(),
+		"HOME="+home,
+		"PATH="+filepath.Dir(automap)+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"VCPKG_DEFAULT_BINARY_CACHE="+cache,
+		"AUTOMAP_CACHE="+release.CacheDir(),
+	)
+	// Without a map directory, the CLI reads the newest published map
+	// release, as a developer's does.
+	if mapDir != "" {
+		env = append(env, "AUTOMAP_MAP="+mapDir)
+	}
+	return env
+}
+
 // runTask runs one task in a fresh repo and grades it. It returns the
 // model Claude Code reports using.
 func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskResult, string) {
@@ -317,16 +337,7 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	os.MkdirAll(filepath.Dir(skill), 0o755)
 	os.WriteFile(skill, []byte(agentfiles.RouterSkill(cli.Version)), 0o644)
 
-	env := append(os.Environ(),
-		"HOME="+home,
-		"PATH="+filepath.Dir(automap)+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"VCPKG_DEFAULT_BINARY_CACHE="+cache,
-	)
-	// Without a map directory, the CLI reads the newest published map
-	// release, as a developer's does.
-	if mapDir != "" {
-		env = append(env, "AUTOMAP_MAP="+mapDir)
-	}
+	env := cliEnv(home, automap, cache, mapDir)
 	// An upgrade task's setup reads the release before the newest, from
 	// the release cache, so the lock records it; with a map directory
 	// there is no release to move across.
