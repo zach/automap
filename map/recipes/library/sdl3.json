@@ -6,7 +6,8 @@
   "applies_to": {
     "sdl3": {
       "versions": [
-        "3.4.18"
+        "3.4.18",
+        "3.4.20"
       ],
       "variants": [
         "default"

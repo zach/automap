@@ -180,6 +180,160 @@
           "web": false
         }
       }
+    },
+    {
+      "version": "3.4.20",
+      "released": "2026-11-03",
+      "security_fix": false,
+      "pin": {
+        "tag": "release-3.4.20",
+        "commit": "f00dc919ca35b9756316e86c4777392de442f9b2",
+        "content_hash": "sha512:8b2c4596f51a2e49e0b54629f440b17952562ec0d403e7852b0148487c89a0f2a28cfe0e700a6bb3278b0191d3eff30b5e0cddc2498783180c16806d4b943173"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "sdl3",
+          "registry": "automap",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "SDL3",
+        "targets": [
+          "SDL3::SDL3"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {
+            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux]",
+            "vcpkg_default_features": "false"
+          },
+          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers; the port's other default Linux feature, IBus input methods, is off. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "function-pointer-globals",
+          "hooks": [
+            {
+              "api": "SDL_SetMemoryFunctions",
+              "signature": "bool(SDL_malloc_func, SDL_calloc_func, SDL_realloc_func, SDL_free_func)"
+            }
+          ],
+          "aligned": false,
+          "install_before": "any other call into SDL, including SDL_SetHint",
+          "query": "SDL_GetMemoryFunctions"
+        },
+        "diagnostics": {
+          "log_hook": "SDL_SetLogOutputFunction(SDL_LogOutputFunction, void*)",
+          "assert_hook": "SDL_SetAssertionHandler(SDL_AssertionHandler, void*) at runtime",
+          "query": "SDL_GetLogOutputFunction, SDL_GetAssertionHandler"
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "memory",
+              "step": "sdl3:SDL_SetMemoryFunctions"
+            },
+            {
+              "phase": "diagnostics",
+              "step": "sdl3:SDL_SetLogOutputFunction"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_Init"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_CreateWindow",
+              "after": [
+                "sdl3:SDL_Init"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_CreateGPUDevice",
+              "after": [
+                "sdl3:SDL_Init"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_ClaimWindowForGPUDevice",
+              "after": [
+                "sdl3:SDL_CreateWindow",
+                "sdl3:SDL_CreateGPUDevice"
+              ]
+            }
+          ],
+          "shutdown_steps": [
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_WaitForGPUIdle"
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_ReleaseWindowFromGPUDevice",
+              "after": [
+                "sdl3:SDL_WaitForGPUIdle"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_DestroyGPUDevice",
+              "after": [
+                "sdl3:SDL_ReleaseWindowFromGPUDevice"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_DestroyWindow",
+              "after": [
+                "sdl3:SDL_ReleaseWindowFromGPUDevice"
+              ]
+            },
+            {
+              "phase": "platform",
+              "step": "sdl3:SDL_Quit",
+              "after": [
+                "sdl3:SDL_DestroyGPUDevice",
+                "sdl3:SDL_DestroyWindow"
+              ]
+            }
+          ],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": "SDL_GetVersion() == SDL_VERSION and an even minor version",
+          "min_language_standard": "C99",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": {
+            "linux-x64-clang": "SDL_VIDEO_DRIVER=offscreen",
+            "windows-x64-msvc": "",
+            "macos-arm64-appleclang": ""
+          },
+          "system_dependencies": {
+            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build their libxcrypt dependency; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+          },
+          "gpu_backends": {
+            "windows-x64-msvc": "direct3d12",
+            "linux-x64-clang": "vulkan",
+            "macos-arm64-appleclang": "metal"
+          },
+          "web": false
+        }
+      }
     }
   ]
 }
