@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 	"testing"
+
+	"github.com/zach/automap/internal/release"
 )
 
 func TestEveryTaskLoads(t *testing.T) {
@@ -180,4 +182,20 @@ func TestTheUpgradeTaskStartsOneReleaseBehind(t *testing.T) {
 	if task.SetupMapRelease != "previous" || task.Pass.MapRelease != "newest" || task.Pass.Level != "probed" || len(task.Setup) == 0 {
 		t.Errorf("starter-upgrade: %+v should set up against the previous release and pass at probed on the newest", task)
 	}
+}
+
+// The runner gives each task's CLI its own home, so the CLI's release cache
+// must be named outright: an upgrade task's setup reads the previous
+// release from the runner's cache, and the lock records the release only
+// when the CLI's cache is the same one.
+func TestTheCLISharesTheRunnersReleaseCache(t *testing.T) {
+	t.Setenv("AUTOMAP_CACHE", "/caches/automap")
+	env := cliEnv("/work/home", "/bin/automap", "/caches/vcpkg", "")
+	want := "AUTOMAP_CACHE=" + release.CacheDir()
+	for _, e := range env {
+		if e == want {
+			return
+		}
+	}
+	t.Errorf("the CLI's env %q lacks %q", env, want)
 }
