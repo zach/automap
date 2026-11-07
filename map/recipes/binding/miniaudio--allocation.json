@@ -8,7 +8,8 @@
   "applies_to": {
     "miniaudio": {
       "versions": [
-        "0.11.25"
+        "0.11.25",
+        "0.11.26"
       ],
       "variants": [
         "default"
