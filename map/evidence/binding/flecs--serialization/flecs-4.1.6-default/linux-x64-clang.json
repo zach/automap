@@ -25,13 +25,13 @@
     },
     "platform": "linux-x64-clang",
     "level": "probed",
-    "produced_at": "2026-11-05T22:47:52Z",
-    "map_release": "git:1b594f44bc3935f23bb6730410e3765f997bbb12",
+    "produced_at": "2026-11-07T02:00:31Z",
+    "map_release": "git:03ba17a44875fe1f4e5dc299f37cfb05c8f20737",
     "conditions": {
       "build_type": "Debug",
       "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
       "environment": {},
-      "runner_image": "ubuntu26 20261026.180.1",
+      "runner_image": "ubuntu26 20261101.186.1",
       "sanitizers": {
         "thread": "separate Debug build with -fsanitize=thread; TSAN_OPTIONS=halt_on_error=0:exitcode=66; the executable run with --probe"
       }
