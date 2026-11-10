@@ -6,14 +6,27 @@ The **map** describes libraries, the slots they fill (windowing, physics, jobs, 
 
 ## Status
 
-Pre-release, building toward 0.1.0. The public map covers thirteen libraries on Linux, Windows and macOS: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
+The CLI is released as [`cli-v0.1.0`](https://github.com/zach/automap/releases/tag/cli-v0.1.0), one static binary each for Linux, Windows and macOS. The public map covers thirteen libraries on those three platforms: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
 
 ## Quick start
 
-You need CMake 3.25+, Ninja, a C++20 compiler (clang on Linux, MSVC on Windows, Apple Clang on macOS) and Go 1.24 to build the CLI. vcpkg is optional: the CLI uses the one at `VCPKG_ROOT`, or bootstraps the release the map names into its cache.
+You need CMake 3.25+, Ninja and a C++20 compiler (clang on Linux, MSVC on Windows, Apple Clang on macOS). vcpkg is optional: the CLI uses the one at `VCPKG_ROOT`, or bootstraps the release the map names into its cache.
+
+Download the CLI for your platform from the [latest release](https://github.com/zach/automap/releases) and check it against the release's SHA-256 file. On Linux:
 
 ```console
-$ go install github.com/zach/automap/cmd/automap@latest
+$ base=https://github.com/zach/automap/releases/download/cli-v0.1.0
+$ curl -fsSLO $base/automap-0.1.0-linux-amd64 -O $base/automap-0.1.0.sha256
+$ sha256sum --check --ignore-missing automap-0.1.0.sha256
+$ install -m 755 automap-0.1.0-linux-amd64 ~/.local/bin/automap
+$ automap --version
+```
+
+The Windows binary is `automap-0.1.0-windows-amd64.exe` and the macOS one `automap-0.1.0-darwin-arm64`. With Go 1.24 or newer, `go install github.com/zach/automap/cmd/automap@latest` builds the CLI from source instead.
+
+Then, in an empty directory:
+
+```console
 $ mkdir my-engine && cd my-engine
 $ automap start --with sdl3 --with dear-imgui:docking --json
 $ automap extend jolt --json
@@ -32,7 +45,7 @@ $ automap extend jolt --json
 | `automap fetch`, `automap vendor` | Fill the caches for offline work; copy everything a build needs into the repo. |
 | `automap eject` | Leaves Automap: a plain CMake and vcpkg project remains. |
 
-Run `automap` with no arguments for the full usage.
+`automap help` prints the full usage, and `automap help <command>` one command's flags.
 
 ## How it works
 

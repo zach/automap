@@ -24,7 +24,8 @@
         "fetch",
         "vendor",
         "find",
-        "show"
+        "show",
+        "version"
       ]
     },
     "cli_version": {
