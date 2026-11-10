@@ -85,6 +85,10 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 			detail = fmt.Sprintf("%d probed %s failed", rules, plural(rules, "rule", "rules"))
 		}
 		r.Summary = fmt.Sprintf("Composition is %s on %s: %s.", out.Level, platform, detail)
+		if out.Level == "none" {
+			// No level was reached: say what happened instead.
+			r.Summary = fmt.Sprintf("The composition didn't build on %s: %s.", platform, detail)
+		}
 		return exitFailed
 	case unverifiable > 0:
 		r.Summary = fmt.Sprintf("Composition is %s on %s: %d probed %s unverifiable.", out.Level, platform, unverifiable, plural(unverifiable, "rule", "rules"))
@@ -148,8 +152,9 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 	if _, fails := regenerate(m, &seeded, lock, scratch); fails != nil {
 		return failWith(r, fails, "The seeded composition's files can't be generated.", exitFailed)
 	}
+	// A seed run says whether a probe catches its violation; the level the
+	// broken scratch copy reached isn't the composition's.
 	out := verify.Run(m, &seeded, lock, verify.Options{Root: scratch, Platform: platform})
-	r.Level = out.Level
 	for _, res := range out.Results {
 		if res.Rule == seed.Rule && res.Library == seed.Library && res.Status == "fail" {
 			r.OK = true

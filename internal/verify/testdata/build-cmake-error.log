@@ -1,0 +1,16 @@
+$ cmake -S . -B build/automap/windows-x64-msvc -G Ninja -DCMAKE_BUILD_TYPE=Debug
+-- Running vcpkg install
+-- Running vcpkg install - done
+CMake Error at cmake/automap/stb-truetype.cmake:3 (find_package):
+  Could not find a package configuration file provided by "Stb" with any of
+  the following names:
+
+    StbConfig.cmake
+    stb-config.cmake
+
+Call Stack (most recent call first):
+  cmake/automap/automap.cmake:31 (include)
+  CMakeLists.txt:9 (include)
+
+
+-- Configuring incomplete, errors occurred!

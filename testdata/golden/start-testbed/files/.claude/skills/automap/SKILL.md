@@ -30,7 +30,8 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 
 The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke` (ran 120 headless frames and shut down cleanly) or `probed` (every applicable probed rule passed). Aim for `probed`.
 
-- `BUILD_FAILED`: read the details file, the build log; fix the build.
+- `BUILD_FAILED`: the message quotes the build log's first error; the details file is the whole log. Fix the build.
+- `FETCH_FAILED`: vcpkg couldn't download a source, and the message names the URL. Retry if the network was down. If this machine's network blocks the URL, nothing in the repo is wrong: run `automap vendor --json` on a machine that reaches it and commit `vendor/automap/`, which builds with no network.
 - `SMOKE_FAILED`: the executable crashed or didn't shut down cleanly. `INIT_FAILED(<call>)` names the startup call that failed.
 - A rule's failure code, such as `ALLOC_HOOK_LATE(<library>)`, `INIT_ORDER(<step> before <step>)` or `ABI_DEFINE_MISMATCH(<define>)`, names the rule and library. Read the details file, then fix the glue it points at.
 - An `UNVERIFIABLE(<rule>)` warning means no probe could check that rule; it keeps the composition below `probed`.

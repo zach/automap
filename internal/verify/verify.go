@@ -97,7 +97,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	if err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error()})
 	} else if err := build(vcpkg, opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
-		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error(), DetailsFile: paths.buildLog})
+		out.Failures = append(out.Failures, buildFailure(in(paths.buildLog), paths.buildLog, "", err))
 		if log, err := os.ReadFile(in(paths.buildLog)); err == nil {
 			if r := LinkMismatch(string(log)); r != nil {
 				linked = append(linked, *r)
@@ -120,7 +120,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	// says why.
 	if built {
 		if err := build(vcpkg, opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
-			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
+			out.Failures = append(out.Failures, buildFailure(in(paths.probeBuildLog), paths.probeBuildLog, "The probe build failed: ", err))
 		} else {
 			err := runExecutable(opts.Root, paths.probeBuild, paths.probeLog, man.Executable.Target, env, paths.results)
 			harness, readErr := readResults(in(paths.results))
@@ -201,6 +201,36 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 		out.Failures = append(out.Failures, Failure{Code: "EVIDENCE_FAILED", Message: err.Error()})
 	}
 	return out
+}
+
+// buildFailure is the failure for a build that failed, with why from its
+// log (file on disk, details as the result names it): FETCH_FAILED with
+// the URL when vcpkg couldn't download something, and otherwise
+// BUILD_FAILED with the log's first error.
+func buildFailure(file, details, prefix string, err error) Failure {
+	f := Failure{Code: "BUILD_FAILED", Message: prefix + err.Error(), DetailsFile: details}
+	log, readErr := os.ReadFile(file)
+	if readErr != nil {
+		return f
+	}
+	d := DiagnoseBuild(string(log))
+	switch {
+	case d.URL != "":
+		f.Code = "FETCH_FAILED"
+		f.Message = prefix + "vcpkg couldn't download " + d.URL
+		if d.Excerpt != "" {
+			f.Message += " (" + strings.TrimSuffix(strings.TrimPrefix(firstLine(d.Excerpt), "error: "), ".") + ")"
+		}
+		f.Message += ". If this machine's network blocks it, run automap vendor on a machine that reaches it and commit vendor/automap/, which builds with no network; the build log has the details."
+	case d.Excerpt != "":
+		f.Message += ":\n" + d.Excerpt
+	}
+	return f
+}
+
+func firstLine(s string) string {
+	line, _, _ := strings.Cut(s, "\n")
+	return line
 }
 
 // tsanProcedure is the ThreadSanitizer run, as the jobs contract states it.

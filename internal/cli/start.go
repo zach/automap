@@ -134,7 +134,9 @@ func writeAndVerify(a *args, m *mapmodel.Map, man *composition.Manifest, files m
 		return exitFailed
 	}
 	status := runVerify(m, man, checked, host, r)
-	r.Summary = done + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
+	verified := strings.Replace(r.Summary, "Composition is", "the composition is", 1)
+	verified = strings.Replace(verified, "The composition didn't build", "it didn't build", 1)
+	r.Summary = done + "; " + strings.TrimSuffix(verified, ".") + "."
 	return status
 }
 

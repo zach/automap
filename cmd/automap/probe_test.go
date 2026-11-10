@@ -39,6 +39,9 @@ func TestEverySeededViolationIsCaught(t *testing.T) {
 			if run.Result.EvidenceFile != "" {
 				t.Errorf("a seed run wrote evidence %s", run.Result.EvidenceFile)
 			}
+			if run.Result.Level != "" {
+				t.Errorf("a seed run reports level %q; the broken scratch copy's level isn't the composition's", run.Result.Level)
+			}
 		})
 	}
 	if _, err := os.Stat(filepath.Join(repo.Dir, "evidence")); err == nil {

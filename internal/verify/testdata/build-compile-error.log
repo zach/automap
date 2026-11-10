@@ -1,0 +1,16 @@
+$ cmake -S . -B build/automap/linux-x64-clang -G Ninja -DCMAKE_BUILD_TYPE=Debug
+-- Running vcpkg install
+-- Running vcpkg install - done
+-- Configuring done (1.2s)
+-- Build files have been written to: /home/dev/game/build/automap/linux-x64-clang
+$ cmake --build build/automap/linux-x64-clang --target game
+[1/9] Building CXX object CMakeFiles/automap_glue.dir/glue/sdl3/sdl3_setup.cpp.o
+[2/9] Building CXX object CMakeFiles/game.dir/game/app/main.cpp.o
+FAILED: CMakeFiles/game.dir/game/app/main.cpp.o
+/usr/bin/clang++ -I/home/dev/game/glue -g -std=c++20 -o CMakeFiles/game.dir/game/app/main.cpp.o -c /home/dev/game/game/app/main.cpp
+/home/dev/game/game/app/main.cpp:42:5: error: use of undeclared identifier 'frame_count'
+   42 |     frame_count++;
+      |     ^
+1 error generated.
+[3/9] Building CXX object CMakeFiles/automap_glue.dir/glue/automap/startup.cpp.o
+ninja: build stopped: subcommand failed.
