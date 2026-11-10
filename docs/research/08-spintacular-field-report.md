@@ -44,7 +44,7 @@ Disposition names the ticket in `docs/issues/past-the-testbed/`, or says why not
 | 11 | OK | Failure results are honest | n/a | | none |
 | 12 | FRICTION | "the composition is none on …" | Verified: `writeAndVerify`, `runVerify` | The level is spliced into a sentence written for a level that was reached | 05 |
 | 13 | ENV | GitHub archive downloads blocked; nothing in Automap helps | Verified: this repo's sessions hit the same proxy | vcpkg downloads sources from `/archive/` URLs | 05 (names the URL), 08 (`vendor` as the route) |
-| 14 | GAP | SDL3's variant says IBus is off; the build has it | Verified by dry run: the plan is `sdl3[core,dbus,ibus,vulkan,wayland,x11]` | vcpkg unions features: `imgui[sdl3-binding]` depends on `sdl3` with default features | 11 |
+| 14 | GAP | SDL3's variant says IBus is off; the build has it | Verified by dry run: the plan is `sdl3[core,dbus,ibus,vulkan,wayland,x11]` | vcpkg unions features: `imgui[sdl3-binding]` depends on `sdl3` with default features | 11 (Dear ImGui from a registry port that doesn't) |
 | 15 | GAP | The skill doesn't say how a testbed becomes a game | Verified: `SKILL.md.tmpl` | The skill covers start, extend, upgrade, verify | 08 |
 | 16 | OK | Day-one composition reached `probed` locally | n/a | | none |
 | 17 | OK | `extend` is quick and correct | n/a | | none |

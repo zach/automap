@@ -28,7 +28,8 @@
       "build_backend": {
         "vcpkg": {
           "port": "imgui",
-          "registry": "curated"
+          "registry": "automap",
+          "port_version": 1
         }
       },
       "cmake": {
@@ -43,7 +44,7 @@
           "build_options": {
             "vcpkg_features": "docking-experimental,sdl3-binding,sdlgpu3-binding"
           },
-          "description": "The docking branch, built with its SDL3 platform and SDL_GPU renderer backends from the same commit."
+          "description": "The docking branch, built with its SDL3 platform and SDL_GPU renderer backends from the same commit, from the Automap registry's port: vcpkg's port asks for SDL3 with its default features, which on Linux switch on IBus, D-Bus and libsystemd whatever the composition's SDL3 variant says; Automap's asks for SDL3 without them."
         }
       ],
       "facts": {
