@@ -133,7 +133,7 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 		if pin.Path != l.Source.Path {
 			return fmt.Sprintf("%s is pinned at path %q, but the map says %q", l.ID, pin.Path, l.Source.Path)
 		}
-		if hash, err := SourceHash(l.Source.Path); err != nil || hash != pin.ContentHash {
+		if !SourceMatches(l.Source.Path, pin.ContentHash) {
 			return fmt.Sprintf("%s's source in %s has changed since the lock pinned it; re-resolve with automap upgrade %s", l.ID, l.Source.Path, l.ID)
 		}
 		return ""

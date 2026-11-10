@@ -296,3 +296,34 @@ func TestLibrariesThatPinOnePortAtTwoVersionsConflict(t *testing.T) {
 	run.ExpectFailure(t, "PORT_CONFLICT(stub-ui)", "acme-fonts")
 	run.ExpectUnchanged(t)
 }
+
+// A lock written on Linux checks on a Windows checkout, where git has
+// turned the in-repo library's line endings into CRLF: the pin hashes text
+// with its line endings normalized.
+func TestAnInRepoPinSurvivesLineEndingConversion(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	pinned := readLock(t, repo).Pins["acme-tools"].ContentHash
+	for _, f := range []string{"engine/acme-tools/CMakeLists.txt", "engine/acme-tools/acme_tools.cpp", "engine/acme-tools/include/acme_tools.h"} {
+		repo.WriteFile(t, f, strings.ReplaceAll(clitest.Read(t, repo, f), "\n", "\r\n"))
+	}
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got := readLock(t, repo).Pins["acme-tools"].ContentHash; got != pinned {
+		t.Errorf("acme-tools pinned at %s after its line endings changed, want %s as before", got, pinned)
+	}
+}
+
+// A change to an in-repo library's content still fails the lock.
+func TestAnInRepoPinFailsWhenItsSourceChanges(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, "engine/acme-tools/acme_tools.cpp", clitest.Read(t, repo, "engine/acme-tools/acme_tools.cpp")+"// changed\n")
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "LOCK_MISMATCH(acme-tools)", "has changed since the lock pinned it")
+}

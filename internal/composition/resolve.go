@@ -1,6 +1,7 @@
 package composition
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -455,8 +456,23 @@ func GlueEntryFor(man *Manifest, r *mapmodel.Recipe) GlueEntry {
 
 // SourceHash is the content hash of an in-repo library's directory: the
 // SHA-256 of each file's path and SHA-256 in path order, skipping .git, so
-// it changes whenever a file in it does.
-func SourceHash(dir string) (string, error) {
+// it changes whenever a file in it does. Text, a file with no NUL byte, is
+// hashed with CRLF line endings read as LF, so a checkout that converts
+// line endings, as git does on Windows, keeps the hash.
+func SourceHash(dir string) (string, error) { return sourceHash(dir, true) }
+
+// SourceMatches says whether an in-repo library's directory still has the
+// content a pin's hash names. It accepts the hash of the raw bytes too,
+// which is what a CLI before 0.2.0 pinned.
+func SourceMatches(dir, hash string) bool {
+	if normalized, err := sourceHash(dir, true); err != nil || normalized == hash {
+		return err == nil
+	}
+	raw, err := sourceHash(dir, false)
+	return err == nil && raw == hash
+}
+
+func sourceHash(dir string, normalize bool) (string, error) {
 	info, err := os.Stat(dir)
 	if err != nil {
 		return "", err
@@ -478,6 +494,9 @@ func SourceHash(dir string) (string, error) {
 		data, err := os.ReadFile(p)
 		if err != nil {
 			return err
+		}
+		if normalize && !bytes.Contains(data, []byte{0}) {
+			data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 		}
 		rel, _ := filepath.Rel(dir, p)
 		sum := sha256.Sum256(data)
