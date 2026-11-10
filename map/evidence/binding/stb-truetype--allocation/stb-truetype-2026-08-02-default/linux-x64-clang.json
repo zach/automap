@@ -1,0 +1,56 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "pkg:github/nothings/stb@2026-08-02",
+      "digest": {
+        "gitCommit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+        "sha512": "93db78589d836b5a8924ed0e980c6fd8d1dbc7e2d0489bc5a0fa4dedd73ed94332e5c814adc2976e89fab3f4cd96b5c46beae7b5dd55bc8374a91390d774b2b0"
+      }
+    }
+  ],
+  "predicateType": "https://github.com/zach/automap/evidence/v1",
+  "predicate": {
+    "subject_kind": "binding",
+    "subject_detail": {
+      "contract": "allocation",
+      "contract_version": "1.0.0",
+      "pin": {
+        "commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+        "content_hash": "sha512:93db78589d836b5a8924ed0e980c6fd8d1dbc7e2d0489bc5a0fa4dedd73ed94332e5c814adc2976e89fab3f4cd96b5c46beae7b5dd55bc8374a91390d774b2b0",
+        "library": "stb-truetype",
+        "variant": "default",
+        "version": "2026-08-02"
+      }
+    },
+    "platform": "linux-x64-clang",
+    "level": "probed",
+    "produced_at": "2026-11-10T21:58:34Z",
+    "map_release": "git:6a1870ece585ee2e491c4322fcbf5c8b79283d5a",
+    "conditions": {
+      "build_type": "Debug",
+      "compiler": "Ubuntu clang version 21.1.8 (6ubuntu1)",
+      "environment": {},
+      "runner_image": "ubuntu26 20261101.186.1",
+      "sanitizers": {}
+    },
+    "results": [
+      {
+        "rule": "allocation.hooks-before-first-allocation",
+        "library": "stb-truetype",
+        "status": "not-applicable",
+        "reason": "stb_truetype's hooks are compile-time macros in its implementation: no stb_truetype code runs without them."
+      },
+      {
+        "rule": "allocation.routed-through-facade",
+        "library": "stb-truetype",
+        "status": "pass"
+      }
+    ],
+    "verifier": {
+      "kind": "automap-ci",
+      "id": "https://github.com/zach/automap/.github/workflows/verify-map.yml@refs/heads/main",
+      "signed": true
+    }
+  }
+}
