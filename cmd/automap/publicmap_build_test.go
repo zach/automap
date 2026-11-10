@@ -777,6 +777,19 @@ func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
 		}
 	}
 
+	// The library links no DXC, so nothing puts dxcompiler beside the
+	// executable for a game to ship: on Windows, vcpkg copies every DLL
+	// the executable needs there.
+	if hostPlatform == "windows-x64-msvc" {
+		build := filepath.Join(repo.Dir, "build", "automap", hostPlatform)
+		if dlls, _ := filepath.Glob(filepath.Join(build, "*.dll")); len(dlls) == 0 {
+			t.Errorf("no DLL is beside the executable in %s: vcpkg didn't copy what it needs, so this check proves nothing", build)
+		}
+		if _, err := os.Stat(filepath.Join(build, "dxcompiler.dll")); err == nil {
+			t.Error("dxcompiler.dll is beside the executable: the library still imports DXC")
+		}
+	}
+
 	for _, c := range shadercrossSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
@@ -787,6 +800,40 @@ func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
 				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
 			}
 		})
+	}
+}
+
+// The build fragment's automap_compile_shaders() turns HLSL into the
+// SPIR-V the pairing's glue takes, when the executable builds: with the
+// dxc vcpkg installs on Windows and x64 Linux, and from a committed .spv
+// where vcpkg has none, as on macOS.
+func TestShadersCompileWhenTheExecutableBuilds(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--with", "sdl-shadercross", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, "shaders/fill.vert.hlsl", "float4 main(float3 position : POSITION) : SV_Position { return float4(position, 1.0); }\n")
+	repo.WriteFile(t, "CMakeLists.txt", clitest.Read(t, repo, "CMakeLists.txt")+"automap_compile_shaders(testbed vertex:shaders/fill.vert.hlsl)\n")
+	spirv := "\x03\x02\x23\x07" // SPIR-V's magic number, little-endian
+	compiled := hostPlatform != "macos-arm64-appleclang"
+	if !compiled {
+		repo.WriteFile(t, "shaders/fill.vert.hlsl.spv", spirv+"compiled elsewhere")
+	}
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	out, err := os.ReadFile(filepath.Join(repo.Dir, "build", "automap", hostPlatform, "shaders", "fill.vert.hlsl.spv"))
+	switch {
+	case err != nil:
+		t.Fatalf("no SPIR-V beside the executable: %v", err)
+	case !strings.HasPrefix(string(out), spirv):
+		t.Errorf("shaders/fill.vert.hlsl.spv doesn't begin with SPIR-V's magic number: % x", out[:min(8, len(out))])
+	case compiled && len(out) < 100:
+		t.Errorf("shaders/fill.vert.hlsl.spv is %d bytes: dxc didn't compile it", len(out))
 	}
 }
 

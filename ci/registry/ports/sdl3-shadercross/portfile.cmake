@@ -8,9 +8,12 @@ vcpkg_from_github(
         fix-directx-shader-compiler-includes.patch
 )
 
-# DXC comes from vcpkg's directx-dxc port, which builds only on Windows and
-# x64 Linux; elsewhere SDL_shadercross builds without it.
-if(VCPKG_TARGET_IS_WINDOWS OR (VCPKG_TARGET_IS_LINUX AND VCPKG_TARGET_ARCHITECTURE STREQUAL "x64"))
+# DXC is linked into the library only with the dxc feature: a library with
+# it imports dxcompiler, which a program must then ship, and a game that
+# hands SDL_shadercross SPIR-V never calls it. Without the feature the
+# library still compiles SPIR-V to DXBC (through d3dcompiler_47.dll on
+# Windows), MSL and SPIR-V.
+if("dxc" IN_LIST FEATURES)
     set(SHADERCROSS_DXC ON)
 else()
     set(SHADERCROSS_DXC OFF)

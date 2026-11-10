@@ -102,7 +102,13 @@ SDL_SubmitGPUCommandBuffer(commands);
 
 ## Shaders
 
-SDL_shadercross's glue takes SPIR-V and turns it into what the platform's GPU backend needs at startup. Compile shader source to SPIR-V when you build: where SDL_shadercross is in the composition, vcpkg has installed the `dxc` compiler under `build/automap/<platform>/vcpkg_installed/<triplet>/tools/directx-dxc/` (Windows and x64 Linux), and `dxc -spirv -T vs_6_0 -E main shader.hlsl -Fo shader.spv` writes SPIR-V. Commit the SPIR-V, or compile it in a build step.
+SDL_shadercross's glue takes SPIR-V and turns it into what the platform's GPU backend needs at startup; the library is built without DXC, so the game ships no shader compiler. Shader source becomes SPIR-V when the game builds. With SDL_shadercross in the composition, its build fragment gives your `CMakeLists.txt` a function for it:
+
+```cmake
+automap_compile_shaders(mygame vertex:shaders/sprite.vert.hlsl fragment:shaders/sprite.frag.hlsl)
+```
+
+Each HLSL file is compiled (entry point `main`) to `shaders/<file's name>.spv` beside the executable, where the game reads it and hands the bytes to `am_shadercross_create_shader()`. The compiler is `dxc`, which vcpkg installs with SDL_shadercross on Windows and x64 Linux. On macOS, where vcpkg has none, the function uses a `dxc` on the `PATH` or else copies `<file>.spv` from beside the source: commit the SPIR-V a Windows or Linux build wrote.
 
 ## A release build
 

@@ -127,7 +127,7 @@ jobs:
           - group: slots
             tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed|TestTheTestbedWithOnDemandTracyProbed
           - group: media
-            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed|TestTheTestbedExtendsWithShadercrossProbed
+            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed|TestTheTestbedExtendsWithShadercrossProbed|TestShadersCompileWhenTheExecutableBuilds
           - group: offline
             tests: TestTheTestbedVerifiesOfflineAfterFetch|TestAVendoredTestbedVerifiesFromAFreshCloneOffline|TestTheReferenceCompositionsBuildWithoutAutomapOnceEjected
           - group: starter
