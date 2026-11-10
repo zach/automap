@@ -4,11 +4,11 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-human
+**Status:** done
 
 - [x] The product owner agrees the two slots and libraries as map coverage ([ADR-0084](../../adr/0084-the-map-covers-text-and-data-files.md)).
-- [ ] Both libraries, their recipes, stb_truetype's allocation binding with its probe and seeded violation are in `map/`, MIT-0, verified on all three platforms.
-- [ ] stb_truetype and stb_image share the `stb` port in one composition.
+- [x] Both libraries, their recipes, stb_truetype's allocation binding with its probe and seeded violation are in `map/`, MIT-0, verified on all three platforms.
+- [x] stb_truetype and stb_image share the `stb` port in one composition.
 
 ## Comments
 
