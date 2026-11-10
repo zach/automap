@@ -1,5 +1,9 @@
 {
   "default": {
+    "imgui": {
+      "baseline": "1.93.0",
+      "port-version": 1
+    },
     "joltphysics": {
       "baseline": "5.6.0",
       "port-version": 0
@@ -14,7 +18,7 @@
     },
     "sdl3-shadercross": {
       "baseline": "3.0.0-preview2",
-      "port-version": 1
+      "port-version": 2
     }
   }
 }
