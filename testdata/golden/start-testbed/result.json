@@ -7,6 +7,8 @@
   "failures": [],
   "files_written": [
     ".claude/skills/automap/SKILL.md",
+    ".claude/skills/automap/game.md",
+    ".claude/skills/automap/private-maps.md",
     ".gitignore",
     "AGENTS.md",
     "CMakeLists.txt",

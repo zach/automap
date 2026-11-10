@@ -333,9 +333,11 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	}
 	// The agent finds Automap the way a developer's agent would: the CLI on
 	// its PATH and the router skill installed at user scope.
-	skill := filepath.Join(home, ".claude", "skills", "automap", "SKILL.md")
-	os.MkdirAll(filepath.Dir(skill), 0o755)
-	os.WriteFile(skill, []byte(agentfiles.RouterSkill(cli.Version)), 0o644)
+	skill := filepath.Join(home, ".claude", "skills", "automap")
+	os.MkdirAll(skill, 0o755)
+	for name, text := range agentfiles.SkillFiles(cli.Version) {
+		os.WriteFile(filepath.Join(skill, name), []byte(text), 0o644)
+	}
 
 	env := cliEnv(home, automap, cache, mapDir)
 	// An upgrade task's setup reads the release before the newest, from

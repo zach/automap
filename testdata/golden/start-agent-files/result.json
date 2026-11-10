@@ -7,7 +7,11 @@
   "failures": [],
   "files_written": [
     ".agents/skills/automap/SKILL.md",
+    ".agents/skills/automap/game.md",
+    ".agents/skills/automap/private-maps.md",
     ".claude/skills/automap/SKILL.md",
+    ".claude/skills/automap/game.md",
+    ".claude/skills/automap/private-maps.md",
     ".gitignore",
     "AGENTS.md",
     "CLAUDE.md",

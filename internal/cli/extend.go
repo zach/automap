@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 )
 
@@ -67,7 +68,7 @@ func extend(a *args, r *result) int {
 		generated[f] = true
 	}
 	keep := func(p string) bool {
-		return !generated[p] && p != "AGENTS.md" && p != "CLAUDE.md" && !strings.HasSuffix(p, "/automap/SKILL.md")
+		return !generated[p] && !agentfiles.IsAgentFile(p)
 	}
 	pin := lock.Pins[lib]
 	var slots []string

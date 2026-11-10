@@ -90,8 +90,41 @@ func TestANewerCLIRewritesTheRouterSkill(t *testing.T) {
 	if got := run.ReadFile(t, ".claude/skills/automap/SKILL.md"); got != agentfiles.RouterSkill("0.0.0-dev") {
 		t.Errorf("the skill wasn't rewritten at the CLI's version:\n%s", got)
 	}
-	if len(run.Result.FilesWritten) != 1 || run.Result.FilesWritten[0] != ".claude/skills/automap/SKILL.md" {
-		t.Errorf("files_written %v, want the rewritten skill", run.Result.FilesWritten)
+	// The guides beside it are the skill's too: a composition an older CLI
+	// wrote gets them with the newer skill.
+	want := []string{".claude/skills/automap/SKILL.md", ".claude/skills/automap/game.md", ".claude/skills/automap/private-maps.md"}
+	if strings.Join(run.Result.FilesWritten, " ") != strings.Join(want, " ") {
+		t.Errorf("files_written %v, want the skill's files %v", run.Result.FilesWritten, want)
+	}
+}
+
+// The router skill routes to two guides the CLI writes beside it: what a
+// testbed needs to become a game, and how to write a private map.
+func TestTheRouterSkillComesWithItsGuides(t *testing.T) {
+	run := agentFilesRepo(t).Automap(t, startTestbed...)
+
+	run.ExpectExit(t, 0)
+	skill := run.ReadFile(t, ".claude/skills/automap/SKILL.md")
+	for guide, wants := range map[string][]string{
+		"game.md":         {`"executable"`, "--frames <n>", "--probe <file>", "am::probe::write_results()", "POST_BUILD", "CMAKE_BUILD_TYPE=Release", "What to ship"},
+		"private-maps.md": {`"private_maps"`, "automap show recipe", "build-fragment", "automap verify --seed", "automap upgrade <library>"},
+	} {
+		if !strings.Contains(skill, "("+guide+")") {
+			t.Errorf("SKILL.md doesn't link %s", guide)
+		}
+		for _, dir := range []string{".claude/skills/automap/", ".agents/skills/automap/"} {
+			text := run.ReadFile(t, dir+guide)
+			for _, want := range wants {
+				if !strings.Contains(text, want) {
+					t.Errorf("%s%s lacks %q", dir, guide, want)
+				}
+			}
+		}
+	}
+	for _, want := range []string{"## Changing a composition", "Removing a library", "automap vendor --json", "actions/attest-build-provenance"} {
+		if !strings.Contains(skill, want) {
+			t.Errorf("SKILL.md lacks %q", want)
+		}
 	}
 }
 

@@ -480,7 +480,12 @@ With `--probe <results-file>`, the composition's executable also runs every prob
 
 ### 5.7 Agent interface
 
-The agent interface is the CLI, the router skill and the `AGENTS.md` section (§2.7). The router skill is written to `.claude/skills/automap/SKILL.md` and into any other agent's skill directory already present in the repo (`.agents/skills/`, `.github/skills/`, `.codex/skills/`, `.cursor/skills/`). It records the CLI version that wrote it in its frontmatter `metadata` as `automap-cli-version`, and any command run by a newer CLI rewrites it [ADR-0044](../adr/0044-router-skill-ships-inside-the-cli.md). It covers: choosing between `find`, `extend` and `upgrade`; reading failure codes and details files; adapting reference glue with a recipe's notes; the four nevers; and the reference CI workflow for multi-platform evidence.
+The agent interface is the CLI, the router skill and the `AGENTS.md` section (§2.7). The router skill is written to `.claude/skills/automap/SKILL.md` and into any other agent's skill directory already present in the repo (`.agents/skills/`, `.github/skills/`, `.codex/skills/`, `.cursor/skills/`). It records the CLI version that wrote it in its frontmatter `metadata` as `automap-cli-version`, and any command run by a newer CLI rewrites it [ADR-0044](../adr/0044-router-skill-ships-inside-the-cli.md). `SKILL.md` routes: it covers choosing between the commands; reading failure codes and details files; changing a composition, including removing a library; what to do when the network blocks downloads; adapting reference glue with a recipe's notes; the four nevers; and evidence in CI, from the reference workflow or a workflow of the developer's own. Two guides sit beside it, written and rewritten with it:
+
+- `game.md`, from testbed to game: what the manifest's executable may be, the `--frames` and `--probe` protocol with a `main` that honours it, where the executable runs and where assets go, shaders, a release build and what to ship.
+- `private-maps.md`: a private map's layout, starting from a similar public library's entries, what each entry needs, composing from it, checking its probes with `verify --seed`, and re-resolving after it changes.
+
+The `AGENTS.md` section gives the test, build and run commands; its build line works without `VCPKG_ROOT`, since the first line of `verify`'s build log is the configure command it ran.
 
 ---
 

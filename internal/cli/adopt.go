@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
 )
@@ -122,7 +123,7 @@ func adopt(a *args, r *result) int {
 	}
 	// The agent files and .gitignore are merged into, never kept as found.
 	keep := func(p string) bool {
-		return !generated[p] && p != "AGENTS.md" && p != "CLAUDE.md" && p != ".gitignore" && !strings.HasSuffix(p, "/automap/SKILL.md")
+		return !generated[p] && p != ".gitignore" && !agentfiles.IsAgentFile(p)
 	}
 	// An existing engine builds where it likes; verify writes here.
 	if ignore, changed := ignoreBuild("/build/automap/"); changed {

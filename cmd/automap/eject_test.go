@@ -91,7 +91,7 @@ func TestAnEjectedCompositionBuildsWithoutAutomap(t *testing.T) {
 	for p, data := range before {
 		switch {
 		case p == "automap.manifest.json", p == "automap.lock.json", p == "vcpkg-configuration.json",
-			p == "AGENTS.md", strings.HasSuffix(p, "/automap/SKILL.md"), // the agent files go with the manifest and lock
+			p == "AGENTS.md", strings.Contains(p, "/skills/automap/"), // the agent files go with the manifest and lock
 			strings.HasPrefix(p, "map/"), strings.HasPrefix(p, ".automap-test-cache/"):
 			continue
 		}

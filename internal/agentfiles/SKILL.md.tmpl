@@ -19,8 +19,13 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 | to add or swap in a library | `automap extend <library>[:<variant>] [--slot <slot>]... --json` |
 | a newer map release, for every library or the ones named | `automap upgrade [<library>...] [--map-release <release>] --json` |
 | to know whether the engine is wired correctly | `automap verify --json` |
-| to know which libraries fill a slot | `automap find --slot <slot> --json` |
+| to know whether the map has a library for something | `automap find <words> --json`, or `automap find --slot <slot> --json` |
 | a library's facts, hooks and variants | `automap show library <id> --json` |
+| to turn the testbed into a game, build a release or ship it | read [`game.md`](game.md), beside this file |
+| a library the map doesn't have, or a patched one | read [`private-maps.md`](private-maps.md), beside this file |
+| to change the composition some other way | see **Changing a composition** below |
+
+`automap help` lists every command and `automap help <command>` its flags.
 
 `start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. `extend` adds one library the same way: its slots, build fragment, bindings, setup glue and the glue of any pairing it completes, then re-resolves and verifies; it never overwrites glue already in the repo. A `LICENSE_WARNING(<library>)` warning means the library is copyleft or proprietary: tell the developer why before going on. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`. `start` reads the newest map release and the lock records it; later commands, `extend` included, read the release the lock records. Once a release is cached, everything but fetching works offline.
 
@@ -37,9 +42,23 @@ The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke`
 - An `UNVERIFIABLE(<rule>)` warning means no probe could check that rule; it keeps the composition below `probed`.
 - `EVIDENCE_STALE(<subject>,<platform>)` and `EVIDENCE_BROKEN(<subject>,<platform>)` warnings are about Automap's published evidence for a binding or pairing at the lock's exact pins: stale is more than 30 days old, broken means Automap's latest run of it failed. Mention them to the developer; they don't change this composition's own level.
 
-## Evidence on all three platforms
+## Changing a composition
 
-`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it is signed by the repo's workflow. To verify on Windows, Linux and macOS, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which verifies on all three hosted runners, signs each platform's evidence with GitHub artifact attestations, and commits it with its `.sigstore.json` bundle beside the lock.
+- **A choice** (`choices` in the manifest, such as `diagnostics.profiler`): edit the manifest and run `automap verify --json`, which rewrites the choices header.
+- **The executable** (`executable` in the manifest): edit it and run `automap verify --json`; [`game.md`](game.md) has the rules.
+- **A library's variant, the platforms, or a slot's library**: edit the manifest, then `automap upgrade --json` re-resolves the lock and the files the CLI writes.
+- **Removing a library**: delete it from the manifest's `slots`, `variants` and `glue`, set any choice that named its slot (such as `profiling-slot`) to another value, and run `automap upgrade --json`. Then delete its glue directory (`glue/<library>/`) and build fragment (`cmake/automap/<library>.cmake`), which the CLI leaves.
+- **A private map or an in-repo library that changed**: commit it, then `automap upgrade <library> --json` re-pins it and updates the glue you haven't changed.
+
+A `LOCK_MISMATCH` failure means the lock no longer matches the manifest or the maps, and says which of these to run. Never edit the lock.
+
+## When the network blocks downloads
+
+vcpkg downloads each library's source the first time it builds. `FETCH_FAILED` names the URL that failed. On a machine whose network refuses those URLs (many agent sandboxes do), the composition is not at fault and editing it won't help. On a machine with an open network, `automap vendor --json` copies the ports, sources, map release and evidence the composition needs into `vendor/automap/`; committed, it builds with no network and no caches. `automap fetch --json` fills the machine's own caches instead. Until then, verify in CI.
+
+## Evidence in CI
+
+`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it names the repo's workflow as its verifier. To verify on Windows, Linux and macOS, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which verifies on the hosted runners, signs each platform's evidence with GitHub artifact attestations, and commits it with its `.sigstore.json` bundle beside the lock.
 
 ```yaml
 name: Automap
@@ -57,6 +76,8 @@ jobs:
 ```
 
 If the composition isn't at the repo's root, pass its directory with `with: { working-directory: <dir> }`.
+
+A workflow of your own gets the same evidence when each job: installs the CLI release this skill names and checks its SHA-256; installs the system packages the libraries need (`automap show library <id> --json`, under `facts.platform`); on Windows, runs in the MSVC developer environment; runs `automap verify --json`; and uploads `build/automap/*.log`, which the result's `details_file` names. For signed evidence the job also needs `permissions: { id-token: write, attestations: write }` and a step that attests the evidence file (`actions/attest-build-provenance` with `subject-path: evidence/<platform>.json`); commit the evidence with the attestation's bundle beside it as `evidence/<platform>.sigstore.json`.
 
 ## Adapting glue
 
