@@ -1,6 +1,7 @@
 // Tracy's binding to the diagnostics contract: Tracy in the profiling slot
 // records every zone the diagnostics facade opens.
 // SPDX-License-Identifier: MIT-0
+#include <cstddef>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -24,4 +25,9 @@ void am_profiling_slot_zone_begin(const char* name) {
 
 void am_profiling_slot_zone_end() {
     if (!zones.empty()) zones.pop_back();
+}
+
+// The facade zones open on the calling thread, for the binding's probe.
+std::size_t am_tracy_open_zones() {
+    return zones.size();
 }

@@ -355,6 +355,37 @@ func TestTheTestbedExtendsWithJoltAndMimallocProbed(t *testing.T) {
 	}
 }
 
+// Tracy's on-demand variant, the one a game can ship, records only while a
+// profiler is connected. It reaches probed like the default, and its probe
+// and its link-time check catch the same seeded violations.
+func TestTheTestbedWithOnDemandTracyProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "tracy:on-demand", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	for _, c := range diagnosticsBackendSeeds {
+		if !strings.HasSuffix(c.seed, ":tracy") {
+			continue
+		}
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
 // The seeds spdlog and Tracy add as the diagnostics facade's backends.
 var diagnosticsBackendSeeds = []struct{ seed, code string }{
 	{"diagnostics.routed-through-facade:spdlog", "DIAG_NOT_ROUTED(spdlog)"},

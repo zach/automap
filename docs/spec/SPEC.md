@@ -628,7 +628,7 @@ Thirteen libraries fill fifteen slots [ADR-0058](../adr/0058-v1-catalog.md). The
 | physics-3d | Jolt (`jolt`) | MIT | 5.6.0 | default, double-precision, deterministic |
 | jobs | enkiTS (`enkits`) | Zlib | 1.12 | default |
 | allocator | mimalloc (`mimalloc`) | MIT | 3.6.0 | default |
-| profiling | Tracy (`tracy`) | BSD-3-Clause | 0.14.x | default |
+| profiling | Tracy (`tracy`) | BSD-3-Clause | 0.14.x | default, on-demand (records only while a profiler is connected: the one that can ship) |
 | logging | spdlog (`spdlog`) | MIT | 1.17.0 | default (vcpkg's fmt) |
 | math | GLM (`glm`) | MIT or Happy Bunny | 1.0.3 | default |
 | audio | miniaudio (`miniaudio`) | MIT-0 or public domain | 0.11.25 | default |
