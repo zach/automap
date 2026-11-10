@@ -73,7 +73,7 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 - **Usage is generated from the command table,** so a command can't be missing from it. `--version`, `version`, `help` and `<command> --help` exit 0.
 - **A failed build's failure message ends with the log's first error lines.** A vcpkg download failure is `FETCH_FAILED` with the URL, from `verify` as from `fetch`.
 - **`find` summarizes; `show` details.** A `find` entry has `id`, `name`, `version`, `variants`, `slots`, `license` and `evidence` as one state and level per platform. `show library` keeps every evidence row.
-- **The executable lands in the build root.** The CLI configures with `CMAKE_RUNTIME_OUTPUT_DIRECTORY` set to the build directory.
+- **The CLI finds the executable.** It runs the one at the build root or, failing that, the one the target built anywhere in the build tree, from the executable's own directory.
 - **The router skill stays one file per topic.** `SKILL.md` routes; `game.md` and `private-maps.md` beside it hold the two longer guides, written and refreshed by the CLI with it.
 - **Window settings are context fields** SDL3's setup glue reads before it creates the window: `sdl3.window_title`, `sdl3.window_width`, `sdl3.window_height`, with the testbed's values as defaults.
 - **The reference workflow reads the composition.** A first job turns the manifest's `platforms` into the matrix and reads the CLI version from the router skill's metadata; each verify job downloads that release's binary and checks its SHA-256, and uploads `build/automap/*.log`.

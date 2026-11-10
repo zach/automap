@@ -8,6 +8,7 @@
   "files_written": [
     ".agents/skills/automap/SKILL.md",
     ".claude/skills/automap/SKILL.md",
+    ".gitignore",
     "AGENTS.md",
     "CLAUDE.md",
     "CMakeLists.txt",

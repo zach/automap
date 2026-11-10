@@ -365,12 +365,9 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 		return "", err
 	}
 	defer log.Close()
-	exe, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(buildDir), target))
+	exe, err := findExecutable(filepath.Join(root, filepath.FromSlash(buildDir)), target)
 	if err != nil {
 		return "", err
-	}
-	if runtime.GOOS == "windows" {
-		exe += ".exe"
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
 	defer cancel()
@@ -385,9 +382,11 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 	fmt.Fprintf(log, "$ %s %s %s\n", strings.Join(env, " "), exe, strings.Join(args, " "))
 	cmd := exec.CommandContext(ctx, exe, args...)
 	var stderr bytes.Buffer
-	// Run from the build directory, so files a library writes as it runs,
-	// such as imgui.ini, never land in the developer's repo.
-	cmd.Dir = filepath.Join(root, filepath.FromSlash(buildDir))
+	// Run from the executable's directory in the build tree: files a
+	// library writes as it runs, such as imgui.ini, never land in the
+	// developer's repo, and assets the build copies beside the executable
+	// are found.
+	cmd.Dir = filepath.Dir(exe)
 	cmd.Stdout, cmd.Stderr = log, &stderr
 	cmd.Env = append(os.Environ(), env...)
 	err = cmd.Run()
@@ -402,6 +401,50 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 		return stderr.String(), fmt.Errorf("%s didn't run %d headless frames and shut down cleanly: %v", target, SmokeFrames, err)
 	}
 	return stderr.String(), nil
+}
+
+// findExecutable is the absolute path of the executable a target builds:
+// at the build directory's root, where CMake puts a target the top-level
+// CMakeLists.txt defines, or wherever in the build tree the project's own
+// layout puts it.
+func findExecutable(buildDir, target string) (string, error) {
+	name := target
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	abs, err := filepath.Abs(buildDir)
+	if err != nil {
+		return "", err
+	}
+	isExecutable := func(p string) bool {
+		info, err := os.Stat(p)
+		return err == nil && info.Mode().IsRegular() && (runtime.GOOS == "windows" || info.Mode()&0o111 != 0)
+	}
+	if exe := filepath.Join(abs, name); isExecutable(exe) {
+		return exe, nil
+	}
+	var found string
+	filepath.WalkDir(abs, func(p string, d os.DirEntry, err error) error {
+		if err != nil || found != "" {
+			return filepath.SkipAll
+		}
+		if d.IsDir() {
+			// vcpkg's packages and CMake's own files hold no target of the
+			// project's.
+			if d.Name() == "vcpkg_installed" || d.Name() == "CMakeFiles" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.Name() == name && isExecutable(p) {
+			found = p
+		}
+		return nil
+	})
+	if found == "" {
+		return "", fmt.Errorf("the build produced no executable named %s in %s: the manifest's executable target must be a CMake executable target", name, filepath.ToSlash(buildDir))
+	}
+	return found, nil
 }
 
 var initFailed = regexp.MustCompile(`INIT_FAILED\([^)]*\)`)

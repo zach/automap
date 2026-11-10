@@ -81,6 +81,34 @@ func UpdateAgentsMD(existing, section string) string {
 	return existing + sep + section
 }
 
+// RemoveSection returns existing without its Automap section, and whether
+// it had one. Everything outside the markers keeps its bytes, but for the
+// blank line the section was appended after.
+func RemoveSection(existing string) (string, bool) {
+	begin := strings.Index(existing, beginMarker)
+	end := strings.Index(existing, endMarker)
+	if begin < 0 || end < begin {
+		return existing, false
+	}
+	before := existing[:begin]
+	after := strings.TrimPrefix(existing[end+len(endMarker):], "\n")
+	if after == "" && strings.HasSuffix(before, "\n\n") {
+		before = strings.TrimSuffix(before, "\n")
+	}
+	return before + after, true
+}
+
+// RemoveClaudeImport returns CLAUDE.md without the import line.
+func RemoveClaudeImport(existing string) string {
+	var kept []string
+	for _, line := range strings.SplitAfter(existing, "\n") {
+		if strings.TrimSpace(line) != ClaudeImport {
+			kept = append(kept, line)
+		}
+	}
+	return strings.Join(kept, "")
+}
+
 // ClaudeImport is the line that makes Claude Code read AGENTS.md.
 const ClaudeImport = "@AGENTS.md"
 

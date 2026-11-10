@@ -18,7 +18,7 @@ type Diagnosis struct {
 var (
 	// The first line of an error from a compiler, a linker, CMake, Ninja or
 	// vcpkg.
-	errorLine = regexp.MustCompile(`^(CMake Error\b|error:|fatal:|ninja: error:|LINK : fatal error|.*\b(fatal )?error( [A-Z]+\d+)?:)`)
+	errorLine = regexp.MustCompile(`^(CMake Error\b|error:|fatal:|ninja: error:|LINK : fatal error|\S*\bld(\.lld|\.bfd|\.gold|64)?: |.*\b(fatal )?error( [A-Z]+\d+)?:)`)
 	// vcpkg's download failures: its own downloader's, and git's when a
 	// registry or a source repository can't be reached.
 	downloadError = regexp.MustCompile(`(?i)^error: .*(download|curl|status code|WinHttp)|^fatal: unable to access|Download failed, halting portfile|Could not resolve host`)
@@ -54,8 +54,11 @@ func DiagnoseBuild(log string) Diagnosis {
 		// The error, then the lines that continue it: indented ones, and
 		// for CMake the message after its "at <file> (<command>):" line.
 		excerpt := []string{strings.TrimSpace(line)}
+		linker := strings.Contains(line, "ld: ") || strings.Contains(line, "ld.lld: ")
 		for _, next := range lines[i+1:] {
-			if len(excerpt) == excerptLines || strings.TrimSpace(next) == "" || !strings.HasPrefix(next, " ") {
+			// A linker says where, then what, on lines of their own.
+			continues := strings.HasPrefix(next, " ") || linker && !strings.Contains(next, "linker command failed") && !strings.HasPrefix(next, "ninja:")
+			if len(excerpt) == excerptLines || strings.TrimSpace(next) == "" || !continues {
 				break
 			}
 			excerpt = append(excerpt, strings.TrimSpace(next))

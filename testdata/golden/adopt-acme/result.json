@@ -7,6 +7,7 @@
   "failures": [],
   "files_written": [
     ".claude/skills/automap/SKILL.md",
+    ".gitignore",
     "AGENTS.md",
     "automap.lock.json",
     "automap.manifest.json",

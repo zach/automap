@@ -120,7 +120,14 @@ func adopt(a *args, r *result) int {
 	for _, f := range generatedFiles(man) {
 		generated[f] = true
 	}
-	keep := func(p string) bool { return !generated[p] }
+	// The agent files and .gitignore are merged into, never kept as found.
+	keep := func(p string) bool {
+		return !generated[p] && p != "AGENTS.md" && p != "CLAUDE.md" && p != ".gitignore" && !strings.HasSuffix(p, "/automap/SKILL.md")
+	}
+	// An existing engine builds where it likes; verify writes here.
+	if ignore, changed := ignoreBuild("/build/automap/"); changed {
+		files[".gitignore"] = []byte(ignore)
+	}
 	var pinned []string
 	for _, lib := range man.Libraries() {
 		pin := lock.Pins[lib]

@@ -73,6 +73,11 @@ func start(a *args, r *result) int {
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written.", exitFailed)
 	}
+	// The testbed builds into build/, as the AGENTS.md section says, and
+	// verify into build/automap/.
+	if ignore, changed := ignoreBuild("/build/"); changed {
+		files[".gitignore"] = []byte(ignore)
+	}
 	var pinned []string
 	for _, lib := range man.Libraries() {
 		pin := lock.Pins[lib]

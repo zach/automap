@@ -38,6 +38,7 @@ func TestDiagnoseQuotesTheFirstError(t *testing.T) {
 		want []string
 	}{
 		{"build-compile-error.log", []string{"game/app/main.cpp:42:5: error: use of undeclared identifier 'frame_count'"}},
+		{"build-link-error.log", []string{"undefined reference to `am_game_update(am::Context&)'"}},
 		{"build-cmake-error.log", []string{"CMake Error at cmake/automap/stb-truetype.cmake:3 (find_package):", `Could not find a package configuration file provided by "Stb"`}},
 	} {
 		d := verify.DiagnoseBuild(readLog(t, c.log))

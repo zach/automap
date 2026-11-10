@@ -1,0 +1,9 @@
+$ cmake --build build/automap/linux-x64-clang --target game
+[8/9] Building CXX object game/CMakeFiles/game.dir/app/main.cpp.o
+[9/9] Linking CXX executable game
+FAILED: game
+: && /usr/bin/clang++ -g game/CMakeFiles/game.dir/app/main.cpp.o -o game  vcpkg_installed/x64-linux/debug/lib/libstub_ui.a && :
+/usr/bin/ld: game/CMakeFiles/game.dir/app/main.cpp.o: in function `main':
+/home/dev/game/game/app/main.cpp:31: undefined reference to `am_game_update(am::Context&)'
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+ninja: build stopped: subcommand failed.
