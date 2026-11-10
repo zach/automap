@@ -6,7 +6,7 @@ The **map** describes libraries, the slots they fill (windowing, physics, jobs, 
 
 ## Status
 
-The CLI is released as [`cli-v0.1.0`](https://github.com/zach/automap/releases/tag/cli-v0.1.0), one static binary each for Linux, Windows and macOS. The public map covers thirteen libraries on those three platforms: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
+The CLI is released as [`cli-v0.1.0`](https://github.com/zach/automap/releases/tag/cli-v0.1.0), one static binary each for Linux, Windows and macOS. The public map covers fifteen libraries on those three platforms: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image, stb_truetype, nlohmann/json and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
 
 ## Quick start
 

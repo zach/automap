@@ -619,7 +619,7 @@ The probe harness ships with every composition [ADR-0070](../adr/0070-recipes-sh
 
 ### 8.3 Slots and libraries
 
-Thirteen libraries fill fifteen slots [ADR-0058](../adr/0058-v1-catalog.md). The version in each map release is the newest upstream release that has passed the cooldown with known-good evidence; SDL_shadercross has no tags and is pinned by commit [ADR-0036](../adr/0036-what-a-pin-contains.md). Versions current at spec time are from the research and the spike (accessed 2026-10-29 and 2026-10-30).
+Fifteen libraries fill seventeen slots: v1's thirteen [ADR-0058](../adr/0058-v1-catalog.md), and stb_truetype and nlohmann/json for text and data files, which the first game built on Automap needed [ADR-0084](../adr/0084-the-map-covers-text-and-data-files.md). The version in each map release is the newest upstream release that has passed the cooldown with known-good evidence; SDL_shadercross has no tags and is pinned by commit [ADR-0036](../adr/0036-what-a-pin-contains.md). Versions current at spec time are from the research and the spike (accessed 2026-10-29 and 2026-10-30).
 
 | Slot(s) | Library (id) | License | Version at spec time | Variants |
 | --- | --- | --- | --- | --- |
@@ -635,7 +635,9 @@ Thirteen libraries fill fifteen slots [ADR-0058](../adr/0058-v1-catalog.md). The
 | ecs | flecs (`flecs`) | MIT | 4.1.6 | default |
 | model-import | fastgltf (`fastgltf`) | MIT | 0.9.1 | default |
 | image-decode | stb_image (`stb-image`) | MIT or Unlicense | by commit (header v2.30) | default |
-| shader-compiler | SDL_shadercross (`sdl-shadercross`) | Zlib | by commit (`3.0.0-preview2`, from the Automap registry, whose port needs DXC only on Windows and Linux) | default |
+| shader-compiler | SDL_shadercross (`sdl-shadercross`) | Zlib | by commit (`3.0.0-preview2`, from the Automap registry, whose port links no DXC into the library) | default |
+| text | stb_truetype (`stb-truetype`) | MIT or Unlicense | by commit (the `stb` port stb_image comes from) | default |
+| data-files | nlohmann/json (`nlohmann-json`) | MIT | 3.12.0 | default |
 
 All are permissively licensed and carried by vcpkg [ADR-0058](../adr/0058-v1-catalog.md). Jolt's double-precision and deterministic variants come from the Automap registry, because vcpkg features must be additive.
 
@@ -678,7 +680,7 @@ Every library has a library recipe with a build fragment and setup glue [ADR-007
 | --- | --- | --- |
 | testbed | sdl3, dear-imgui | probed on all three platforms; journey 1's start eval passes |
 | testbed + Jolt | adds jolt | probed on all three platforms; journey 1's extend eval passes |
-| starter engine | all thirteen | probed on all three platforms; journey 2's evals pass |
+| starter engine | v1's thirteen | probed on all three platforms; journey 2's evals pass |
 
 ### 8.7 Journey evals
 
@@ -959,3 +961,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0081](../adr/0081-eval-suite-runs-claude-code-headless.md) | The eval suite runs Claude Code headless, under a spending cap |
 | [0082](../adr/0082-evidence-is-read-live-for-exact-pins.md) | Map releases freeze facts, recipes and probes; evidence is read live for exact pins |
 | [0083](../adr/0083-nda-platforms-are-out-of-scope.md) | NDA platforms are out of scope |
+| [0084](../adr/0084-the-map-covers-text-and-data-files.md) | The public map covers text and data files |

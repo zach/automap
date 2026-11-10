@@ -1,0 +1,7 @@
+{
+  "id": "data-files",
+  "description": "Reads and writes structured data files, such as JSON: settings, saves, balance tables and other game data.",
+  "examples": [
+    "nlohmann-json"
+  ]
+}

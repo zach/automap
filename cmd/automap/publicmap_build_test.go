@@ -69,7 +69,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds) + len(shadercrossSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds) + len(shadercrossSeeds) + len(textSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -551,6 +551,50 @@ var assetsSeeds = []struct{ seed, code string }{
 	{"assets.reads-through-interface:stb-image", "ASSET_READ_BYPASSED(stb-image)"},
 	{"assets.output-identical:stb-image", "ASSET_OUTPUT_DIFFERS(stb-image)"},
 	{"allocation.routed-through-facade:stb-image", "ALLOC_NOT_ROUTED(stb-image)"},
+}
+
+// The seed stb_truetype adds.
+var textSeeds = []struct{ seed, code string }{
+	{"allocation.routed-through-facade:stb-truetype", "ALLOC_NOT_ROUTED(stb-truetype)"},
+}
+
+// stb_truetype fills the text slot and nlohmann/json the data-files slot.
+// stb_truetype comes from the stb port stb_image comes from: the
+// composition builds the port once, for both.
+func TestTheTestbedExtendsWithTextAndDataFilesProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--with", "stb-image", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "nlohmann-json", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "stb-truetype", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	var man struct {
+		Slots map[string]string `json:"slots"`
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["text"] != "stb-truetype" || man.Slots["data-files"] != "nlohmann-json" || man.Slots["image-decode"] != "stb-image" {
+		t.Errorf("slots %v, want stb-truetype in text, nlohmann-json in data-files and stb-image in image-decode", man.Slots)
+	}
+	if n := strings.Count(clitest.Read(t, repo, "vcpkg.json"), `"name": "stb"`); n != 2 {
+		t.Errorf("vcpkg.json names the stb port %d times, want once as a dependency and once as an override", n)
+	}
+	for _, c := range textSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
 }
 
 // fastgltf imports a model and stb_image decodes an image, both reading

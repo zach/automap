@@ -41,6 +41,16 @@
     ]
   },
   {
+    "id": "testbed-text-data",
+    "with": [
+      "sdl3",
+      "dear-imgui:docking",
+      "stb-image",
+      "stb-truetype",
+      "nlohmann-json"
+    ]
+  },
+  {
     "id": "starter",
     "with": [
       "sdl3",
