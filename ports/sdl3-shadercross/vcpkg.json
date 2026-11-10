@@ -1,14 +1,15 @@
 {
   "name": "sdl3-shadercross",
   "version": "3.0.0-preview2",
-  "port-version": 1,
-  "description": "This is a library for translating shaders to different formats, intended for use with SDL's GPU API. It takes SPIRV or HLSL as the source and outputs DXBC, DXIL, SPIRV, MSL, or HLSL. Automap's build of the port: DXC, which vcpkg's directx-dxc port doesn't support on macOS, is a dependency only where it builds; elsewhere SDL_shadercross is built without HLSL-to-DXIL compilation, which only Direct3D 12 needs.",
+  "port-version": 2,
+  "description": "This is a library for translating shaders to different formats, intended for use with SDL's GPU API. It takes SPIRV or HLSL as the source and outputs DXBC, DXIL, SPIRV, MSL, or HLSL. Automap's build of the port: DXC is linked into the library only with the dxc feature, so a game that hands it SPIR-V ships no DXC; without the feature it has no HLSL input and no DXIL output. Where vcpkg has DXC, it is still installed as a tool, to compile shaders when the game builds.",
   "homepage": "https://www.libsdl.org",
   "license": "Zlib",
   "supports": "!uwp",
   "dependencies": [
     {
       "name": "directx-dxc",
+      "host": true,
       "version>=": "2026-02-20",
       "platform": "windows | (linux & x64)"
     },
@@ -32,5 +33,17 @@
       "name": "vcpkg-cmake-config",
       "host": true
     }
-  ]
+  ],
+  "features": {
+    "dxc": {
+      "description": "Link DXC into the library: HLSL source input and DXIL output at run time. A program that uses it ships dxcompiler and dxil beside its executable.",
+      "supports": "windows | (linux & x64)",
+      "dependencies": [
+        {
+          "name": "directx-dxc",
+          "version>=": "2026-02-20"
+        }
+      ]
+    }
+  }
 }
