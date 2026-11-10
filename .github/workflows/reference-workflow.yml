@@ -1,8 +1,10 @@
 name: Reference workflow
 
 # Runs the reference CI workflow on ci/reference-repo, a developer's repo
-# as automap start wrote it, with the CLI at this commit. On main it
-# commits the signed evidence beside that repo's lock.
+# as automap start wrote it: once with the CLI built from this commit,
+# and once with a released CLI installed the way a developer's repo gets
+# it. On main the first commits the signed evidence beside that repo's
+# lock.
 on:
   push:
     branches: [main]
@@ -27,3 +29,11 @@ jobs:
       working-directory: ci/reference-repo
       automap-ref: ${{ github.sha }}
       publish: ${{ github.ref == 'refs/heads/main' }}
+      keep-build: true
+  released:
+    name: With a released CLI
+    uses: ./.github/workflows/automap-verify.yml
+    with:
+      working-directory: ci/reference-repo
+      automap-version: "0.1.0"
+      publish: false

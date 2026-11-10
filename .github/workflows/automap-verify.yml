@@ -1,11 +1,11 @@
 name: Automap verify
 
 # The reference CI workflow for a developer's composition (SPEC §2.4,
-# ADR-0032): verifies it on Windows, Linux and macOS with automap verify,
-# signs each platform's evidence with the repository's GitHub identity
-# through artifact attestations, and commits the evidence and its bundle
-# beside the lock. A developer's repo calls it; the router skill has the
-# caller.
+# ADR-0032). It verifies the composition with automap verify on each
+# platform its manifest targets, with the CLI release that wrote it, signs
+# each platform's evidence with the repository's GitHub identity through
+# artifact attestations, and commits the evidence and its bundle beside
+# the lock. A developer's repo calls it; the router skill has the caller.
 on:
   workflow_call:
     inputs:
@@ -13,22 +13,56 @@ on:
         description: "The composition's directory in the repo"
         type: string
         default: "."
-      automap-ref:
-        description: "The automap version to install: a tag, branch or commit of zach/automap"
+      automap-version:
+        description: "The automap release to install, such as 0.2.0 (default: the version the composition's router skill records)"
         type: string
-        default: "main"
+        default: ""
+      automap-ref:
+        description: "Build automap from source instead: a tag, branch or commit of zach/automap"
+        type: string
+        default: ""
       publish:
         description: "Commit the evidence beside the lock"
         type: boolean
         default: true
+      keep-build:
+        description: "Upload the built executable and what the build put beside it, as the artifact automap-build-<platform>"
+        type: boolean
+        default: false
 
 jobs:
+  plan:
+    name: Read the composition
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+      version: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Platforms and CLI version
+        id: read
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          # One job per platform the manifest targets, on its hosted runner.
+          matrix=$(jq -c '{include: [.platforms[] | {platform: ., os: ({"linux-x64-clang": "ubuntu-latest", "windows-x64-msvc": "windows-latest", "macos-arm64-appleclang": "macos-latest"}[.])} | select(.os != null)]}' automap.manifest.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          # The CLI that wrote the composition recorded its version in the
+          # router skill.
+          version="${{ inputs.automap-version }}"
+          if [ -z "$version" ] && [ -f .claude/skills/automap/SKILL.md ]; then
+            version=$(sed -n 's/^ *automap-cli-version: "\(.*\)"$/\1/p' .claude/skills/automap/SKILL.md | head -1)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "platforms: $matrix; automap: ${version:-from source}"
+
   verify:
-    name: Verify (${{ matrix.os }})
+    name: Verify (${{ matrix.platform }})
+    needs: plan
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     permissions:
@@ -38,23 +72,66 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      AUTOMAP_VERSION: ${{ needs.plan.outputs.version }}
+      AUTOMAP_REF: ${{ inputs.automap-ref }}
     steps:
       - uses: actions/checkout@v4
+      - name: Released or from source
+        id: how
+        run: |
+          # A development version has no release: build it from source.
+          case "$AUTOMAP_VERSION" in ""|*-dev|0.0.0*) source=true ;; *) source=false ;; esac
+          [ -n "$AUTOMAP_REF" ] && source=true
+          echo "source=$source" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v5
+        if: steps.how.outputs.source == 'true'
         with:
           go-version: stable
           cache: false
+      - name: automap, from source
+        if: steps.how.outputs.source == 'true'
+        run: |
+          GOBIN="$RUNNER_TEMP/bin" go install "github.com/zach/automap/cmd/automap@${AUTOMAP_REF:-main}"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: automap, the release
+        if: steps.how.outputs.source != 'true'
+        run: |
+          case "$RUNNER_OS" in
+            Linux) file="automap-$AUTOMAP_VERSION-linux-amd64"; exe=automap ;;
+            Windows) file="automap-$AUTOMAP_VERSION-windows-amd64.exe"; exe=automap.exe ;;
+            macOS) file="automap-$AUTOMAP_VERSION-darwin-arm64"; exe=automap ;;
+          esac
+          base="https://github.com/zach/automap/releases/download/cli-v$AUTOMAP_VERSION"
+          mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP/bin"
+          curl -fsSL --retry 3 -o "$file" "$base/$file"
+          curl -fsSL --retry 3 -o sums "$base/automap-$AUTOMAP_VERSION.sha256"
+          want=$(awk -v f="$file" '$2 == f || $2 == "*" f {print $1}' sums)
+          got=$( (sha256sum "$file" 2>/dev/null || shasum -a 256 "$file") | cut -d' ' -f1)
+          [ -n "$want" ] && [ "$want" = "$got" ] || { echo "automap $AUTOMAP_VERSION: SHA-256 $got, want $want"; exit 1; }
+          mv "$file" "$exe" && chmod +x "$exe" && rm sums
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
       - name: System packages (Linux)
         if: runner.os == 'Linux'
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # What the v1 catalog's libraries need on Linux (their
-          # system_dependencies facts), and clang with its ThreadSanitizer
+          # What the composition's libraries state they need (their
+          # system_packages fact), and clang with its ThreadSanitizer
           # runtime.
+          packages=""
+          for library in $(jq -r '[.slots[]] | unique | .[]' automap.manifest.json); do
+            packages="$packages $(automap show library "$library" --json | jq -r --arg p "${{ matrix.platform }}" \
+              '.entries[0].definition.versions[-1].facts.platform.system_packages[$p] // {} | ((.apt // []) + (.apt_headless // [])) | join(" ")' || true)"
+          done
+          if [ -z "$(echo $packages)" ]; then
+            # A map release from before libraries stated their packages:
+            # what the v1 catalog's libraries need.
+            packages="autoconf autoconf-archive automake libtool libltdl-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev mesa-vulkan-drivers"
+          fi
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang pkg-config autoconf autoconf-archive automake libtool libltdl-dev \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxtst-dev \
-            libwayland-dev libxkbcommon-dev wayland-protocols libegl-dev \
-            mesa-vulkan-drivers libvulkan1
+          sudo apt-get install -y ninja-build clang pkg-config libvulkan1 $packages
           sudo apt-get install -y "libclang-rt-$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p')-dev"
       - name: MSVC developer environment
         if: runner.os == 'Windows'
@@ -82,18 +159,43 @@ jobs:
           path: ${{ runner.temp }}/vcpkg-archives
           key: automap-vcpkg-${{ runner.os }}-${{ hashFiles(format('{0}/automap.lock.json', inputs.working-directory)) }}
           restore-keys: automap-vcpkg-${{ runner.os }}-
-      - name: automap
-        run: |
-          GOBIN="$RUNNER_TEMP/bin" go install "github.com/zach/automap/cmd/automap@${{ inputs.automap-ref }}"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
       - name: Verify
         id: verify
         working-directory: ${{ inputs.working-directory }}
         env:
           GITHUB_TOKEN: ${{ github.token }} # for GitHub's API, which limits unauthenticated requests
         run: |
-          automap verify --json | tee "$RUNNER_TEMP/verify.json"
+          # Evidence of a run that fell short is still evidence, at the
+          # level it reached: record it, then fail the job.
+          automap verify --json > "$RUNNER_TEMP/verify.json" || true
+          cat "$RUNNER_TEMP/verify.json"
           echo "evidence=$(jq -r '.evidence_file // empty' "$RUNNER_TEMP/verify.json")" >> "$GITHUB_OUTPUT"
+          jq -e .ok "$RUNNER_TEMP/verify.json" > /dev/null
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: automap-logs-${{ matrix.platform }}
+          # The details files a failure names.
+          path: |
+            ${{ inputs.working-directory }}/build/automap/*.log
+            ${{ inputs.working-directory }}/build/automap/*.json
+          if-no-files-found: ignore
+      - name: Keep the build
+        if: inputs.keep-build && steps.verify.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: automap-build-${{ matrix.platform }}
+          # The executable and what the build copied beside it, such as
+          # DLLs and assets; not vcpkg's packages or the object files.
+          path: |
+            ${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/vcpkg_installed/**
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/**/CMakeFiles/**
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/**/*.ninja*
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/**/*.log
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/**/*.cmake
+            !${{ inputs.working-directory }}/build/automap/${{ matrix.platform }}/CMakeCache.txt
       - name: Sign the evidence
         id: attest
         if: always() && steps.verify.outputs.evidence != ''
@@ -110,7 +212,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always() && steps.attest.outcome == 'success'
         with:
-          name: automap-evidence-${{ matrix.os }}
+          name: automap-evidence-${{ matrix.platform }}
           path: ${{ runner.temp }}/out
 
   publish:

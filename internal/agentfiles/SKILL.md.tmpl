@@ -59,7 +59,7 @@ vcpkg downloads each library's source the first time it builds. `FETCH_FAILED` n
 
 ## Evidence in CI
 
-`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it names the repo's workflow as its verifier. To verify on Windows, Linux and macOS, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which verifies on the hosted runners, signs each platform's evidence with GitHub artifact attestations, and commits it with its `.sigstore.json` bundle beside the lock.
+`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it names the repo's workflow as its verifier. To verify on every platform the manifest targets, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which runs one job per platform on GitHub's hosted runners with the CLI release this skill names, signs each platform's evidence with GitHub artifact attestations, commits it with its `.sigstore.json` bundle beside the lock, and uploads the build logs as the artifact `automap-logs-<platform>`.
 
 ```yaml
 name: Automap
@@ -76,7 +76,7 @@ jobs:
     uses: zach/automap/.github/workflows/automap-verify.yml@main
 ```
 
-If the composition isn't at the repo's root, pass its directory with `with: { working-directory: <dir> }`.
+Its inputs, under `with:`: `working-directory` when the composition isn't at the repo's root; `keep-build: true` to upload the built executable and what the build put beside it as `automap-build-<platform>`; `publish: false` to verify without committing evidence, as on a feature branch; `automap-version` to install another CLI release.
 
 A workflow of your own gets the same evidence when each job: installs the CLI release this skill names and checks its SHA-256; installs the system packages the libraries need (`automap show library <id> --json`: `facts.platform.system_packages`, per platform, `apt` to build and `apt_headless` to run without a display); on Windows, runs in the MSVC developer environment; runs `automap verify --json`; and uploads `build/automap/*.log`, which the result's `details_file` names. For signed evidence the job also needs `permissions: { id-token: write, attestations: write }` and a step that attests the evidence file (`actions/attest-build-provenance` with `subject-path: evidence/<platform>.json`); commit the evidence with the attestation's bundle beside it as `evidence/<platform>.sigstore.json`.
 
