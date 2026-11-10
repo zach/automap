@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/mapmodel"
 	"github.com/zach/automap/internal/release"
+	"github.com/zach/automap/internal/verify"
 	"github.com/zach/automap/schemas"
 )
 
@@ -61,10 +63,6 @@ func upgrade(a *args, r *result) int {
 	if !ok {
 		return exitUsage
 	}
-	oldMap, ok := loadMapAt(oldDir, privates, r)
-	if !ok {
-		return exitUsage
-	}
 	newMap, ok := loadMapAt(newDir, privates, r)
 	if !ok {
 		return exitUsage
@@ -73,7 +71,6 @@ func upgrade(a *args, r *result) int {
 	for lib, pin := range lock.Pins {
 		locked[lib] = pin.Version
 	}
-	oldMap = oldMap.Hold(locked)
 	// Libraries not named stay at their versions.
 	hold := map[string]string{}
 	if len(a.positional) > 0 {
@@ -88,13 +85,35 @@ func upgrade(a *args, r *result) int {
 	opts := func(m *mapmodel.Map) composition.FileOptions {
 		return composition.FileOptions{Testbed: base.Executable.Target == composition.TestbedTarget, RegistryURL: registryURL(m), Vendored: composition.ReadVendoredPorts(".")}
 	}
-	oldPlan, fails := composition.PlanStartup(oldMap, base)
-	if fails != nil {
-		return failWith(r, fails, "The composition doesn't match its own map release.", exitUsage)
+	// The files as the lock pinned them: the lock's release with each
+	// private map at the commit the lock records, so a private recipe's
+	// changed reference shows as a change. A private map that can't be
+	// read at its commit, or doesn't describe the composition there, is
+	// read as it is now.
+	oldFilesWith := func(privates []mapmodel.PrivateMap, r *result) (map[string][]byte, bool) {
+		oldMap, ok := loadMapAt(oldDir, privates, r)
+		if !ok {
+			return nil, false
+		}
+		oldMap = oldMap.Hold(locked)
+		oldPlan, fails := composition.PlanStartup(oldMap, base)
+		if fails == nil {
+			var files map[string][]byte
+			if files, fails = composition.Files(oldMap, base, lock, oldPlan, opts(oldMap)); fails == nil {
+				return files, true
+			}
+		}
+		failWith(r, fails, "", exitUsage)
+		return nil, false
 	}
-	oldFiles, fails := composition.Files(oldMap, base, lock, oldPlan, opts(oldMap))
-	if fails != nil {
-		return failWith(r, fails, "The composition doesn't match its own map release.", exitUsage)
+	pinned, cleanup := lockedPrivateMaps(privates, lock)
+	defer cleanup()
+	oldFiles, ok := oldFilesWith(pinned, newResult(r.Command))
+	if !ok {
+		if oldFiles, ok = oldFilesWith(privates, r); !ok {
+			r.Summary = "The composition can't be regenerated as the lock pinned it (" + lockedMaps(lock) + "), so upgrade can't tell which files have changed since."
+			return exitUsage
+		}
 	}
 	tag := mapRelease(newMap.PublicDir())
 	man := composition.Upgrade(newMap, base, tag)
@@ -129,6 +148,55 @@ func upgrade(a *args, r *result) int {
 	}
 	done += fmt.Sprintf("; %d %s updated, %d diverged", updated, plural(updated, "file", "files"), len(diverged))
 	return writeAndVerify(a, newMap, man, write, nil, done, r)
+}
+
+// lockedPrivateMaps is each private map as the lock pinned it: its files at
+// the commit the lock records, in a scratch directory. A map the lock has
+// no commit for, or whose commit git can't read, stays where it is. The
+// caller runs cleanup when done.
+func lockedPrivateMaps(privates []mapmodel.PrivateMap, lock *composition.Lock) ([]mapmodel.PrivateMap, func()) {
+	scratch, err := os.MkdirTemp("", "automap-private-")
+	if err != nil {
+		return privates, func() {}
+	}
+	out := slices.Clone(privates)
+	for i, pm := range out {
+		commit := lock.PrivateMaps[pm.ID].Commit
+		if commit == "" {
+			continue
+		}
+		// The map's directory within its repository, and the repository's
+		// root, where git archive reads a tree's path from.
+		where, err := exec.Command("git", "-C", pm.Location, "rev-parse", "--show-prefix", "--show-toplevel").Output()
+		lines := strings.Split(strings.TrimRight(string(where), "\n"), "\n")
+		if err != nil || len(lines) != 2 {
+			continue
+		}
+		tree := commit
+		if dir := strings.TrimSuffix(lines[0], "/"); dir != "" {
+			tree += ":" + dir
+		}
+		dst := filepath.Join(scratch, fmt.Sprint(i))
+		archive := exec.Command("git", "-C", lines[1], "-c", "core.autocrlf=false", "archive", "--format=tar", tree)
+		if verify.ArchiveTree(archive, dst) == nil {
+			out[i].Location = dst
+		}
+	}
+	return out, func() { os.RemoveAll(scratch) }
+}
+
+// lockedMaps names the maps a lock was resolved against.
+func lockedMaps(lock *composition.Lock) string {
+	out := "map release " + lock.MapRelease
+	var ids []string
+	for id := range lock.PrivateMaps {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	for _, id := range ids {
+		out += ", private map " + id + " at " + lock.PrivateMaps[id].Commit[:min(7, len(lock.PrivateMaps[id].Commit))]
+	}
+	return out
 }
 
 // upgradeTarget is the directory of the map to upgrade to: a map directory

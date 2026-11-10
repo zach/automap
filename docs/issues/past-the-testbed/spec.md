@@ -54,12 +54,16 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 21. As Automap's CI, I want to compare every variant's features against vcpkg's install plan for each reference composition, so that a fact about a build can't drift.
 22. As a developer's agent, I want a library's system packages as a list I can install and `verify` to name a missing one, instead of a failed port build.
 
-### Direction, for the product owner
+### Changing a composition
 
 23. As a developer's agent, I want to remove a library and to re-resolve after a manifest or private-map change with commands named for those jobs.
-24. As a developer, I want a private map's uncommitted changes read and marked, so that iterating on one doesn't need a commit per try and the lock never claims a commit it didn't read.
-25. As a game developer, I want text and fonts and data files in the public map.
-26. As a game developer, I want profiling in development builds and not in the release, and a profiler variant that can ship.
+24. As a developer, I want a private map's uncommitted changes read and marked, so that iterating on one doesn't need a commit per try, and a lock that checks in CI's shallow clone as it does on my machine.
+25. As a game developer, I want a profiler variant that can ship.
+
+### Direction, for the product owner
+
+26. As a game developer, I want text and fonts and data files in the public map.
+27. As a game developer, I want profiling in development builds and not in the release.
 
 ## Implementation Decisions
 
@@ -75,6 +79,8 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 - **The reference workflow reads the composition.** A first job turns the manifest's `platforms` into the matrix and reads the CLI version from the router skill's metadata; each verify job downloads that release's binary and checks its SHA-256, and uploads `build/automap/*.log`.
 - **SDL3's default variant states what is built.** IBus is on: vcpkg unions features, so a variant can't promise a feature stays off when another port asks for it.
 - **System packages are a new platform fact,** `system_packages`, a list per platform and package manager, beside the prose; the platform contract moves to 1.1.0.
+- **`remove` and `resolve` are commands.** `remove <library>` is the other half of extend; `resolve` re-resolves against the lock's own release after the manifest or a private map changed; `upgrade` is `resolve` plus the move to a newer release.
+- **A private map is pinned by content.** The lock records the hash of its directory, as for an in-repo library, and the commit beside it when the directory is committed and clean; an uncommitted map composes with a warning and unsigned evidence.
 - **SDL_shadercross links DXC only where a variant asks for it.** The default variant compiles SPIR-V to DXBC, MSL and SPIR-V with no DXC at run time; the port keeps DXC as a build-time tool, and the build fragment offers a CMake function that compiles HLSL to SPIR-V with it.
 
 ## Out of Scope
@@ -85,4 +91,4 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 
 ## Decisions the product owner makes
 
-Tickets 13, 14, 16 and 17 change an ADR or what the map covers, and ticket 18 spends on evals and cuts a release; each waits for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI.
+Ticket 17 changes what the map covers, ticket 16's second half changes what a composition is, and ticket 18 spends on evals and cuts a release; each waits for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI: command names beyond the five jobs and how the lock records a private map are the spec's details (SPEC §12.3), and a variant of a library the map covers is curation.

@@ -107,7 +107,11 @@ func Files(m *mapmodel.Map, man *Manifest, lock *Lock, plan *StartupPlan, opts F
 	}
 	for _, lib := range man.Libraries() {
 		if _, ok := out[path.Join("cmake/automap", lib+".cmake")]; !ok {
-			fails = append(fails, failure("NO_BUILD_FRAGMENT("+lib+")", "The map has no library recipe with a build fragment for %s.", lib))
+			from := ""
+			if maps := m.Origins("library", lib); len(maps) > 0 {
+				from = ", which " + strings.Join(maps, " and ") + " " + map[bool]string{true: "defines", false: "define"}[len(maps) == 1]
+			}
+			fails = append(fails, failure("NO_BUILD_FRAGMENT("+lib+")", "The maps have no library recipe with a build fragment for %s%s: add one whose reference_glue has a file with the role build-fragment.", lib, from))
 		}
 	}
 

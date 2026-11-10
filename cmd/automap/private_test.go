@@ -327,3 +327,116 @@ func TestAnInRepoPinFailsWhenItsSourceChanges(t *testing.T) {
 	run.ExpectExit(t, 2)
 	run.ExpectFailure(t, "LOCK_MISMATCH(acme-tools)", "has changed since the lock pinned it")
 }
+
+const (
+	acmeToolsReference = "automap-private/recipes/library/acme-tools/acme-tools.cmake"
+	acmeToolsFragment  = "cmake/automap/acme-tools.cmake"
+)
+
+// acmeToolsRepo is Acme's repo with acme-tools in the composition and
+// committed, and then the private recipe's build fragment changed and
+// committed: what upgrade has to carry into the repo.
+func acmeToolsRepo(t *testing.T, edit func(repo *clitest.Repo)) *clitest.Repo {
+	t.Helper()
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	commitRepo(t, repo)
+	if edit != nil {
+		edit(repo)
+	}
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed in the private map.\n")
+	commitRepo(t, repo)
+	return repo
+}
+
+// upgrade compares against each private map as the lock pinned it: a
+// private recipe's changed reference reaches the repo's copy that still
+// matched the old one (SPEC §5.4).
+func TestUpgradeCarriesAPrivateMapsChangedGlue(t *testing.T) {
+	repo := acmeToolsRepo(t, nil)
+
+	run := repo.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got, want := clitest.Read(t, repo, acmeToolsFragment), clitest.Read(t, repo, acmeToolsReference); got != want {
+		t.Errorf("%s is\n%s\nwant the private map's new reference\n%s", acmeToolsFragment, got, want)
+	}
+	if !strings.Contains(run.Result.Summary, "1 file updated, 0 diverged") {
+		t.Errorf("summary %q, want 1 file updated, 0 diverged", run.Result.Summary)
+	}
+	if commit := gitOutput(t, repo.Dir, "log", "-1", "--format=%H", "--", "automap-private"); readLock(t, repo).PrivateMaps["acme"].Commit != commit {
+		t.Errorf("the lock doesn't pin private map acme at its new commit %s", commit)
+	}
+}
+
+// A copy the developer changed is left alone when the private reference
+// changes too, with the new reference beside it.
+func TestUpgradeLeavesGlueThatDivergedFromAPrivateMap(t *testing.T) {
+	repo := acmeToolsRepo(t, func(repo *clitest.Repo) {
+		repo.WriteFile(t, acmeToolsFragment, clitest.Read(t, repo, acmeToolsFragment)+"# Mine.\n")
+	})
+	mine := clitest.Read(t, repo, acmeToolsFragment)
+
+	run := repo.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got := clitest.Read(t, repo, acmeToolsFragment); got != mine {
+		t.Errorf("%s was rewritten:\n%s", acmeToolsFragment, got)
+	}
+	if got, want := clitest.Read(t, repo, acmeToolsFragment+".reference"), clitest.Read(t, repo, acmeToolsReference); got != want {
+		t.Errorf("%s.reference is\n%s\nwant the private map's new reference", acmeToolsFragment, got)
+	}
+	var warned bool
+	for _, w := range run.Result.Warnings {
+		warned = warned || w.Code == "GLUE_DIVERGED("+acmeToolsFragment+")"
+	}
+	if !warned {
+		t.Errorf("no GLUE_DIVERGED(%s) warning in %+v", acmeToolsFragment, run.Result.Warnings)
+	}
+}
+
+// A pin that differs from the map is one failure, however many platforms
+// the composition has.
+func TestALockMismatchIsReportedOnce(t *testing.T) {
+	repo := acmeToolsRepo(t, nil)
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	seen := map[string]int{}
+	for _, f := range run.Result.Failures {
+		seen[f.Code+": "+f.Message]++
+	}
+	for failure, n := range seen {
+		if n > 1 {
+			t.Errorf("%d times: %s", n, failure)
+		}
+	}
+	run.ExpectFailure(t, "LOCK_MISMATCH(stub-ui)", "private map acme has changed")
+}
+
+// In a shallow clone, as CI checks a repo out, the commit the lock pins a
+// private map at isn't there to read: upgrade compares against the map as
+// it is, and still upgrades.
+func TestUpgradeInAShallowCloneReadsThePrivateMapAsItIs(t *testing.T) {
+	s := newReleaseServer(t)
+	repo := acmeStubsRepo(t, s, fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	commitRepo(t, repo)
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed in the private map.\n")
+	commitRepo(t, repo)
+	shallow := &clitest.Repo{Dir: t.TempDir()}
+	if out, err := exec.Command("git", "clone", "-q", "--depth", "1", "file://"+repo.Dir, shallow.Dir).CombinedOutput(); err != nil {
+		t.Fatalf("git clone: %v\n%s", err, out)
+	}
+	shallow.Setenv("AUTOMAP_RELEASES", s.URL)
+	shallow.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	shallow.Setenv("AUTOMAP_CACHE", t.TempDir())
+
+	run := shallow.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if !strings.Contains(run.Result.Summary, "0 files updated, 0 diverged") {
+		t.Errorf("summary %q, want 0 files updated, 0 diverged: the old reference can't be read", run.Result.Summary)
+	}
+}

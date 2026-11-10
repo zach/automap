@@ -89,6 +89,9 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 		if pin.Variant != choice.Default {
 			mismatch(lib, "%s is pinned as variant %s, but the manifest asks for %s", lib, pin.Variant, choice.Default)
 		}
+		// A problem with the library's one pin is the same on every
+		// platform that uses it: say it once.
+		said := map[string]bool{}
 		for _, p := range man.Platforms {
 			ppin := pin
 			if pp, ok := pin.Platforms[p]; ok {
@@ -97,7 +100,8 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 			if ppin.Variant != choice.On(p) {
 				mismatch(lib, "%s on %s is pinned as variant %s, but the manifest asks for %s", lib, p, ppin.Variant, choice.On(p))
 			}
-			if msg := pinAgainstMap(m, l, ppin); msg != "" {
+			if msg := pinAgainstMap(m, l, ppin); msg != "" && !said[msg] {
+				said[msg] = true
 				mismatch(lib, "%s", msg)
 			}
 		}
