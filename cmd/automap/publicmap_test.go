@@ -27,8 +27,12 @@ func TestThePublicMapsContractsHaveTheirProbedRules(t *testing.T) {
 			run := repo.Automap(t, "show", "contract", contract, "--map", "map", "--json")
 
 			run.ExpectExit(t, 0)
-			if v := run.Result.Entries[0].Get("definition", "version"); v != "1.0.0" {
-				t.Errorf("version %v, want 1.0.0", v)
+			want := "1.0.0"
+			if contract == "platform" {
+				want = "1.1.0" // adds the system_packages fact
+			}
+			if v := run.Result.Entries[0].Get("definition", "version"); v != want {
+				t.Errorf("version %v, want %s", v, want)
 			}
 			probed := map[string]bool{}
 			for _, r := range run.Result.Entries[0].Get("definition", "rules").([]any) {

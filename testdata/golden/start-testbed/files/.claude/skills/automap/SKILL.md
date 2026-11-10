@@ -35,6 +35,7 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 
 The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke` (ran 120 headless frames and shut down cleanly) or `probed` (every applicable probed rule passed). Aim for `probed`.
 
+- `SYSTEM_PACKAGE_MISSING(<package>)`: a library needs a system package this machine lacks; nothing was built. The message has the one `apt-get install` line for everything missing. As a warning, it is a package only a headless run needs, such as a software GPU driver.
 - `BUILD_FAILED`: the message quotes the build log's first error; the details file is the whole log. Fix the build.
 - `FETCH_FAILED`: vcpkg couldn't download a source, and the message names the URL. Retry if the network was down. If this machine's network blocks the URL, nothing in the repo is wrong: run `automap vendor --json` on a machine that reaches it and commit `vendor/automap/`, which builds with no network.
 - `SMOKE_FAILED`: the executable crashed or didn't shut down cleanly. `INIT_FAILED(<call>)` names the startup call that failed.
@@ -77,7 +78,7 @@ jobs:
 
 If the composition isn't at the repo's root, pass its directory with `with: { working-directory: <dir> }`.
 
-A workflow of your own gets the same evidence when each job: installs the CLI release this skill names and checks its SHA-256; installs the system packages the libraries need (`automap show library <id> --json`, under `facts.platform`); on Windows, runs in the MSVC developer environment; runs `automap verify --json`; and uploads `build/automap/*.log`, which the result's `details_file` names. For signed evidence the job also needs `permissions: { id-token: write, attestations: write }` and a step that attests the evidence file (`actions/attest-build-provenance` with `subject-path: evidence/<platform>.json`); commit the evidence with the attestation's bundle beside it as `evidence/<platform>.sigstore.json`.
+A workflow of your own gets the same evidence when each job: installs the CLI release this skill names and checks its SHA-256; installs the system packages the libraries need (`automap show library <id> --json`: `facts.platform.system_packages`, per platform, `apt` to build and `apt_headless` to run without a display); on Windows, runs in the MSVC developer environment; runs `automap verify --json`; and uploads `build/automap/*.log`, which the result's `details_file` names. For signed evidence the job also needs `permissions: { id-token: write, attestations: write }` and a step that attests the evidence file (`actions/attest-build-provenance` with `subject-path: evidence/<platform>.json`); commit the evidence with the attestation's bundle beside it as `evidence/<platform>.sigstore.json`.
 
 ## Adapting glue
 

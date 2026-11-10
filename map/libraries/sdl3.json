@@ -172,6 +172,31 @@
           "system_dependencies": {
             "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build libxcrypt, a dependency of the ibus feature's D-Bus; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },
+          "system_packages": {
+            "linux-x64-clang": {
+              "apt": [
+                "libx11-dev",
+                "libxext-dev",
+                "libxrandr-dev",
+                "libxcursor-dev",
+                "libxi-dev",
+                "libxss-dev",
+                "libxtst-dev",
+                "libwayland-dev",
+                "libxkbcommon-dev",
+                "wayland-protocols",
+                "libegl-dev",
+                "autoconf",
+                "autoconf-archive",
+                "automake",
+                "libtool",
+                "libltdl-dev"
+              ],
+              "apt_headless": [
+                "mesa-vulkan-drivers"
+              ]
+            }
+          },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
             "linux-x64-clang": "vulkan",
@@ -325,6 +350,31 @@
           },
           "system_dependencies": {
             "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build libxcrypt, a dependency of the ibus feature's D-Bus; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+          },
+          "system_packages": {
+            "linux-x64-clang": {
+              "apt": [
+                "libx11-dev",
+                "libxext-dev",
+                "libxrandr-dev",
+                "libxcursor-dev",
+                "libxi-dev",
+                "libxss-dev",
+                "libxtst-dev",
+                "libwayland-dev",
+                "libxkbcommon-dev",
+                "wayland-protocols",
+                "libegl-dev",
+                "autoconf",
+                "autoconf-archive",
+                "automake",
+                "libtool",
+                "libltdl-dev"
+              ],
+              "apt_headless": [
+                "mesa-vulkan-drivers"
+              ]
+            }
           },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",

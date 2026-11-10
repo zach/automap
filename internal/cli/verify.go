@@ -59,6 +59,9 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 	for _, f := range out.Failures {
 		r.Failures = append(r.Failures, failure{Code: f.Code, Rule: f.Rule, Library: f.Library, Message: f.Message, DetailsFile: f.DetailsFile})
 	}
+	for _, w := range out.Warnings {
+		r.warn(w.Code, w.Message)
+	}
 	var unverifiable int
 	for _, res := range out.Results {
 		if res.Status == "unverifiable" && out.Level != "none" && out.Level != "builds" {

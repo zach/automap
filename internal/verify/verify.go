@@ -45,6 +45,7 @@ type Outcome struct {
 	Level        string
 	Results      []Result
 	Failures     []Failure
+	Warnings     []Failure // a code and a message each
 	EvidenceFile string
 }
 
@@ -93,8 +94,17 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	var built, smoked, probesRan, tsanRan bool
 	var setAside []TSanReport
 	var linked []Result // results the linker decided, such as MSVC's ABI define check
-	vcpkg, err := VcpkgRoot(m)
-	if err != nil {
+	// A system package a library needs and the machine lacks is named
+	// before building: the alternative is a port build failing minutes in.
+	lacking, warnings := missingPackages(m, man, platform)
+	out.Warnings = warnings
+	vcpkg, err := "", error(nil)
+	if len(lacking) == 0 {
+		vcpkg, err = VcpkgRoot(m)
+	}
+	if len(lacking) > 0 {
+		out.Failures = append(out.Failures, lacking...)
+	} else if err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error()})
 	} else if err := build(vcpkg, opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
 		out.Failures = append(out.Failures, buildFailure(in(paths.buildLog), paths.buildLog, "", err))

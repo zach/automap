@@ -114,7 +114,7 @@ func TestResolvePinsTheNewestVersionFromTheMap(t *testing.T) {
 	if !reflect.DeepEqual(lock.Pins["stub-window"], want) {
 		t.Errorf("stub-window pin\n%+v, want\n%+v", lock.Pins["stub-window"], want)
 	}
-	wantContracts := map[string]string{"allocation": "1.0.0", "build-flags": "1.0.0", "diagnostics": "1.0.0", "lifecycle": "1.0.0", "platform": "1.0.0"}
+	wantContracts := map[string]string{"allocation": "1.0.0", "build-flags": "1.0.0", "diagnostics": "1.0.0", "lifecycle": "1.0.0", "platform": "1.1.0"}
 	if !reflect.DeepEqual(lock.Contracts, wantContracts) {
 		t.Errorf("contracts %v, want %v", lock.Contracts, wantContracts)
 	}
