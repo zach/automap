@@ -14,4 +14,4 @@
 -    am::lifecycle::shutdown_step("dear-imgui--sdl3:ImGui_ImplSDLGPU3_Shutdown");
  }
  
- bool am_pair_imgui_sdl3_begin_frame(am::Context&) {
+ void am_pair_imgui_sdl3_process_event(const SDL_Event& event) {

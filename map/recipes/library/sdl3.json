@@ -41,6 +41,22 @@
       ],
       "provides": [
         {
+          "name": "sdl3.window_title",
+          "type": "const char*"
+        },
+        {
+          "name": "sdl3.window_width",
+          "type": "int"
+        },
+        {
+          "name": "sdl3.window_height",
+          "type": "int"
+        },
+        {
+          "name": "sdl3.window_flags",
+          "type": "unsigned long long"
+        },
+        {
           "name": "sdl3.window",
           "type": "SDL_Window*"
         },
@@ -76,6 +92,7 @@
   "adaptation_notes": [
     "The build fragment calls find_package(SDL3 CONFIG REQUIRED) and links SDL3::SDL3.",
     "Setup glue runs SDL_Init, creates one window and a GPU device for the platform's backend, and claims the window for the device; shutdown waits for the GPU to go idle, releases the window from the device, and destroys both before SDL_Quit.",
+    "A game sets the window before am::startup(ctx): ctx.sdl3.window_title, ctx.sdl3.window_width and ctx.sdl3.window_height, and ctx.sdl3.window_flags for SDL_WindowFlags such as SDL_WINDOW_FULLSCREEN. Left unset, they are the testbed's: \"Automap testbed\", 1280 by 720, resizable. After startup they hold what the window was created with.",
     "Headless runs need no different build: on Linux, verify sets SDL_VIDEO_DRIVER=offscreen and SDL_GPU's Vulkan backend runs on Mesa lavapipe; hosted Windows and macOS runners have a desktop session, so SDL uses its native video driver with Direct3D 12 and Metal."
   ]
 }

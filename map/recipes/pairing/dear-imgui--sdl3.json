@@ -104,9 +104,9 @@
   "probes": [
     {
       "rule": "dear-imgui--sdl3.events-forwarded",
-      "check": "am_probe_imgui_sdl3_events(): pushes a synthetic SDL_EVENT_MOUSE_MOTION, runs one frame through am_pair_imgui_sdl3_begin_frame, and checks ImGui's io.MousePos matches it.",
+      "check": "am_probe_imgui_sdl3_events(): pushes a synthetic SDL_EVENT_MOUSE_MOTION, polls SDL's events into am_pair_imgui_sdl3_process_event, begins a frame with am_pair_imgui_sdl3_new_frame, and checks ImGui's io.MousePos matches it.",
       "seeded_violation": {
-        "description": "Skip the ImGui_ImplSDL3_ProcessEvent call in am_pair_imgui_sdl3_begin_frame().",
+        "description": "Skip the ImGui_ImplSDL3_ProcessEvent call in am_pair_imgui_sdl3_process_event().",
         "patch": "dear-imgui--sdl3/seeded/dear-imgui--sdl3.events-forwarded.patch"
       }
     },
@@ -121,7 +121,8 @@
   ],
   "adaptation_notes": [
     "am_pair_imgui_sdl3_shutdown() calls SDL_WaitForGPUIdle first: the renderer backend releases GPU resources the device may still be using.",
-    "The game's frame loop calls am_pair_imgui_sdl3_begin_frame(), draws with ImGui, then am_pair_imgui_sdl3_end_frame(); begin_frame forwards every polled SDL event to ImGui.",
+    "A game's frame loop uses the frame in pieces: it polls SDL's events itself and passes each to am_pair_imgui_sdl3_process_event(), calls am_pair_imgui_sdl3_new_frame(), draws with ImGui, and after its own render passes calls am_pair_imgui_sdl3_render(commands, target), which draws ImGui over the target in a pass of its own. To draw ImGui inside one of the game's passes instead, call am_pair_imgui_sdl3_prepare(commands) before the pass begins and am_pair_imgui_sdl3_draw(commands, pass) inside it.",
+    "am_pair_imgui_sdl3_begin_frame() and am_pair_imgui_sdl3_end_frame() are the whole frame for a testbed with nothing else to draw: they poll every event, clear the swapchain and submit, so a game with its own events and passes doesn't call them.",
     "Both backends must shut down before ImGui::DestroyContext(), which asserts otherwise."
   ]
 }

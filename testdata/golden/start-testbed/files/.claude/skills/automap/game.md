@@ -68,6 +68,38 @@ Game code calls each library's own API, and Automap's shared interfaces for what
 
 Everything under `glue/` and `cmake/automap/` is yours to change, except the files the CLI writes from the manifest (`choices.h`, `context.h`, `startup.h`, `startup.cpp`, `automap.cmake`). The recipe's notes say what each piece of glue is for: `automap show recipe <id> --json`. A file you change is left alone by `automap upgrade`, which puts a newer reference beside it and warns.
 
+## The window and the frame
+
+With SDL3 in the composition, set the window before `am::startup(ctx)`; no glue needs editing:
+
+```cpp
+am::Context ctx;
+ctx.sdl3.window_title = "My Game";
+ctx.sdl3.window_width = 1920;
+ctx.sdl3.window_height = 1080;
+ctx.sdl3.window_flags = SDL_WINDOW_FULLSCREEN;   // optional; resizable when unset
+```
+
+With Dear ImGui too, the pairing's glue (`glue/dear-imgui--sdl3/`) gives the frame in pieces, for a game that polls its own events and owns its render passes:
+
+```cpp
+SDL_Event event;
+while (SDL_PollEvent(&event)) {
+    am_pair_imgui_sdl3_process_event(event);
+    // your own handling
+}
+am_pair_imgui_sdl3_new_frame();
+// ImGui:: calls
+SDL_GPUCommandBuffer* commands = SDL_AcquireGPUCommandBuffer(ctx.sdl3.gpu_device);
+SDL_GPUTexture* target = nullptr;
+SDL_WaitAndAcquireGPUSwapchainTexture(commands, ctx.sdl3.window, &target, nullptr, nullptr);
+// your render passes into target
+am_pair_imgui_sdl3_render(commands, target);     // ImGui over them, in a pass of its own
+SDL_SubmitGPUCommandBuffer(commands);
+```
+
+`am_pair_imgui_sdl3_begin_frame` and `am_pair_imgui_sdl3_end_frame`, which the testbed calls, are the whole frame for a program with nothing else to draw: they poll every event and clear the window, so a game doesn't call them.
+
 ## Shaders
 
 SDL_shadercross's glue takes SPIR-V and turns it into what the platform's GPU backend needs at startup. Compile shader source to SPIR-V when you build: where SDL_shadercross is in the composition, vcpkg has installed the `dxc` compiler under `build/automap/<platform>/vcpkg_installed/<triplet>/tools/directx-dxc/` (Windows and x64 Linux), and `dxc -spirv -T vs_6_0 -E main shader.hlsl -Fo shader.spv` writes SPIR-V. Commit the SPIR-V, or compile it in a build step.

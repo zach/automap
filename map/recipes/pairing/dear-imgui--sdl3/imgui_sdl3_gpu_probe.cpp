@@ -10,7 +10,7 @@
 namespace {
 
 // dear-imgui--sdl3.events-forwarded: a mouse motion SDL reports reaches
-// ImGui within one frame.
+// ImGui within one frame, through the pieces a game's own frame loop calls.
 void am_probe_imgui_sdl3_events(am::Context& ctx) {
     SDL_Event motion = {};
     motion.type = SDL_EVENT_MOUSE_MOTION;
@@ -18,7 +18,9 @@ void am_probe_imgui_sdl3_events(am::Context& ctx) {
     motion.motion.x = 12.0f;
     motion.motion.y = 34.0f;
     SDL_PushEvent(&motion);
-    am_pair_imgui_sdl3_begin_frame(ctx);
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) am_pair_imgui_sdl3_process_event(event);
+    am_pair_imgui_sdl3_new_frame();
     ImVec2 seen = ImGui::GetIO().MousePos;
     am_pair_imgui_sdl3_end_frame(ctx);
     bool forwarded = seen.x == 12.0f && seen.y == 34.0f;
