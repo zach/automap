@@ -123,7 +123,7 @@ jobs:
           - name: macOS
             os: macos-latest
           - group: core
-            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed|TestTheCustomAdoptEvalsEngineCanBeAdoptedAndEjected
+            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed|TestTheCustomAdoptEvalsEngineCanBeAdoptedAndEjected|TestALibrarysPortBuildsTheSameFeaturesInEveryReferenceComposition
           - group: slots
             tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
           - group: media

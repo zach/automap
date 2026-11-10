@@ -4,9 +4,15 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] SDL3's default variant names `ibus` among its Linux features, its description says IBus is on and why, and the system dependencies still hold.
-- [ ] A check (`ci/cmd/verifymap plan-check` or a test in the public-map CI job) runs `vcpkg install --dry-run` for each reference composition and fails when a library's port has a feature in the plan that the variant doesn't state or imply through the port's own feature dependencies.
-- [ ] The check passes on `main` and fails when SDL3's variant drops `ibus`.
-- [ ] CI runs it on every push, on Linux.
+- [x] SDL3's default variant names `ibus` among its Linux features, its description says IBus is on and why, and the system dependencies still hold.
+- [x] A test in the public-map CI job runs `vcpkg install --dry-run` for each reference composition and for each of its libraries alone, and fails when a library's port gets a feature in the composition that it doesn't get alone.
+- [x] The check passes on `main` and fails when SDL3's variant drops `ibus`.
+- [x] CI runs it on every push, on all three platforms, in the public-map job's `core` group.
+
+## Comments
+
+- vcpkg builds a port with the union of the features every port in the plan asks of it, and a top-level `default-features: false` doesn't override another port's request: `imgui[sdl3-binding]` depends on `sdl3` with its defaults, so every composition with Dear ImGui built SDL3 with IBus and D-Bus while the variant said IBus was off. A variant can't promise a feature stays off, so SDL3's variant now states the port's Linux defaults plus `vulkan`.
+- `TestALibrarysPortBuildsTheSameFeaturesInEveryReferenceComposition` compares dry-run install plans, which need the registries and no downloads; before the fix it failed for SDL3 in six reference compositions and for nothing else.
+- SDL_shadercross's note about DXC at run time is ticket 15's.

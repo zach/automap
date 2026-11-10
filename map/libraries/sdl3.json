@@ -53,10 +53,10 @@
         {
           "name": "default",
           "build_options": {
-            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux]",
+            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux],ibus[linux]",
             "vcpkg_default_features": "false"
           },
-          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers; the port's other default Linux feature, IBus input methods, is off. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
+          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, its X11 and Wayland video drivers, and IBus input methods, which bring D-Bus with them. Those are the port's default Linux features plus vulkan, stated here because vcpkg builds a port with every feature any port in the composition asks of it, and Dear ImGui's port asks for SDL3's defaults. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
         }
       ],
       "facts": {
@@ -170,7 +170,7 @@
             "macos-arm64-appleclang": ""
           },
           "system_dependencies": {
-            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build their libxcrypt dependency; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build libxcrypt, a dependency of the ibus feature's D-Bus; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
@@ -207,10 +207,10 @@
         {
           "name": "default",
           "build_options": {
-            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux]",
+            "vcpkg_features": "vulkan[linux],x11[linux],wayland[linux],ibus[linux]",
             "vcpkg_default_features": "false"
           },
-          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, and its X11 and Wayland video drivers; the port's other default Linux feature, IBus input methods, is off. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
+          "description": "SDL with, on Linux, the sdl3 port's vulkan feature, which SDL_GPU needs for its Vulkan backend, its X11 and Wayland video drivers, and IBus input methods, which bring D-Bus with them. Those are the port's default Linux features plus vulkan, stated here because vcpkg builds a port with every feature any port in the composition asks of it, and Dear ImGui's port asks for SDL3's defaults. Windows and macOS use the port's platform backends: Direct3D 12 and Metal."
         }
       ],
       "facts": {
@@ -324,7 +324,7 @@
             "macos-arm64-appleclang": ""
           },
           "system_dependencies": {
-            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build their libxcrypt dependency; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
+            "linux-x64-clang": "X11 (libx11-dev, libxext-dev, libxrandr-dev, libxcursor-dev, libxi-dev, libxss-dev, libxtst-dev) and Wayland (libwayland-dev, libxkbcommon-dev, wayland-protocols, libegl-dev) development packages, for the variant's x11 and wayland features; autoconf, autoconf-archive, automake, libtool and libltdl-dev, which vcpkg needs to build libxcrypt, a dependency of the ibus feature's D-Bus; a Vulkan driver (mesa-vulkan-drivers for lavapipe) to run headless"
           },
           "gpu_backends": {
             "windows-x64-msvc": "direct3d12",
