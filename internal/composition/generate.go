@@ -322,7 +322,7 @@ func PortConflicts(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 			here.version += fmt.Sprintf("#%d", *pv)
 		}
 		if pin.Registry != nil {
-			here.registry = pin.Registry.Kind + " " + pin.Registry.ID + " " + pin.Registry.Commit
+			here.registry = pin.Registry.Kind + " " + pin.Registry.ID + " " + pin.Registry.Commit + " " + pin.Registry.ContentHash
 		}
 		port := v.BuildBackend.Vcpkg.Port
 		prev, seen := first[port]

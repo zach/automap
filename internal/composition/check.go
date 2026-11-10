@@ -106,6 +106,13 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 			}
 		}
 	}
+	// A private map the lock pins must still be what it pinned: its
+	// recipes, facts and probes are read as they are now.
+	for _, meta := range m.Maps[1:] {
+		if pin, pinned := lock.PrivateMaps[meta.ID]; pinned && !pin.Matches(meta.ContentHash, meta.Commit) {
+			fails = append(fails, failure("LOCK_MISMATCH(private map "+meta.ID+")", "private map %s at %s has changed since the lock pinned it; automap resolve re-pins it and carries its changes into the repo", meta.ID, meta.Dir))
+		}
+	}
 	for _, c := range sortedKeys(lock.Contracts) {
 		found := false
 		for _, v := range m.Contracts[c] {
@@ -151,13 +158,6 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 	}
 	if pin.Registry != nil && pin.Registry.Kind == "vcpkg-curated" && pin.Registry.Commit != vcpkgBaseline(m) {
 		return fmt.Sprintf("%s's curated registry commit differs from the map's vcpkg baseline", l.ID)
-	}
-	if pin.Registry != nil && pin.Registry.Kind == "private" {
-		for _, meta := range m.Maps[1:] {
-			if meta.ID == pin.Registry.ID && meta.Commit != pin.Registry.Commit {
-				return fmt.Sprintf("private map %s has changed since the lock pinned %s from it; automap resolve re-pins it and carries its changes", meta.ID, l.ID)
-			}
-		}
 	}
 	return ""
 }

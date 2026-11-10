@@ -38,6 +38,7 @@ func verifyCmd(a *args, r *result) int {
 	if seed := a.value("seed"); seed != "" {
 		return runSeed(m, man, lock, platform, seed, r)
 	}
+	warnPrivateMaps(m, r)
 	return runVerify(m, man, lock, platform, r)
 }
 

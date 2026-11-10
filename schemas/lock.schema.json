@@ -30,15 +30,29 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "commit"
-        ],
         "properties": {
+          "content_hash": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
           "commit": {
             "type": "string",
             "pattern": "^[0-9a-f]{40}$"
           }
-        }
+        },
+        "description": "A private map as the lock pinned it: the content hash of its directory, evidence aside, and the commit that last changed it when it had no uncommitted changes. A lock a CLI before 0.2.0 wrote has the commit alone.",
+        "anyOf": [
+          {
+            "required": [
+              "content_hash"
+            ]
+          },
+          {
+            "required": [
+              "commit"
+            ]
+          }
+        ]
       }
     },
     "pins": {
@@ -73,8 +87,7 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "kind",
-              "commit"
+              "kind"
             ],
             "properties": {
               "kind": {
@@ -91,8 +104,25 @@
               "commit": {
                 "type": "string",
                 "pattern": "^[0-9a-f]{40}$"
+              },
+              "content_hash": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "description": "For a private map: the content hash the lock pins it at."
               }
-            }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "commit"
+                ]
+              },
+              {
+                "required": [
+                  "content_hash"
+                ]
+              }
+            ]
           },
           "content_hash": {
             "type": "string",
@@ -185,8 +215,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "kind",
-            "commit"
+            "kind"
           ],
           "properties": {
             "kind": {
@@ -203,8 +232,25 @@
             "commit": {
               "type": "string",
               "pattern": "^[0-9a-f]{40}$"
+            },
+            "content_hash": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "description": "For a private map: the content hash the lock pins it at."
             }
-          }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "commit"
+              ]
+            },
+            {
+              "required": [
+                "content_hash"
+              ]
+            }
+          ]
         },
         "content_hash": {
           "type": "string",

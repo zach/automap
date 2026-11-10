@@ -101,6 +101,7 @@ func writeAndVerify(a *args, m *mapmodel.Map, man *composition.Manifest, files m
 	for p, data := range agents {
 		files[p] = data
 	}
+	warnPrivateMaps(m, r)
 	changed := map[string][]byte{}
 	for p, data := range files {
 		existing, err := os.ReadFile(filepath.FromSlash(p))
@@ -224,4 +225,15 @@ func mapRelease(dir string) string {
 		return "unreleased"
 	}
 	return "git:" + commit
+}
+
+// warnPrivateMaps warns about each private map with uncommitted changes:
+// the lock pins its content, but there is no commit to read it back from,
+// so evidence about the composition isn't signed.
+func warnPrivateMaps(m *mapmodel.Map, r *result) {
+	for _, meta := range m.Maps[1:] {
+		if meta.Commit == "" {
+			r.warn("PRIVATE_MAP_UNCOMMITTED("+meta.ID+")", "Private map "+meta.ID+" at "+filepath.ToSlash(meta.Dir)+" has uncommitted changes, or isn't in git. The lock pins its content as it is now, with no commit to read it back from, so evidence about this composition isn't signed. Commit it and run automap resolve.")
+		}
+	}
 }

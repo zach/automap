@@ -20,7 +20,7 @@ Name it in the manifest:
 "private_maps": [{ "id": "mygame", "location": "automap-private" }]
 ```
 
-`automap find` and `automap show` read it at once. Composing from it needs it committed: the lock pins it at the commit that last changed it.
+`automap find`, `automap show` and `automap extend` read it at once, committed or not: the lock pins its content. While it has uncommitted changes the result carries a `PRIVATE_MAP_UNCOMMITTED` warning, and evidence about the composition isn't signed.
 
 ## Start from a library like yours
 
@@ -48,13 +48,14 @@ Two libraries can come from one vcpkg port, such as two headers of `stb`: give b
 ## Compose, and check your own probes
 
 ```console
-$ git add automap-private && git commit -m "Private map: <library>"
 $ automap extend <library> --json
 $ automap verify --seed <rule>:<library> --json     # your probe must catch its seeded violation
+$ git add automap-private && git commit -m "Private map: <library>"
+$ automap resolve --json                            # records the commit; evidence can be signed again
 ```
 
 `verify --seed` applies the seeded violation in a scratch copy and passes only when your probe fails there: a probe that can't fail proves nothing.
 
 ## After you change it
 
-Commit the change, then `automap resolve --json`: it re-pins the private map and updates the glue in the repo that you haven't changed since the old reference, without moving the map release or any library's version. Nothing in a private map is ever uploaded; the evidence `verify` writes for a composition that uses it is the composition's own, in `evidence/`.
+`automap resolve --json` re-pins the private map and updates the glue in the repo that you haven't changed since the old reference, without moving the map release or any library's version. Until then, commands that check the lock fail with `LOCK_MISMATCH(private map <id>)`. Iterate with `resolve`; commit when it works, and `resolve` once more to record the commit. Nothing in a private map is ever uploaded; the evidence `verify` writes for a composition that uses it is the composition's own, in `evidence/`.

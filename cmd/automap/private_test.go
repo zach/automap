@@ -51,12 +51,18 @@ func acmeStubsRepo(t *testing.T, s *releaseServer, mapDir string) *clitest.Repo 
 }
 
 type lockFile struct {
-	PrivateMaps map[string]struct{ Commit string } `json:"private_maps"`
-	Pins        map[string]struct {
+	PrivateMaps map[string]struct {
+		Commit      string
+		ContentHash string `json:"content_hash"`
+	} `json:"private_maps"`
+	Pins map[string]struct {
 		Variant     string
 		Path        string
 		ContentHash string `json:"content_hash"`
-		Registry    *struct{ Kind, ID, Commit string }
+		Registry    *struct {
+			Kind, ID, Commit string
+			ContentHash      string `json:"content_hash"`
+		}
 	}
 }
 
@@ -76,9 +82,9 @@ func gitOutput(t *testing.T, dir string, args ...string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// The lock pins a private map at the commit that last changed it, a private
-// variant at that map, and an in-repo library by path and content hash
-// (SPEC §4.2).
+// The lock pins a private map by its content, with the commit that last
+// changed it beside that, a private variant at that map, and an in-repo
+// library by path and content hash (SPEC §4.2).
 func TestPrivateContentIsPinned(t *testing.T) {
 	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
 
@@ -87,12 +93,13 @@ func TestPrivateContentIsPinned(t *testing.T) {
 	run.ExpectExit(t, 0)
 	lock := readLock(t, repo)
 	commit := gitOutput(t, repo.Dir, "log", "-1", "--format=%H", "--", "automap-private")
-	if lock.PrivateMaps["acme"].Commit != commit {
-		t.Errorf("private map acme pinned at %q, want its last commit %s", lock.PrivateMaps["acme"].Commit, commit)
+	acme := lock.PrivateMaps["acme"]
+	if acme.Commit != commit || !strings.HasPrefix(acme.ContentHash, "sha256:") {
+		t.Errorf("private map acme pinned as %+v, want its content hash, and its last commit %s beside it", acme, commit)
 	}
 	ui := lock.Pins["stub-ui"]
-	if ui.Variant != "acme-patched" || ui.Registry == nil || ui.Registry.Kind != "private" || ui.Registry.ID != "acme" || ui.Registry.Commit != commit {
-		t.Errorf("stub-ui pinned as %+v, want acme-patched from private map acme at %s", ui, commit)
+	if ui.Variant != "acme-patched" || ui.Registry == nil || ui.Registry.Kind != "private" || ui.Registry.ID != "acme" || ui.Registry.ContentHash != acme.ContentHash || ui.Registry.Commit != commit {
+		t.Errorf("stub-ui pinned as %+v, want acme-patched from private map acme at its content hash %s", ui, acme.ContentHash)
 	}
 	tools := lock.Pins["acme-tools"]
 	if tools.Path != "engine/acme-tools" || !strings.HasPrefix(tools.ContentHash, "sha256:") || tools.Registry != nil {
@@ -403,16 +410,10 @@ func TestALockMismatchIsReportedOnce(t *testing.T) {
 	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
 
 	run.ExpectExit(t, 2)
-	seen := map[string]int{}
-	for _, f := range run.Result.Failures {
-		seen[f.Code+": "+f.Message]++
+	if len(run.Result.Failures) != 1 {
+		t.Errorf("failures %+v, want the one changed private map, once", run.Result.Failures)
 	}
-	for failure, n := range seen {
-		if n > 1 {
-			t.Errorf("%d times: %s", n, failure)
-		}
-	}
-	run.ExpectFailure(t, "LOCK_MISMATCH(stub-ui)", "private map acme has changed")
+	run.ExpectFailure(t, "LOCK_MISMATCH(private map acme)", "has changed since the lock pinned it")
 }
 
 // In a shallow clone, as CI checks a repo out, the commit the lock pins a
@@ -453,4 +454,69 @@ func TestFindSearchesPrivateSlots(t *testing.T) {
 			t.Errorf("find %s: entries %v, want acme-fonts, which fills the private text slot", query, run.Result.Entries)
 		}
 	}
+}
+
+// A private map needs no commit to be composed from: its content is what
+// the lock pins. The result says the pin has no commit behind it.
+func TestAnUncommittedPrivateMapComposesWithAWarning(t *testing.T) {
+	s := newReleaseServer(t)
+	s.publish(t, "map-2026.10.01", fixtureMapDir(t), nil)
+	repo := clitest.NewRepo(t, "acme-stubs")
+	repo.Setenv("AUTOMAP_RELEASES", s.URL)
+	repo.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	repo.Setenv("AUTOMAP_CACHE", t.TempDir())
+	repo.Automap(t, "start", "--with", "stub-window", "--with", "stub-ui", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.EditJSON(t, "automap.manifest.json", set("private_maps", []any{map[string]any{"id": "acme", "location": "automap-private"}}))
+
+	run := repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var warned bool
+	for _, w := range run.Result.Warnings {
+		warned = warned || w.Code == "PRIVATE_MAP_UNCOMMITTED(acme)"
+	}
+	if !warned {
+		t.Errorf("no PRIVATE_MAP_UNCOMMITTED(acme) warning in %+v", run.Result.Warnings)
+	}
+	if acme := readLock(t, repo).PrivateMaps["acme"]; acme.Commit != "" || !strings.HasPrefix(acme.ContentHash, "sha256:") {
+		t.Errorf("private map acme pinned as %+v, want its content hash and no commit", acme)
+	}
+}
+
+// A change to a private map, committed or not, is a change to what the
+// lock pins: commands that check the lock say so, and resolve re-pins it.
+func TestAChangedPrivateMapNeedsResolve(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed, not committed.\n")
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "LOCK_MISMATCH(private map acme)", "automap resolve")
+
+	run = repo.Automap(t, "resolve", "--no-verify", "--json")
+	run.ExpectExit(t, 0)
+	repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json").ExpectExit(t, 0)
+}
+
+// A lock checks the same in a shallow clone, as CI checks a repo out, as in
+// a full one: a private map's content doesn't depend on git's history.
+func TestALockWithAPrivateVariantChecksInAShallowClone(t *testing.T) {
+	s := newReleaseServer(t)
+	repo := acmeStubsRepo(t, s, fixtureMapDir(t))
+	commitRepo(t, repo)
+	repo.WriteFile(t, "README.md", "More.\n")
+	commitRepo(t, repo)
+	shallow := &clitest.Repo{Dir: t.TempDir()}
+	if out, err := exec.Command("git", "clone", "-q", "--depth", "1", "file://"+repo.Dir, shallow.Dir).CombinedOutput(); err != nil {
+		t.Fatalf("git clone: %v\n%s", err, out)
+	}
+	shallow.Setenv("AUTOMAP_RELEASES", s.URL)
+	shallow.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	shallow.Setenv("AUTOMAP_CACHE", t.TempDir())
+
+	run := shallow.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
 }

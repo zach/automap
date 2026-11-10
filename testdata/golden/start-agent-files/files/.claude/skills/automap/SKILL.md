@@ -51,7 +51,7 @@ The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke`
 - **A choice** (`choices` in the manifest, such as `diagnostics.profiler`): edit the manifest and run `automap verify --json`, which rewrites the choices header.
 - **The executable** (`executable` in the manifest): edit it and run `automap verify --json`; [`game.md`](game.md) has the rules.
 - **A library's variant, the platforms, or which library fills a slot**: edit the manifest, then `automap resolve --json`.
-- **A private map or an in-repo library that changed**: `automap resolve --json` re-pins it and updates the glue you haven't changed.
+- **A private map or an in-repo library that changed**: `automap resolve --json` re-pins it and updates the glue you haven't changed. It needn't be committed first; a `PRIVATE_MAP_UNCOMMITTED(<id>)` warning says the lock pins content with no commit behind it, which leaves evidence unsigned until you commit and resolve again.
 
 `resolve` keeps the map release and every library's version; `upgrade` is the command that moves them. A `LOCK_MISMATCH` failure means the lock no longer matches the manifest or the maps, and says which of these to run. Never edit the lock.
 

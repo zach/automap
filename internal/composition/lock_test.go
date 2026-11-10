@@ -52,3 +52,24 @@ func TestAHandEditedLockFails(t *testing.T) {
 		})
 	}
 }
+
+// A private map still matches its pin when its content does; a pin a CLI
+// before 0.2.0 wrote, a commit alone, matches by commit.
+func TestAPrivateMapPinMatchesByContent(t *testing.T) {
+	for _, c := range []struct {
+		name            string
+		pin             composition.PrivateMapPin
+		content, commit string
+		want            bool
+	}{
+		{"same content, another commit", composition.PrivateMapPin{ContentHash: "sha256:aa", Commit: "c1"}, "sha256:aa", "c2", true},
+		{"same content, no commit now", composition.PrivateMapPin{ContentHash: "sha256:aa", Commit: "c1"}, "sha256:aa", "", true},
+		{"changed content, same commit", composition.PrivateMapPin{ContentHash: "sha256:aa", Commit: "c1"}, "sha256:bb", "c1", false},
+		{"a commit alone, the same", composition.PrivateMapPin{Commit: "c1"}, "sha256:bb", "c1", true},
+		{"a commit alone, another", composition.PrivateMapPin{Commit: "c1"}, "sha256:bb", "c2", false},
+	} {
+		if got := c.pin.Matches(c.content, c.commit); got != c.want {
+			t.Errorf("%s: Matches is %v, want %v", c.name, got, c.want)
+		}
+	}
+}

@@ -180,5 +180,5 @@ func TestALockMismatchNamesResolve(t *testing.T) {
 	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
 
 	run.ExpectExit(t, 2)
-	run.ExpectFailure(t, "LOCK_MISMATCH(stub-ui)", "automap resolve")
+	run.ExpectFailure(t, "LOCK_MISMATCH(private map acme)", "automap resolve")
 }

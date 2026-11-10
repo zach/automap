@@ -524,13 +524,13 @@ type EvidenceInput struct {
 // an identity token to sign it with and the map is released or a git
 // commit, or the developer's machine, unsigned. getenv reads the
 // environment. It is a pure function of it.
-func Verifier(mapRelease string, getenv func(string) string) map[string]any {
+func Verifier(mapRelease string, committed bool, getenv func(string) string) map[string]any {
 	if getenv("GITHUB_ACTIONS") != "true" || getenv("GITHUB_WORKFLOW_REF") == "" {
 		return map[string]any{"kind": "developer-local", "id": "local", "signed": false}
 	}
 	identity := getenv("ACTIONS_ID_TOKEN_REQUEST_URL") != "" && getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN") != ""
 	return map[string]any{"kind": "developer-ci", "id": getenv("GITHUB_SERVER_URL") + "/" + getenv("GITHUB_WORKFLOW_REF"),
-		"signed": identity && mapRelease != "unreleased"}
+		"signed": identity && mapRelease != "unreleased" && committed}
 }
 
 // Evidence is the composition's evidence for one run: an in-toto v1
@@ -542,6 +542,12 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 		return nil, err
 	}
 	sum := sha256.Sum256(raw)
+	// A private map with uncommitted changes has no commit to read it back
+	// from: evidence about it is never signed.
+	committed := true
+	for _, pm := range lock.PrivateMaps {
+		committed = committed && pm.Commit != ""
+	}
 	environment := map[string]string{}
 	for _, kv := range in.Env {
 		k, v, _ := strings.Cut(kv, "=")
@@ -572,7 +578,7 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 			"map_release":    lock.MapRelease,
 			"conditions":     conditions,
 			"results":        in.Results,
-			"verifier":       Verifier(lock.MapRelease, os.Getenv),
+			"verifier":       Verifier(lock.MapRelease, committed, os.Getenv),
 		},
 	}
 	if len(in.SetAside) > 0 {
