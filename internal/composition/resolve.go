@@ -425,6 +425,7 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 	for _, c := range Contracts(m, man) {
 		lock.Contracts[c] = m.LatestContract(c).Version
 	}
+	fails = append(fails, PortConflicts(m, man, lock)...)
 	if len(fails) > 0 {
 		return nil, fails
 	}

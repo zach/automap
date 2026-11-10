@@ -1,6 +1,8 @@
 package composition_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -132,5 +134,46 @@ func TestPerPlatformVariantsGetTheirOwnPin(t *testing.T) {
 	pin := lock.Pins["stub-window"]
 	if len(pin.Platforms) != 1 || pin.Platforms["linux-x64-clang"].Variant != "wide-events" {
 		t.Errorf("platform pins %+v, want only linux-x64-clang with wide-events", pin.Platforms)
+	}
+}
+
+// A port two libraries share keeps its default features unless both turn
+// them off, and takes the union of their features.
+func TestASharedPortMergesWhatItsLibrariesAsk(t *testing.T) {
+	for _, c := range []struct {
+		name          string
+		first, second map[string]string
+		want          string
+	}{
+		{"both off", map[string]string{"vcpkg_default_features": "false", "vcpkg_features": "a"}, map[string]string{"vcpkg_default_features": "false", "vcpkg_features": "b,a"},
+			`{"name":"stub-ui","default-features":false,"features":["a","b"]}`},
+		{"one on", map[string]string{"vcpkg_default_features": "false", "vcpkg_features": "x11[linux]"}, map[string]string{},
+			`{"name":"stub-ui","features":[{"name":"x11","platform":"linux"}]}`},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			m := fixtureMap(t)
+			twin := *m.Libraries["stub-ui"]
+			twin.ID = "stub-ui-twin"
+			twin.Versions = append([]mapmodel.Version{}, twin.Versions...)
+			twin.Versions[0].Variants = []mapmodel.Variant{{Name: "default", BuildOptions: c.second}}
+			m.Libraries["stub-ui-twin"] = &twin
+			m.Libraries["stub-ui"].Versions[0].Variants = []mapmodel.Variant{{Name: "default", BuildOptions: c.first}}
+			man := &composition.Manifest{Slots: map[string]string{"tools-ui": "stub-ui", "input": "stub-ui-twin"}}
+			lock := &composition.Lock{Pins: map[string]composition.Pin{"stub-ui": {Variant: "default"}, "stub-ui-twin": {Variant: "default"}}}
+
+			var doc struct {
+				Dependencies []json.RawMessage `json:"dependencies"`
+			}
+			json.Unmarshal(composition.VcpkgJSON(m, man, lock), &doc)
+
+			if len(doc.Dependencies) != 1 {
+				t.Fatalf("dependencies %s, want the shared port once", doc.Dependencies)
+			}
+			var compact bytes.Buffer
+			json.Compact(&compact, doc.Dependencies[0])
+			if compact.String() != c.want {
+				t.Errorf("dependency %s, want %s", compact.String(), c.want)
+			}
+		})
 	}
 }

@@ -185,3 +185,114 @@ func TestAcmeStubsBuildWithPrivateContent(t *testing.T) {
 		t.Error("stub-ui wasn't built from the private map's overlay port")
 	}
 }
+
+// addSharedPortLibrary adds acme-fonts to Acme's private map: a second
+// library from the stub-ui port, at version, with the port's fonts
+// feature, filling a private text slot.
+func addSharedPortLibrary(t *testing.T, repo *clitest.Repo, version string) {
+	t.Helper()
+	repo.WriteFile(t, "automap-private/slots/text.json", `{"id": "text", "description": "Draws text from fonts."}`)
+	repo.WriteFile(t, "automap-private/libraries/acme-fonts.json", `{
+  "id": "acme-fonts",
+  "name": "Acme Fonts",
+  "license": {"spdx": "MIT-0", "class": "permissive"},
+  "contribution_policy": {"ai_generated_contributions": "not-applicable", "source": "In-house."},
+  "slots": ["text"],
+  "source": {"kind": "git", "url": "https://github.com/zach/automap/tree/main/testdata/map/ports/stub-ui"},
+  "versions": [{
+    "version": "`+version+`",
+    "released": "2026-01-15",
+    "pin": {"commit": "2222222222222222222222222222222222222222", "content_hash": "sha512:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002"},
+    "build_backend": {"vcpkg": {"port": "stub-ui", "registry": "automap"}},
+    "cmake": {"package": "StubUI", "targets": ["StubUI::StubUI"]},
+    "variants": [{"name": "default", "build_options": {"vcpkg_features": "fonts"}}],
+    "facts": {
+      "lifecycle": {"init_steps": [], "shutdown_steps": [], "reloadable": true},
+      "build-flags": {"abi_defines": [], "self_check": null, "min_language_standard": "C99", "exceptions": "never-thrown", "rtti": "no-constraint"},
+      "platform": {"targets": ["windows-x64-msvc", "linux-x64-clang", "macos-arm64-appleclang"], "headless": "", "web": false}
+    }
+  }]
+}`)
+	repo.WriteFile(t, "automap-private/recipes/library/acme-fonts.json", `{
+  "kind": "library",
+  "subject": {"library": "acme-fonts"},
+  "applies_to": {"acme-fonts": {"versions": ["`+version+`"], "variants": ["default"]}},
+  "reference_glue": [{"path": "acme-fonts/acme-fonts.cmake", "role": "build-fragment"}],
+  "probes": [],
+  "adaptation_notes": ["acme-fonts is the fonts header of the stub-ui port."]
+}`)
+	repo.WriteFile(t, "automap-private/recipes/library/acme-fonts/acme-fonts.cmake", "# acme-fonts ships in the stub-ui port, which stub-ui's fragment finds.\n")
+	commitRepo(t, repo)
+}
+
+// sharedPortRepo is Acme's repo with the public stub-ui in the composition
+// and acme-fonts, from the same port at version, in its private map.
+func sharedPortRepo(t *testing.T, version string) *clitest.Repo {
+	t.Helper()
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.EditJSON(t, "automap.manifest.json", set("variants/stub-ui", "default"))
+	addSharedPortLibrary(t, repo, version)
+	repo.Automap(t, "upgrade", "stub-ui", "--no-verify", "--json").ExpectExit(t, 0)
+	return repo
+}
+
+// Two libraries that come from one vcpkg port share it: vcpkg.json names
+// the port once, with the union of their features and one override, and
+// vcpkg-configuration.json names it once among the registry's packages
+// (SPEC §5.5).
+func TestLibrariesThatShareAPortShareItsEntry(t *testing.T) {
+	repo := sharedPortRepo(t, "1.0.0")
+
+	run := repo.Automap(t, "extend", "acme-fonts", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var manifest struct {
+		Dependencies []struct {
+			Name     string
+			Features []any
+		}
+		Overrides []struct{ Name, Version string }
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg.json")), &manifest)
+	var deps, overrides int
+	for _, d := range manifest.Dependencies {
+		if d.Name == "stub-ui" {
+			deps++
+			if len(d.Features) != 1 || d.Features[0] != "fonts" {
+				t.Errorf("stub-ui's features %v, want the union of its libraries': [fonts]", d.Features)
+			}
+		}
+	}
+	for _, o := range manifest.Overrides {
+		if o.Name == "stub-ui" {
+			overrides++
+		}
+	}
+	if deps != 1 || overrides != 1 {
+		t.Errorf("vcpkg.json names stub-ui in %d dependencies and %d overrides, want one of each:\n%s", deps, overrides, clitest.Read(t, repo, "vcpkg.json"))
+	}
+	var config struct {
+		Registries []struct{ Packages []string }
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg-configuration.json")), &config)
+	for _, reg := range config.Registries {
+		seen := map[string]int{}
+		for _, p := range reg.Packages {
+			if seen[p]++; seen[p] > 1 {
+				t.Errorf("vcpkg-configuration.json names package %s twice: %v", p, reg.Packages)
+			}
+		}
+	}
+}
+
+// Two libraries can't pin one port at two versions: vcpkg builds a port
+// once.
+func TestLibrariesThatPinOnePortAtTwoVersionsConflict(t *testing.T) {
+	repo := sharedPortRepo(t, "2.0.0")
+
+	run := repo.Automap(t, "extend", "acme-fonts", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "PORT_CONFLICT(stub-ui)", "acme-fonts")
+	run.ExpectUnchanged(t)
+}
