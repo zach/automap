@@ -47,8 +47,10 @@ type Task struct {
 	// Pass is what grading requires: the level automap verify --json
 	// reports, the library each named slot holds in the manifest, the
 	// libraries the composition has, the libraries the lock pins to a
-	// private map's variant, and the map release the lock records
-	// ("newest" for the newest published release).
+	// private map's variant, the map release the lock records ("newest"
+	// for the newest published release), the CMake target the manifest
+	// names as the executable, and the libraries the composition must no
+	// longer have.
 	//
 	// An eject task's pass is instead the composition gone and the repo
 	// building and passing its smoke test without Automap.
@@ -59,6 +61,8 @@ type Task struct {
 		Libraries       []string          `json:"libraries,omitempty"`
 		PrivateVariants []string          `json:"private_variants,omitempty"`
 		MapRelease      string            `json:"map_release,omitempty"`
+		Executable      string            `json:"executable,omitempty"`
+		AbsentLibraries []string          `json:"absent_libraries,omitempty"`
 	} `json:"pass"`
 	TimeoutMinutes int `json:"timeout_minutes"`
 }
@@ -436,13 +440,16 @@ func runTask(root string, t *Task, model, automap, mapDir, cache string) (TaskRe
 	r.Level = result.Level
 	o := outcome{Level: result.Level, Summary: result.Summary}
 	var manifest struct {
-		Slots    map[string]string `json:"slots"`
-		Variants map[string]any    `json:"variants"`
+		Slots      map[string]string `json:"slots"`
+		Variants   map[string]any    `json:"variants"`
+		Executable struct {
+			Target string `json:"target"`
+		} `json:"executable"`
 	}
 	if raw, err := os.ReadFile(filepath.Join(repo, "automap.manifest.json")); err == nil {
 		json.Unmarshal(raw, &manifest)
 	}
-	o.Slots = manifest.Slots
+	o.Slots, o.Executable = manifest.Slots, manifest.Executable.Target
 	for lib := range manifest.Variants {
 		o.Libraries = append(o.Libraries, lib)
 	}
@@ -656,6 +663,8 @@ type outcome struct {
 	// MapRelease is the release the lock records; NewestRelease the
 	// newest published one.
 	MapRelease, NewestRelease string
+	// Executable is the CMake target the manifest names.
+	Executable string
 }
 
 // grade judges a session's outcome: verify reached the task's level, and
@@ -687,6 +696,14 @@ func grade(t *Task, o outcome) (status, reason string) {
 	for _, lib := range t.Pass.PrivateVariants {
 		if !slices.Contains(o.PrivateVariants, lib) {
 			return "fail", fmt.Sprintf("the lock doesn't pin %s to a private map's variant", lib)
+		}
+	}
+	if t.Pass.Executable != "" && o.Executable != t.Pass.Executable {
+		return "fail", fmt.Sprintf("the manifest's executable is %q, want %s", o.Executable, t.Pass.Executable)
+	}
+	for _, lib := range t.Pass.AbsentLibraries {
+		if slices.Contains(o.Libraries, lib) {
+			return "fail", fmt.Sprintf("the composition still has %s", lib)
 		}
 	}
 	if t.Pass.MapRelease == "newest" && o.MapRelease != o.NewestRelease {

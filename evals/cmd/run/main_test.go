@@ -199,3 +199,38 @@ func TestTheCLISharesTheRunnersReleaseCache(t *testing.T) {
 	}
 	t.Errorf("the CLI's env %q lacks %q", env, want)
 }
+
+// A task past the testbed is graded on what the composition has become:
+// the manifest's executable, and the libraries that are gone from it.
+func TestGradeChecksTheExecutableAndTheLibrariesTakenOut(t *testing.T) {
+	var task Task
+	task.Pass.Level = "probed"
+	task.Pass.Executable = "skyhook"
+	task.Pass.AbsentLibraries = []string{"tracy"}
+	for _, c := range []struct {
+		name string
+		o    outcome
+		pass bool
+	}{
+		{"the game, without the profiler", outcome{Level: "probed", Executable: "skyhook", Libraries: []string{"sdl3", "dear-imgui"}}, true},
+		{"still the testbed", outcome{Level: "probed", Executable: "testbed", Libraries: []string{"sdl3", "dear-imgui"}}, false},
+		{"the profiler is still there", outcome{Level: "probed", Executable: "skyhook", Libraries: []string{"sdl3", "dear-imgui", "tracy"}}, false},
+	} {
+		if status, reason := grade(&task, c.o); (status == "pass") != c.pass {
+			t.Errorf("%s: grade %s (%s), want pass %v", c.name, status, reason, c.pass)
+		}
+	}
+}
+
+// The testbed-to-game task starts from a testbed with a profiler in it and
+// passes when the game is the composition's executable and the profiler
+// is gone.
+func TestTheTestbedToGameTask(t *testing.T) {
+	task, err := loadTask("../../..", "testbed-to-game")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if task.Pass.Executable != "skyhook" || len(task.Pass.AbsentLibraries) != 1 || task.Pass.Level != "probed" || len(task.Setup) != 2 {
+		t.Errorf("testbed-to-game: %+v should start from a testbed with Tracy and pass at probed as skyhook without it", task)
+	}
+}
