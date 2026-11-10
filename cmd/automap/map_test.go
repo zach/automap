@@ -1,7 +1,9 @@
 package main_test
 
 import (
+	"fmt"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/zach/automap/internal/clitest"
@@ -79,8 +81,57 @@ func TestFindByQuery(t *testing.T) {
 	run := fixtureRepo(t).Automap(t, "find", "window", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	if len(run.Result.Entries) != 1 || run.Result.Entries[0]["id"] != "stub-window" {
-		t.Errorf("entries %v, want stub-window", run.Result.Entries)
+	if len(run.Result.Entries) == 0 || run.Result.Entries[0]["id"] != "stub-window" || run.Result.Entries[0]["match"] != "id" {
+		t.Errorf("entries %v, want stub-window first, matched by its id", run.Result.Entries)
+	}
+}
+
+// A find entry is short: what the library is, the slots it fills and its
+// license, without opening show.
+func TestFindEntriesSayWhatALibraryIs(t *testing.T) {
+	run := fixtureRepo(t).Automap(t, "find", "--slot", "windowing", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	if len(run.Result.Entries) != 1 {
+		t.Fatalf("entries %v, want stub-window", run.Result.Entries)
+	}
+	e := run.Result.Entries[0]
+	if e["name"] != "Stub Window" || fmt.Sprint(e["slots"]) != "[input windowing]" || e["license"] != "MIT-0" || e["license_class"] != "permissive" {
+		t.Errorf("entry %v, want its name, slots [input windowing] and license MIT-0, permissive", e)
+	}
+}
+
+// A need is phrased in the slot's words more often than the library's:
+// find matches the slots a library fills, by id and by description.
+func TestFindMatchesTheSlotsALibraryFills(t *testing.T) {
+	for query, match := range map[string]string{"tools-ui": "slot tools-ui", "overlays": "slot tools-ui: Immediate-mode UI for tools, editors and debug overlays."} {
+		run := fixtureRepo(t).Automap(t, "find", query, "--map", "map", "--json")
+
+		run.ExpectExit(t, 0)
+		if len(run.Result.Entries) != 1 || run.Result.Entries[0]["id"] != "stub-ui" || run.Result.Entries[0]["match"] != match {
+			t.Errorf("find %s: entries %v, want stub-ui, matched by %q", query, run.Result.Entries, match)
+		}
+	}
+}
+
+// When nothing matches, the answer is the slots the map has, so the next
+// question can be asked in its words.
+func TestFindThatMatchesNothingListsTheSlots(t *testing.T) {
+	run := fixtureRepo(t).Automap(t, "find", "fonts", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	if !strings.Contains(run.Result.Summary, `No libraries match "fonts"`) || !strings.Contains(run.Result.Summary, "tools-ui (1)") || !strings.Contains(run.Result.Summary, "physics-3d (1)") {
+		t.Errorf("summary %q, want it to say nothing matches and list each slot with its count of libraries", run.Result.Summary)
+	}
+	var slots []string
+	for _, e := range run.Result.Entries {
+		if e["kind"] != "slot" {
+			t.Errorf("entry %v, want only slots", e)
+		}
+		slots = append(slots, fmt.Sprint(e["id"]))
+	}
+	if strings.Join(slots, " ") != "input physics-3d tools-ui windowing" {
+		t.Errorf("slot entries %v, want the fixture map's four", slots)
 	}
 }
 

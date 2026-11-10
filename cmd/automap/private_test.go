@@ -440,3 +440,17 @@ func TestUpgradeInAShallowCloneReadsThePrivateMapAsItIs(t *testing.T) {
 		t.Errorf("summary %q, want 0 files updated, 0 diverged: the old reference can't be read", run.Result.Summary)
 	}
 }
+
+// find searches every map layer: a private map's slot and its library are
+// found by the slot's id and by its description.
+func TestFindSearchesPrivateSlots(t *testing.T) {
+	repo := sharedPortRepo(t, "1.0.0")
+	for _, query := range []string{"text", "font"} {
+		run := repo.Automap(t, "find", query, "--json")
+
+		run.ExpectExit(t, 0)
+		if len(run.Result.Entries) != 1 || run.Result.Entries[0]["id"] != "acme-fonts" {
+			t.Errorf("find %s: entries %v, want acme-fonts, which fills the private text slot", query, run.Result.Entries)
+		}
+	}
+}

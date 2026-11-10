@@ -9,6 +9,12 @@
     {
       "id": "stub-ui",
       "kind": "library",
+      "license": "MIT-0",
+      "license_class": "permissive",
+      "name": "Stub UI",
+      "slots": [
+        "tools-ui"
+      ],
       "variants": [
         "default"
       ],
