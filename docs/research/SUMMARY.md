@@ -12,6 +12,8 @@ Synthesis of the eight Phase 1 research notes, written 2026-10-29. Every claim h
 | [04](04-agent-ecosystem.md) | Agent Skills, routing, MCP, AGENTS.md, game-dev skill packs, agents writing C++ |
 | [05](05-developer-needs-2026.md) | Engine landscape, platforms and consoles, iteration, determinism, licensing, agent trust |
 | [06](06-verification.md) | CI cost, test ladder, headless graphics, pruning, signed evidence, staleness |
+| [07](07-spike-testbed-agent.md) | The testbed spike with an agent |
+| [08](08-spintacular-field-report.md) | The first game built on Automap 0.1.0: 50 findings checked against the code, and what the plan does with each |
 
 ## How far to trust this research
 

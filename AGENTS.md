@@ -1,6 +1,6 @@
 # Automap
 
-Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. The product spec is [`docs/spec/SPEC.md`](docs/spec/SPEC.md); the work is cut into vertical-slice tickets in [`docs/issues/automap-v1/`](docs/issues/automap-v1/), with their feature spec in `spec.md` there. Terms are defined in [`CONTEXT.md`](CONTEXT.md); decisions are the ADRs in [`docs/adr/`](docs/adr/). When resuming, read the newest handoff in `docs/handoff/`.
+Automap is an agent-ready map and CLI for composing custom C++ game engines from libraries. The product spec is [`docs/spec/SPEC.md`](docs/spec/SPEC.md); the work is cut into vertical-slice tickets, one directory per feature with its feature spec in `spec.md`: [`docs/issues/automap-v1/`](docs/issues/automap-v1/) built v1, and [`docs/issues/past-the-testbed/`](docs/issues/past-the-testbed/) is the work that follows the first game built on it. Terms are defined in [`CONTEXT.md`](CONTEXT.md); decisions are the ADRs in [`docs/adr/`](docs/adr/). When resuming, read the newest handoff in `docs/handoff/`.
 
 ## Build and test
 
@@ -42,7 +42,7 @@ Tests attach at the CLI run as a process ([ADR-0077](docs/adr/0077-tests-attach-
 | `testdata/repos/` | Fixture repos the CLI runs in. |
 | `testdata/golden/` | Golden CLI results and written files, one directory per case. |
 | `docs/spec/` | `SPEC.md`, its examples and `check-examples.py`. |
-| `docs/issues/automap-v1/` | The feature spec and tickets. |
+| `docs/issues/` | Feature specs and tickets, one directory per feature. |
 | `docs/adr/`, `CONTEXT.md` | Decisions and the glossary. |
 | `docs/research/` | Research notes, one file per topic, plus `SUMMARY.md`. |
 | `docs/handoff/` | Session handoffs, newest last. |
@@ -53,7 +53,7 @@ SPEC §10.1 gives the layout later tickets add: the `registry` branch.
 
 ## Working on a ticket
 
-- Work the frontier of `docs/issues/automap-v1/`: a ticket whose blockers are all done. Branch from `main`.
+- Work the frontier of the feature in progress under `docs/issues/`: a ticket whose blockers are all done. Branch from `main`.
 - Work test-first with the `tdd` skill, at the CLI seam.
 - When every acceptance criterion is met, make the last commit on the branch tick the ticket's criteria and set its `Status:` to `done`. Once CI is green, open a pull request to `main` and merge it with a merge commit.
 - Where the spec fills in a detail no ADR decided (SPEC §12.3), follow it as a default; change it if the build needs to, and update the spec to match.
