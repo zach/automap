@@ -17,7 +17,9 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 | --- | --- |
 | a new testbed with some libraries | `automap start --with <library>[:<variant>]... --json` |
 | to add or swap in a library | `automap extend <library>[:<variant>] [--slot <slot>]... --json` |
+| to take a library out | `automap remove <library> --json` |
 | a newer map release, for every library or the ones named | `automap upgrade [<library>...] [--map-release <release>] --json` |
+| the lock brought up to date after editing the manifest or a private map | `automap resolve --json` |
 | to know whether the engine is wired correctly | `automap verify --json` |
 | to know whether the map has a library for something | `automap find <words> --json`, or `automap find --slot <slot> --json` |
 | a library's facts, hooks and variants | `automap show library <id> --json` |
@@ -45,13 +47,13 @@ The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke`
 
 ## Changing a composition
 
+- **Removing a library**: `automap remove <library> --json`. It empties the library's slots, sets a choice that named one of them (such as `profiling-slot`) back to its default, deletes the library's glue and build fragment where you haven't changed them, and verifies. A `GLUE_LEFT(<file>)` warning names a file it left because you changed it.
 - **A choice** (`choices` in the manifest, such as `diagnostics.profiler`): edit the manifest and run `automap verify --json`, which rewrites the choices header.
 - **The executable** (`executable` in the manifest): edit it and run `automap verify --json`; [`game.md`](game.md) has the rules.
-- **A library's variant, the platforms, or a slot's library**: edit the manifest, then `automap upgrade --json` re-resolves the lock and the files the CLI writes.
-- **Removing a library**: delete it from the manifest's `slots`, `variants` and `glue`, set any choice that named its slot (such as `profiling-slot`) to another value, and run `automap upgrade --json`. Then delete its glue directory (`glue/<library>/`) and build fragment (`cmake/automap/<library>.cmake`), which the CLI leaves.
-- **A private map or an in-repo library that changed**: commit it, then `automap upgrade <library> --json` re-pins it and updates the glue you haven't changed.
+- **A library's variant, the platforms, or which library fills a slot**: edit the manifest, then `automap resolve --json`.
+- **A private map or an in-repo library that changed**: `automap resolve --json` re-pins it and updates the glue you haven't changed.
 
-A `LOCK_MISMATCH` failure means the lock no longer matches the manifest or the maps, and says which of these to run. Never edit the lock.
+`resolve` keeps the map release and every library's version; `upgrade` is the command that moves them. A `LOCK_MISMATCH` failure means the lock no longer matches the manifest or the maps, and says which of these to run. Never edit the lock.
 
 ## When the network blocks downloads
 

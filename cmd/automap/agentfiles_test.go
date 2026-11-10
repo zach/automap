@@ -107,7 +107,7 @@ func TestTheRouterSkillComesWithItsGuides(t *testing.T) {
 	skill := run.ReadFile(t, ".claude/skills/automap/SKILL.md")
 	for guide, wants := range map[string][]string{
 		"game.md":         {`"executable"`, "--frames <n>", "--probe <file>", "am::probe::write_results()", "POST_BUILD", "CMAKE_BUILD_TYPE=Release", "What to ship"},
-		"private-maps.md": {`"private_maps"`, "automap show recipe", "build-fragment", "automap verify --seed", "automap upgrade <library>"},
+		"private-maps.md": {`"private_maps"`, "automap show recipe", "build-fragment", "automap verify --seed", "automap resolve --json"},
 	} {
 		if !strings.Contains(skill, "("+guide+")") {
 			t.Errorf("SKILL.md doesn't link %s", guide)
@@ -121,7 +121,7 @@ func TestTheRouterSkillComesWithItsGuides(t *testing.T) {
 			}
 		}
 	}
-	for _, want := range []string{"## Changing a composition", "Removing a library", "automap vendor --json", "actions/attest-build-provenance"} {
+	for _, want := range []string{"## Changing a composition", "automap remove <library> --json", "automap resolve --json", "automap vendor --json", "actions/attest-build-provenance"} {
 		if !strings.Contains(skill, want) {
 			t.Errorf("SKILL.md lacks %q", want)
 		}

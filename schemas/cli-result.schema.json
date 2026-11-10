@@ -25,7 +25,9 @@
         "vendor",
         "find",
         "show",
-        "version"
+        "version",
+        "resolve",
+        "remove"
       ]
     },
     "cli_version": {

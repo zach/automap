@@ -119,4 +119,4 @@ $ cmake --build build/release --target mygame
 
 The executable, your assets, and the shared libraries beside the executable in the release build directory: on Windows, vcpkg copies every DLL the executable needs there when it links. List what the executable imports before you package (`dumpbin /dependents mygame.exe` on Windows, `ldd` on Linux) and ship exactly that; don't ship `vcpkg_installed/`. Ship each library's license: `vcpkg_installed/<triplet>/share/<port>/copyright`.
 
-A library that should not reach players, such as a profiler that records from startup, comes out of the composition before the release build: see **Changing a composition** in [`SKILL.md`](SKILL.md).
+A library that should not reach players, such as a profiler that records from startup, comes out of the composition before the release build: `automap remove <library> --json`, and `automap extend <library> --json` puts it back. Game code that goes through the shared interfaces doesn't change either way.

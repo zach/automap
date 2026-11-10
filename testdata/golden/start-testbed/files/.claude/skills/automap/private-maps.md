@@ -57,4 +57,4 @@ $ automap verify --seed <rule>:<library> --json     # your probe must catch its 
 
 ## After you change it
 
-Commit the change, then `automap upgrade <library> --json`: it re-pins the private map and updates the glue in the repo that you haven't changed since the old reference. Nothing in a private map is ever uploaded; the evidence `verify` writes for a composition that uses it is the composition's own, in `evidence/`.
+Commit the change, then `automap resolve --json`: it re-pins the private map and updates the glue in the repo that you haven't changed since the old reference, without moving the map release or any library's version. Nothing in a private map is ever uploaded; the evidence `verify` writes for a composition that uses it is the composition's own, in `evidence/`.

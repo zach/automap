@@ -26,18 +26,13 @@ import (
 // that the developer hasn't changed since, leaves changed ones alone with
 // the new reference beside them, and ends with verify.
 func upgrade(a *args, r *result) int {
-	if _, err := os.Stat(manifestFile); os.IsNotExist(err) {
-		r.Summary = "Nothing to upgrade: no " + manifestFile + " in the current directory."
-		r.fail("NO_MANIFEST", "No composition here. Run automap start to create one, or automap adopt to adopt an existing engine.")
-		return exitUsage
-	}
-	base, lock, status := readComposition(r)
+	base, lock, privates, status := openComposition(r, "upgrade")
 	if base == nil {
 		return status
 	}
 	if !release.Tag.MatchString(lock.MapRelease) {
 		r.Summary = "Nothing to upgrade from: the lock names no map release."
-		r.fail("NO_MAP", "The lock records map release "+lock.MapRelease+"; upgrade moves a composition from one published map release to another.")
+		r.fail("NO_MAP", "The lock records map release "+lock.MapRelease+"; upgrade moves a composition from one published map release to another. automap resolve re-resolves against a map directory.")
 		return exitUsage
 	}
 	for _, lib := range a.positional {
@@ -47,11 +42,6 @@ func upgrade(a *args, r *result) int {
 			return exitUsage
 		}
 	}
-	privates, ok := manifestPrivateMaps(r)
-	if !ok {
-		return exitUsage
-	}
-
 	// The map the composition was resolved against, and the one it moves to.
 	oldDir, err := release.Open(lock.MapRelease)
 	if err != nil {
@@ -67,30 +57,140 @@ func upgrade(a *args, r *result) int {
 	if !ok {
 		return exitUsage
 	}
-	locked := map[string]string{}
-	for lib, pin := range lock.Pins {
-		locked[lib] = pin.Version
-	}
 	// Libraries not named stay at their versions.
 	hold := map[string]string{}
 	if len(a.positional) > 0 {
-		for lib, v := range locked {
+		for lib, pin := range lock.Pins {
 			if !slices.Contains(a.positional, lib) {
-				hold[lib] = v
+				hold[lib] = pin.Version
 			}
 		}
 	}
 	newMap = newMap.Hold(hold)
-
-	opts := func(m *mapmodel.Map) composition.FileOptions {
-		return composition.FileOptions{Testbed: base.Executable.Target == composition.TestbedTarget, RegistryURL: registryURL(m), Vendored: composition.ReadVendoredPorts(".")}
+	old, ok := lockedFiles(base, lock, oldDir, privates, r, "upgrade")
+	if !ok {
+		return exitUsage
 	}
-	// The files as the lock pinned them: the lock's release with each
-	// private map at the commit the lock records, so a private recipe's
-	// changed reference shows as a change. A private map that can't be
-	// read at its commit, or doesn't describe the composition there, is
-	// read as it is now.
-	oldFilesWith := func(privates []mapmodel.PrivateMap, r *result) (map[string][]byte, bool) {
+	tag := mapRelease(newMap.PublicDir())
+	return recompose(a, r, lock, old, newMap, composition.Upgrade(newMap, base, tag), "Upgraded to "+tag, "upgrade")
+}
+
+// resolve re-resolves the composition against the map release its lock
+// records, after the manifest or a private map changed (SPEC §5.4): the
+// release and every library's version stay where they are; the lock, the
+// files the CLI generates and the glue the developer hasn't changed are
+// brought up to date; and it ends with verify.
+func resolve(a *args, r *result) int {
+	base, lock, privates, status := openComposition(r, "resolve")
+	if base == nil {
+		return status
+	}
+	if len(a.positional) > 0 {
+		r.Summary = "Usage error: resolve takes no arguments."
+		r.fail("USAGE", "automap resolve re-resolves the whole composition; automap upgrade <library> moves one library to a newer version.")
+		return exitUsage
+	}
+	m, old, ok := lockedMap(a, r, base, lock, privates, "resolve")
+	if !ok {
+		return exitUsage
+	}
+	tag := mapRelease(m.PublicDir())
+	return recompose(a, r, lock, old, m, composition.Upgrade(m, base, tag), "Resolved against "+tag, "resolve")
+}
+
+// remove takes one library out of the composition (SPEC §5.4), the other
+// half of extend: it empties the library's slots, drops its variant and
+// glue entries, resets what depended on it, re-resolves, deletes the files
+// the CLI copied for it that the developer hasn't changed, and ends with
+// verify.
+func remove(a *args, r *result) int {
+	if len(a.positional) != 1 {
+		r.Summary = "Usage error: remove takes one library."
+		r.fail("USAGE", "automap remove <library>")
+		return exitUsage
+	}
+	base, lock, privates, status := openComposition(r, "remove")
+	if base == nil {
+		return status
+	}
+	lib := a.positional[0]
+	m, old, ok := lockedMap(a, r, base, lock, privates, "remove")
+	if !ok {
+		return exitUsage
+	}
+	man, slots, fails := composition.Remove(m, base, lib)
+	if fails != nil {
+		return failWith(r, fails, lib+" can't be removed.", exitUsage)
+	}
+	man.MapRelease = mapRelease(m.PublicDir())
+	return recompose(a, r, lock, old, m, man, fmt.Sprintf("Removed %s from %s", lib, strings.Join(slots, ", ")), "remove")
+}
+
+// openComposition reads the manifest and lock in the current directory and
+// the private maps the manifest names, for a command that changes the
+// composition.
+func openComposition(r *result, command string) (*composition.Manifest, *composition.Lock, []mapmodel.PrivateMap, int) {
+	if _, err := os.Stat(manifestFile); os.IsNotExist(err) {
+		r.Summary = "Nothing to " + command + ": no " + manifestFile + " in the current directory."
+		r.fail("NO_MANIFEST", "No composition here. Run automap start to create one, or automap adopt to adopt an existing engine.")
+		return nil, nil, nil, exitUsage
+	}
+	base, lock, status := readComposition(r)
+	if base == nil {
+		return nil, nil, nil, status
+	}
+	privates, ok := manifestPrivateMaps(r)
+	if !ok {
+		return nil, nil, nil, exitUsage
+	}
+	return base, lock, privates, exitOK
+}
+
+// lockedMap loads the map the lock was resolved against, with every
+// library held at the version the lock pins, and the composition's files
+// as the lock pinned them: what resolve and remove start from.
+func lockedMap(a *args, r *result, base *composition.Manifest, lock *composition.Lock, privates []mapmodel.PrivateMap, command string) (*mapmodel.Map, map[string][]byte, bool) {
+	dir := a.value("map")
+	if dir == "" {
+		dir = os.Getenv("AUTOMAP_MAP")
+	}
+	if dir == "" {
+		var ok bool
+		if dir, ok = releaseDir(r); !ok {
+			return nil, nil, false
+		}
+	}
+	m, ok := loadMapAt(dir, privates, r)
+	if !ok {
+		return nil, nil, false
+	}
+	hold := map[string]string{}
+	for lib, pin := range lock.Pins {
+		hold[lib] = pin.Version
+	}
+	old, ok := lockedFiles(base, lock, dir, privates, r, command)
+	if !ok {
+		return nil, nil, false
+	}
+	return m.Hold(hold), old, true
+}
+
+// fileOptions are the options for writing a composition's files.
+func fileOptions(m *mapmodel.Map, man *composition.Manifest) composition.FileOptions {
+	return composition.FileOptions{Testbed: man.Executable.Target == composition.TestbedTarget, RegistryURL: registryURL(m), Vendored: composition.ReadVendoredPorts(".")}
+}
+
+// lockedFiles is the composition's files as the lock pinned them: the
+// public map in oldDir with each private map at the commit the lock
+// records, so a private recipe's changed reference shows as a change. A
+// private map that can't be read at its commit, or doesn't describe the
+// composition there, is read as it is now.
+func lockedFiles(base *composition.Manifest, lock *composition.Lock, oldDir string, privates []mapmodel.PrivateMap, r *result, command string) (map[string][]byte, bool) {
+	locked := map[string]string{}
+	for lib, pin := range lock.Pins {
+		locked[lib] = pin.Version
+	}
+	filesWith := func(privates []mapmodel.PrivateMap, r *result) (map[string][]byte, bool) {
 		oldMap, ok := loadMapAt(oldDir, privates, r)
 		if !ok {
 			return nil, false
@@ -99,7 +199,7 @@ func upgrade(a *args, r *result) int {
 		oldPlan, fails := composition.PlanStartup(oldMap, base)
 		if fails == nil {
 			var files map[string][]byte
-			if files, fails = composition.Files(oldMap, base, lock, oldPlan, opts(oldMap)); fails == nil {
+			if files, fails = composition.Files(oldMap, base, lock, oldPlan, fileOptions(oldMap, base)); fails == nil {
 				return files, true
 			}
 		}
@@ -108,46 +208,87 @@ func upgrade(a *args, r *result) int {
 	}
 	pinned, cleanup := lockedPrivateMaps(privates, lock)
 	defer cleanup()
-	oldFiles, ok := oldFilesWith(pinned, newResult(r.Command))
+	files, ok := filesWith(pinned, newResult(r.Command))
 	if !ok {
-		if oldFiles, ok = oldFilesWith(privates, r); !ok {
-			r.Summary = "The composition can't be regenerated as the lock pinned it (" + lockedMaps(lock) + "), so upgrade can't tell which files have changed since."
-			return exitUsage
+		if files, ok = filesWith(privates, r); !ok {
+			r.Summary = "The composition can't be regenerated as the lock pinned it (" + lockedMaps(lock) + "), so " + command + " can't tell which files have changed since."
+			return nil, false
 		}
 	}
-	tag := mapRelease(newMap.PublicDir())
-	man := composition.Upgrade(newMap, base, tag)
-	newLock, fails := composition.Resolve(newMap, man)
+	return files, true
+}
+
+// recompose writes a changed composition: it resolves man against m,
+// rewrites the files the CLI generates, updates each file copied from the
+// map that still matches old (the files as the lock pinned them), leaves a
+// changed one alone with the new reference beside it, deletes the files
+// the composition no longer has where they still match old, and ends with
+// verify. done begins the summary; command names the caller in warnings.
+func recompose(a *args, r *result, lock *composition.Lock, old map[string][]byte, m *mapmodel.Map, man *composition.Manifest, done, command string) int {
+	tag := man.MapRelease
+	newLock, fails := composition.Resolve(m, man)
 	if fails != nil {
 		return failWith(r, fails, "The composition can't be resolved against "+tag+".", exitUsage)
 	}
-	plan, fails := composition.PlanStartup(newMap, man)
+	plan, fails := composition.PlanStartup(m, man)
 	if fails != nil {
 		return failWith(r, fails, "The composition's startup can't be generated against "+tag+".", exitFailed)
 	}
-	files, fails := composition.Files(newMap, man, newLock, plan, opts(newMap))
+	files, fails := composition.Files(m, man, newLock, plan, fileOptions(m, man))
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written against "+tag+".", exitFailed)
 	}
 
-	write, updated, diverged := upgradeFiles(man, oldFiles, files)
+	write, updated, diverged := upgradeFiles(man, old, files)
 	for _, p := range diverged {
-		r.warn("GLUE_DIVERGED("+p+")", fmt.Sprintf("%s differs from %s's reference, so upgrade left it as it is; %s's reference is beside it at %s.reference. Carry over what applies, using the recipe's adaptation notes (automap show recipe <id>).", p, lock.MapRelease, tag, p))
+		r.warn("GLUE_DIVERGED("+p+")", fmt.Sprintf("%s differs from the reference it was copied from, so %s left it as it is; the new reference is beside it at %s.reference. Carry over what applies, using the recipe's adaptation notes (automap show recipe <id>).", p, command, p))
+	}
+	// Files the composition had and no longer has, such as a removed
+	// library's glue: the CLI's to delete where the developer hasn't
+	// changed them.
+	var gone []string
+	for p := range old {
+		if _, kept := files[p]; !kept {
+			gone = append(gone, p)
+		}
+	}
+	sort.Strings(gone)
+	var deleted int
+	for _, p := range gone {
+		current, err := os.ReadFile(filepath.FromSlash(p))
+		switch {
+		case err != nil:
+		case bytes.Equal(current, old[p]):
+			if os.Remove(filepath.FromSlash(p)) == nil {
+				deleted++
+				// And its directories, where it was the last file in them.
+				for dir := path.Dir(p); dir != "." && os.Remove(filepath.FromSlash(dir)) == nil; dir = path.Dir(dir) {
+				}
+			}
+		default:
+			r.warn("GLUE_LEFT("+p+")", fmt.Sprintf("%s is no longer part of the composition, but it differs from the reference it was copied from, so %s left it. Delete it if nothing of yours needs it.", p, command))
+		}
 	}
 
 	var moved []string
 	for _, lib := range man.Libraries() {
 		from, to := lock.Pins[lib], newLock.Pins[lib]
-		if from.Version != to.Version || from.Variant != to.Variant {
-			moved = append(moved, fmt.Sprintf("%s %s → %s", lib, from.Version, to.Version))
+		if from.Version != "" && (from.Version != to.Version || from.Variant != to.Variant) {
+			change := fmt.Sprintf("%s %s → %s", lib, from.Version, to.Version)
+			if from.Version == to.Version {
+				change = fmt.Sprintf("%s %s → %s", lib, from.Variant, to.Variant)
+			}
+			moved = append(moved, change)
 		}
 	}
-	done := "Upgraded to " + tag
 	if len(moved) > 0 {
 		done += " (" + strings.Join(moved, ", ") + ")"
 	}
 	done += fmt.Sprintf("; %d %s updated, %d diverged", updated, plural(updated, "file", "files"), len(diverged))
-	return writeAndVerify(a, newMap, man, write, nil, done, r)
+	if deleted > 0 {
+		done += fmt.Sprintf(", %d deleted", deleted)
+	}
+	return writeAndVerify(a, m, man, write, nil, done, r)
 }
 
 // lockedPrivateMaps is each private map as the lock pinned it: its files at

@@ -30,7 +30,7 @@ func TestTheUsageListsEveryCommand(t *testing.T) {
 	run := clitest.Automap(t, "no-manifest", "help")
 	run.ExpectExit(t, 0)
 	usage := string(run.Stdout)
-	for _, cmd := range []string{"start", "adopt", "extend", "upgrade", "verify", "show", "find", "fetch", "vendor", "eject", "version", "help"} {
+	for _, cmd := range []string{"start", "adopt", "extend", "remove", "upgrade", "resolve", "verify", "show", "find", "fetch", "vendor", "eject", "version", "help"} {
 		if !strings.Contains(usage, "\n  "+cmd) {
 			t.Errorf("the usage doesn't list %s:\n%s", cmd, usage)
 		}

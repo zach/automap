@@ -38,7 +38,9 @@ $ automap extend jolt --json
 | --- | --- |
 | `automap start --with <library>[:<variant>]...` | Creates a composition in the current directory, then verifies it. |
 | `automap extend <library>[:<variant>]` | Adds a library, then verifies. |
+| `automap remove <library>` | Takes a library out, with its files you haven't changed, then verifies. |
 | `automap upgrade [<library>...]` | Moves to a newer map release, re-resolves, verifies. |
+| `automap resolve` | Re-resolves against the same map release after the manifest or a private map changed, then verifies. |
 | `automap adopt` | Brings an existing CMake and vcpkg project under Automap. |
 | `automap verify` | Builds, runs the smoke test and probes, writes evidence. |
 | `automap find [<query>] [--slot <slot>]`, `automap show <kind> <id>` | Search and inspect the map, with evidence states. |
