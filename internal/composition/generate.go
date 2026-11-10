@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -235,6 +236,108 @@ func AutomapCMake(m *mapmodel.Map, man *Manifest, lock *Lock, sources []string, 
 	return b.String()
 }
 
+// vcpkgPort is one vcpkg port a composition builds, with what every
+// library that comes from it asks of it: vcpkg builds a port once, so two
+// libraries from one port, such as two headers of stb, share its entry.
+type vcpkgPort struct {
+	Name            string
+	Libraries       []string
+	Features        []any // strings, or {name, platform} for a platform-limited feature
+	DefaultFeatures bool  // off only when every library turns them off
+	Version         string
+	PortVersion     int
+}
+
+// vcpkgPorts merges the composition's libraries by port, in library order:
+// a port's features are the union of its libraries' features, and it keeps
+// its default features unless every library sharing it turns them off.
+func vcpkgPorts(m *mapmodel.Map, man *Manifest, lock *Lock) []*vcpkgPort {
+	var out []*vcpkgPort
+	byName := map[string]*vcpkgPort{}
+	for _, lib := range man.Libraries() {
+		l := m.Libraries[lib]
+		if l == nil {
+			continue
+		}
+		v := l.Newest()
+		if v.BuildBackend == nil {
+			continue
+		}
+		variant := v.Variant(lock.Pins[lib].Variant)
+		port := byName[v.BuildBackend.Vcpkg.Port]
+		first := port == nil
+		if first {
+			port = &vcpkgPort{Name: v.BuildBackend.Vcpkg.Port, Version: v.Version}
+			// The curated port's port version; a variant from another
+			// registry has that registry's own.
+			if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil && (variant == nil || variant.Registry == "" || variant.Registry == v.BuildBackend.Vcpkg.Registry) {
+				port.PortVersion = *pv
+			}
+			byName[port.Name] = port
+			out = append(out, port)
+		}
+		port.Libraries = append(port.Libraries, lib)
+		defaults := true
+		if variant != nil {
+			// A feature may name its platforms as a vcpkg platform
+			// expression in brackets, such as "x11[linux]".
+			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
+				f = strings.TrimSpace(f)
+				if f == "" {
+					continue
+				}
+				var feature any = f
+				if name, platform, limited := strings.Cut(strings.TrimSuffix(f, "]"), "["); limited {
+					feature = map[string]string{"name": name, "platform": platform}
+				}
+				if !slices.ContainsFunc(port.Features, func(have any) bool { return fmt.Sprint(have) == fmt.Sprint(feature) }) {
+					port.Features = append(port.Features, feature)
+				}
+			}
+			defaults = variant.BuildOptions["vcpkg_default_features"] != "false"
+		}
+		port.DefaultFeatures = defaults || !first && port.DefaultFeatures
+	}
+	return out
+}
+
+// PortConflicts reports the ports two libraries of the composition pin
+// differently: vcpkg builds a port once, at one version from one registry.
+func PortConflicts(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
+	type source struct{ lib, version, registry string }
+	first := map[string]source{}
+	var fails []Failure
+	for _, lib := range man.Libraries() {
+		l := m.Libraries[lib]
+		if l == nil {
+			continue
+		}
+		v := l.Newest()
+		if v.BuildBackend == nil {
+			continue
+		}
+		pin := lock.Pins[lib]
+		here := source{lib: lib, version: pin.Version}
+		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil {
+			here.version += fmt.Sprintf("#%d", *pv)
+		}
+		if pin.Registry != nil {
+			here.registry = pin.Registry.Kind + " " + pin.Registry.ID + " " + pin.Registry.Commit + " " + pin.Registry.ContentHash
+		}
+		port := v.BuildBackend.Vcpkg.Port
+		prev, seen := first[port]
+		switch {
+		case !seen:
+			first[port] = here
+		case prev.version != here.version:
+			fails = append(fails, failure("PORT_CONFLICT("+port+")", "%s and %s both come from the vcpkg port %s, which vcpkg builds once: %s pins it at %s and %s at %s. Give both libraries the port's one version.", prev.lib, lib, port, prev.lib, prev.version, lib, here.version))
+		case prev.registry != here.registry:
+			fails = append(fails, failure("PORT_CONFLICT("+port+")", "%s and %s both come from the vcpkg port %s, which vcpkg builds once, but from different registries. Give both libraries the same registry for it.", prev.lib, lib, port))
+		}
+	}
+	return fails
+}
+
 // vcpkgOverride pins a port's version and port version in vcpkg.json.
 type vcpkgOverride struct {
 	Name        string `json:"name"`
@@ -242,30 +345,20 @@ type vcpkgOverride struct {
 	PortVersion int    `json:"port-version,omitempty"`
 }
 
-// vcpkgOverrides pins each library's port at its version and, for the
-// curated port, its port version: a variant from another registry has that
-// registry's own.
+// vcpkgOverrides pins each port at its version and port version.
 func vcpkgOverrides(m *mapmodel.Map, man *Manifest, lock *Lock) []vcpkgOverride {
 	var out []vcpkgOverride
-	for _, lib := range man.Libraries() {
-		v := m.Libraries[lib].Newest()
-		if v.BuildBackend == nil {
-			continue
-		}
-		variant := v.Variant(lock.Pins[lib].Variant)
-		o := vcpkgOverride{Name: v.BuildBackend.Vcpkg.Port, Version: v.Version}
-		if pv := v.BuildBackend.Vcpkg.PortVersion; pv != nil && (variant == nil || variant.Registry == "" || variant.Registry == v.BuildBackend.Vcpkg.Registry) {
-			o.PortVersion = *pv
-		}
-		out = append(out, o)
+	for _, port := range vcpkgPorts(m, man, lock) {
+		out = append(out, vcpkgOverride{Name: port.Name, Version: port.Version, PortVersion: port.PortVersion})
 	}
 	return out
 }
 
-// VcpkgJSON is the vcpkg manifest: each library's port with the features
-// its variant enables, an override pinning its version and port version,
-// and the curated registry's baseline, which every composition names: the
-// Automap registry's ports depend on curated ports such as vcpkg-cmake.
+// VcpkgJSON is the vcpkg manifest: each port with the features its
+// libraries' variants enable, an override pinning its version and port
+// version, and the curated registry's baseline, which every composition
+// names: the Automap registry's ports depend on curated ports such as
+// vcpkg-cmake.
 func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 	type dependency struct {
 		Name            string `json:"name"`
@@ -278,30 +371,11 @@ func VcpkgJSON(m *mapmodel.Map, man *Manifest, lock *Lock) []byte {
 		BuiltinBaseline string          `json:"builtin-baseline,omitempty"`
 	}
 	doc.BuiltinBaseline = vcpkgBaseline(m)
-	for _, lib := range man.Libraries() {
-		v := m.Libraries[lib].Newest()
-		if v.BuildBackend == nil {
-			continue
-		}
-		dep := dependency{Name: v.BuildBackend.Vcpkg.Port}
-		if variant := v.Variant(lock.Pins[lib].Variant); variant != nil {
-			// A feature may name its platforms as a vcpkg platform
-			// expression in brackets, such as "x11[linux]".
-			for _, f := range strings.Split(variant.BuildOptions["vcpkg_features"], ",") {
-				f = strings.TrimSpace(f)
-				name, platform, limited := strings.Cut(strings.TrimSuffix(f, "]"), "[")
-				switch {
-				case f == "":
-				case limited:
-					dep.Features = append(dep.Features, map[string]string{"name": name, "platform": platform})
-				default:
-					dep.Features = append(dep.Features, f)
-				}
-			}
-			if variant.BuildOptions["vcpkg_default_features"] == "false" {
-				off := false
-				dep.DefaultFeatures = &off
-			}
+	for _, port := range vcpkgPorts(m, man, lock) {
+		dep := dependency{Name: port.Name, Features: port.Features}
+		if !port.DefaultFeatures {
+			off := false
+			dep.DefaultFeatures = &off
 		}
 		doc.Dependencies = append(doc.Dependencies, dep)
 	}
@@ -380,7 +454,9 @@ func VcpkgConfiguration(m *mapmodel.Map, man *Manifest, lock *Lock, registryURL 
 	for _, lib := range man.Libraries() {
 		pin := lock.Pins[lib]
 		if pin.Registry != nil && pin.Registry.Kind == "automap" {
-			automapPorts = append(automapPorts, m.Libraries[lib].Newest().BuildBackend.Vcpkg.Port)
+			if port := m.Libraries[lib].Newest().BuildBackend.Vcpkg.Port; !slices.Contains(automapPorts, port) {
+				automapPorts = append(automapPorts, port)
+			}
 			commit = pin.Registry.Commit
 		}
 	}

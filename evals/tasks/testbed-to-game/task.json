@@ -1,0 +1,20 @@
+{
+  "id": "testbed-to-game",
+  "request": "This testbed is becoming our game, Skyhook. Make the executable skyhook, built from game/main.cpp instead of the testbed's main.cpp, with a window titled Skyhook at 1600 by 900. We don't ship a profiler: take Tracy out.",
+  "setup": [
+    ["start", "--with", "sdl3", "--with", "dear-imgui:docking", "--no-verify", "--json"],
+    ["extend", "tracy", "--no-verify", "--json"]
+  ],
+  "pass": {
+    "level": "probed",
+    "executable": "skyhook",
+    "slots": {
+      "windowing": "sdl3",
+      "tools-ui": "dear-imgui"
+    },
+    "absent_libraries": [
+      "tracy"
+    ]
+  },
+  "timeout_minutes": 60
+}

@@ -73,6 +73,11 @@ func start(a *args, r *result) int {
 	if fails != nil {
 		return failWith(r, fails, "The composition's files can't be written.", exitFailed)
 	}
+	// The testbed builds into build/, as the AGENTS.md section says, and
+	// verify into build/automap/.
+	if ignore, changed := ignoreBuild("/build/"); changed {
+		files[".gitignore"] = []byte(ignore)
+	}
 	var pinned []string
 	for _, lib := range man.Libraries() {
 		pin := lock.Pins[lib]
@@ -96,6 +101,7 @@ func writeAndVerify(a *args, m *mapmodel.Map, man *composition.Manifest, files m
 	for p, data := range agents {
 		files[p] = data
 	}
+	warnPrivateMaps(m, r)
 	changed := map[string][]byte{}
 	for p, data := range files {
 		existing, err := os.ReadFile(filepath.FromSlash(p))
@@ -134,7 +140,9 @@ func writeAndVerify(a *args, m *mapmodel.Map, man *composition.Manifest, files m
 		return exitFailed
 	}
 	status := runVerify(m, man, checked, host, r)
-	r.Summary = done + "; " + strings.TrimSuffix(strings.Replace(r.Summary, "Composition is", "the composition is", 1), ".") + "."
+	verified := strings.Replace(r.Summary, "Composition is", "the composition is", 1)
+	verified = strings.Replace(verified, "The composition didn't build", "it didn't build", 1)
+	r.Summary = done + "; " + strings.TrimSuffix(verified, ".") + "."
 	return status
 }
 
@@ -217,4 +225,15 @@ func mapRelease(dir string) string {
 		return "unreleased"
 	}
 	return "git:" + commit
+}
+
+// warnPrivateMaps warns about each private map with uncommitted changes:
+// the lock pins its content, but there is no commit to read it back from,
+// so evidence about the composition isn't signed.
+func warnPrivateMaps(m *mapmodel.Map, r *result) {
+	for _, meta := range m.Maps[1:] {
+		if meta.Commit == "" {
+			r.warn("PRIVATE_MAP_UNCOMMITTED("+meta.ID+")", "Private map "+meta.ID+" at "+filepath.ToSlash(meta.Dir)+" has uncommitted changes, or isn't in git. The lock pins its content as it is now, with no commit to read it back from, so evidence about this composition isn't signed. Commit it and run automap resolve.")
+		}
+	}
 }

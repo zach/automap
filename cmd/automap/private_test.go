@@ -51,12 +51,18 @@ func acmeStubsRepo(t *testing.T, s *releaseServer, mapDir string) *clitest.Repo 
 }
 
 type lockFile struct {
-	PrivateMaps map[string]struct{ Commit string } `json:"private_maps"`
-	Pins        map[string]struct {
+	PrivateMaps map[string]struct {
+		Commit      string
+		ContentHash string `json:"content_hash"`
+	} `json:"private_maps"`
+	Pins map[string]struct {
 		Variant     string
 		Path        string
 		ContentHash string `json:"content_hash"`
-		Registry    *struct{ Kind, ID, Commit string }
+		Registry    *struct {
+			Kind, ID, Commit string
+			ContentHash      string `json:"content_hash"`
+		}
 	}
 }
 
@@ -76,9 +82,9 @@ func gitOutput(t *testing.T, dir string, args ...string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// The lock pins a private map at the commit that last changed it, a private
-// variant at that map, and an in-repo library by path and content hash
-// (SPEC §4.2).
+// The lock pins a private map by its content, with the commit that last
+// changed it beside that, a private variant at that map, and an in-repo
+// library by path and content hash (SPEC §4.2).
 func TestPrivateContentIsPinned(t *testing.T) {
 	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
 
@@ -87,12 +93,13 @@ func TestPrivateContentIsPinned(t *testing.T) {
 	run.ExpectExit(t, 0)
 	lock := readLock(t, repo)
 	commit := gitOutput(t, repo.Dir, "log", "-1", "--format=%H", "--", "automap-private")
-	if lock.PrivateMaps["acme"].Commit != commit {
-		t.Errorf("private map acme pinned at %q, want its last commit %s", lock.PrivateMaps["acme"].Commit, commit)
+	acme := lock.PrivateMaps["acme"]
+	if acme.Commit != commit || !strings.HasPrefix(acme.ContentHash, "sha256:") {
+		t.Errorf("private map acme pinned as %+v, want its content hash, and its last commit %s beside it", acme, commit)
 	}
 	ui := lock.Pins["stub-ui"]
-	if ui.Variant != "acme-patched" || ui.Registry == nil || ui.Registry.Kind != "private" || ui.Registry.ID != "acme" || ui.Registry.Commit != commit {
-		t.Errorf("stub-ui pinned as %+v, want acme-patched from private map acme at %s", ui, commit)
+	if ui.Variant != "acme-patched" || ui.Registry == nil || ui.Registry.Kind != "private" || ui.Registry.ID != "acme" || ui.Registry.ContentHash != acme.ContentHash || ui.Registry.Commit != commit {
+		t.Errorf("stub-ui pinned as %+v, want acme-patched from private map acme at its content hash %s", ui, acme.ContentHash)
 	}
 	tools := lock.Pins["acme-tools"]
 	if tools.Path != "engine/acme-tools" || !strings.HasPrefix(tools.ContentHash, "sha256:") || tools.Registry != nil {
@@ -184,4 +191,332 @@ func TestAcmeStubsBuildWithPrivateContent(t *testing.T) {
 	if raw, _ := os.ReadFile(headers[0]); !strings.Contains(string(raw), "STUB_UI_ACME_PATCHED") {
 		t.Error("stub-ui wasn't built from the private map's overlay port")
 	}
+}
+
+// addSharedPortLibrary adds acme-fonts to Acme's private map: a second
+// library from the stub-ui port, at version, with the port's fonts
+// feature, filling a private text slot.
+func addSharedPortLibrary(t *testing.T, repo *clitest.Repo, version string) {
+	t.Helper()
+	repo.WriteFile(t, "automap-private/slots/text.json", `{"id": "text", "description": "Draws text from fonts."}`)
+	repo.WriteFile(t, "automap-private/libraries/acme-fonts.json", `{
+  "id": "acme-fonts",
+  "name": "Acme Fonts",
+  "license": {"spdx": "MIT-0", "class": "permissive"},
+  "contribution_policy": {"ai_generated_contributions": "not-applicable", "source": "In-house."},
+  "slots": ["text"],
+  "source": {"kind": "git", "url": "https://github.com/zach/automap/tree/main/testdata/map/ports/stub-ui"},
+  "versions": [{
+    "version": "`+version+`",
+    "released": "2026-01-15",
+    "pin": {"commit": "2222222222222222222222222222222222222222", "content_hash": "sha512:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002"},
+    "build_backend": {"vcpkg": {"port": "stub-ui", "registry": "automap"}},
+    "cmake": {"package": "StubUI", "targets": ["StubUI::StubUI"]},
+    "variants": [{"name": "default", "build_options": {"vcpkg_features": "fonts"}}],
+    "facts": {
+      "lifecycle": {"init_steps": [], "shutdown_steps": [], "reloadable": true},
+      "build-flags": {"abi_defines": [], "self_check": null, "min_language_standard": "C99", "exceptions": "never-thrown", "rtti": "no-constraint"},
+      "platform": {"targets": ["windows-x64-msvc", "linux-x64-clang", "macos-arm64-appleclang"], "headless": "", "web": false}
+    }
+  }]
+}`)
+	repo.WriteFile(t, "automap-private/recipes/library/acme-fonts.json", `{
+  "kind": "library",
+  "subject": {"library": "acme-fonts"},
+  "applies_to": {"acme-fonts": {"versions": ["`+version+`"], "variants": ["default"]}},
+  "reference_glue": [{"path": "acme-fonts/acme-fonts.cmake", "role": "build-fragment"}],
+  "probes": [],
+  "adaptation_notes": ["acme-fonts is the fonts header of the stub-ui port."]
+}`)
+	repo.WriteFile(t, "automap-private/recipes/library/acme-fonts/acme-fonts.cmake", "# acme-fonts ships in the stub-ui port, which stub-ui's fragment finds.\n")
+	commitRepo(t, repo)
+}
+
+// sharedPortRepo is Acme's repo with the public stub-ui in the composition
+// and acme-fonts, from the same port at version, in its private map.
+func sharedPortRepo(t *testing.T, version string) *clitest.Repo {
+	t.Helper()
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.EditJSON(t, "automap.manifest.json", set("variants/stub-ui", "default"))
+	addSharedPortLibrary(t, repo, version)
+	repo.Automap(t, "upgrade", "stub-ui", "--no-verify", "--json").ExpectExit(t, 0)
+	return repo
+}
+
+// Two libraries that come from one vcpkg port share it: vcpkg.json names
+// the port once, with the union of their features and one override, and
+// vcpkg-configuration.json names it once among the registry's packages
+// (SPEC §5.5).
+func TestLibrariesThatShareAPortShareItsEntry(t *testing.T) {
+	repo := sharedPortRepo(t, "1.0.0")
+
+	run := repo.Automap(t, "extend", "acme-fonts", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var manifest struct {
+		Dependencies []struct {
+			Name     string
+			Features []any
+		}
+		Overrides []struct{ Name, Version string }
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg.json")), &manifest)
+	var deps, overrides int
+	for _, d := range manifest.Dependencies {
+		if d.Name == "stub-ui" {
+			deps++
+			if len(d.Features) != 1 || d.Features[0] != "fonts" {
+				t.Errorf("stub-ui's features %v, want the union of its libraries': [fonts]", d.Features)
+			}
+		}
+	}
+	for _, o := range manifest.Overrides {
+		if o.Name == "stub-ui" {
+			overrides++
+		}
+	}
+	if deps != 1 || overrides != 1 {
+		t.Errorf("vcpkg.json names stub-ui in %d dependencies and %d overrides, want one of each:\n%s", deps, overrides, clitest.Read(t, repo, "vcpkg.json"))
+	}
+	var config struct {
+		Registries []struct{ Packages []string }
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "vcpkg-configuration.json")), &config)
+	for _, reg := range config.Registries {
+		seen := map[string]int{}
+		for _, p := range reg.Packages {
+			if seen[p]++; seen[p] > 1 {
+				t.Errorf("vcpkg-configuration.json names package %s twice: %v", p, reg.Packages)
+			}
+		}
+	}
+}
+
+// Two libraries can't pin one port at two versions: vcpkg builds a port
+// once.
+func TestLibrariesThatPinOnePortAtTwoVersionsConflict(t *testing.T) {
+	repo := sharedPortRepo(t, "2.0.0")
+
+	run := repo.Automap(t, "extend", "acme-fonts", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "PORT_CONFLICT(stub-ui)", "acme-fonts")
+	run.ExpectUnchanged(t)
+}
+
+// A lock written on Linux checks on a Windows checkout, where git has
+// turned the in-repo library's line endings into CRLF: the pin hashes text
+// with its line endings normalized.
+func TestAnInRepoPinSurvivesLineEndingConversion(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	pinned := readLock(t, repo).Pins["acme-tools"].ContentHash
+	for _, f := range []string{"engine/acme-tools/CMakeLists.txt", "engine/acme-tools/acme_tools.cpp", "engine/acme-tools/include/acme_tools.h"} {
+		repo.WriteFile(t, f, strings.ReplaceAll(clitest.Read(t, repo, f), "\n", "\r\n"))
+	}
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got := readLock(t, repo).Pins["acme-tools"].ContentHash; got != pinned {
+		t.Errorf("acme-tools pinned at %s after its line endings changed, want %s as before", got, pinned)
+	}
+}
+
+// A change to an in-repo library's content still fails the lock.
+func TestAnInRepoPinFailsWhenItsSourceChanges(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, "engine/acme-tools/acme_tools.cpp", clitest.Read(t, repo, "engine/acme-tools/acme_tools.cpp")+"// changed\n")
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "LOCK_MISMATCH(acme-tools)", "has changed since the lock pinned it")
+}
+
+const (
+	acmeToolsReference = "automap-private/recipes/library/acme-tools/acme-tools.cmake"
+	acmeToolsFragment  = "cmake/automap/acme-tools.cmake"
+)
+
+// acmeToolsRepo is Acme's repo with acme-tools in the composition and
+// committed, and then the private recipe's build fragment changed and
+// committed: what upgrade has to carry into the repo.
+func acmeToolsRepo(t *testing.T, edit func(repo *clitest.Repo)) *clitest.Repo {
+	t.Helper()
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	commitRepo(t, repo)
+	if edit != nil {
+		edit(repo)
+	}
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed in the private map.\n")
+	commitRepo(t, repo)
+	return repo
+}
+
+// upgrade compares against each private map as the lock pinned it: a
+// private recipe's changed reference reaches the repo's copy that still
+// matched the old one (SPEC §5.4).
+func TestUpgradeCarriesAPrivateMapsChangedGlue(t *testing.T) {
+	repo := acmeToolsRepo(t, nil)
+
+	run := repo.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got, want := clitest.Read(t, repo, acmeToolsFragment), clitest.Read(t, repo, acmeToolsReference); got != want {
+		t.Errorf("%s is\n%s\nwant the private map's new reference\n%s", acmeToolsFragment, got, want)
+	}
+	if !strings.Contains(run.Result.Summary, "1 file updated, 0 diverged") {
+		t.Errorf("summary %q, want 1 file updated, 0 diverged", run.Result.Summary)
+	}
+	if commit := gitOutput(t, repo.Dir, "log", "-1", "--format=%H", "--", "automap-private"); readLock(t, repo).PrivateMaps["acme"].Commit != commit {
+		t.Errorf("the lock doesn't pin private map acme at its new commit %s", commit)
+	}
+}
+
+// A copy the developer changed is left alone when the private reference
+// changes too, with the new reference beside it.
+func TestUpgradeLeavesGlueThatDivergedFromAPrivateMap(t *testing.T) {
+	repo := acmeToolsRepo(t, func(repo *clitest.Repo) {
+		repo.WriteFile(t, acmeToolsFragment, clitest.Read(t, repo, acmeToolsFragment)+"# Mine.\n")
+	})
+	mine := clitest.Read(t, repo, acmeToolsFragment)
+
+	run := repo.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if got := clitest.Read(t, repo, acmeToolsFragment); got != mine {
+		t.Errorf("%s was rewritten:\n%s", acmeToolsFragment, got)
+	}
+	if got, want := clitest.Read(t, repo, acmeToolsFragment+".reference"), clitest.Read(t, repo, acmeToolsReference); got != want {
+		t.Errorf("%s.reference is\n%s\nwant the private map's new reference", acmeToolsFragment, got)
+	}
+	var warned bool
+	for _, w := range run.Result.Warnings {
+		warned = warned || w.Code == "GLUE_DIVERGED("+acmeToolsFragment+")"
+	}
+	if !warned {
+		t.Errorf("no GLUE_DIVERGED(%s) warning in %+v", acmeToolsFragment, run.Result.Warnings)
+	}
+}
+
+// A pin that differs from the map is one failure, however many platforms
+// the composition has.
+func TestALockMismatchIsReportedOnce(t *testing.T) {
+	repo := acmeToolsRepo(t, nil)
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	if len(run.Result.Failures) != 1 {
+		t.Errorf("failures %+v, want the one changed private map, once", run.Result.Failures)
+	}
+	run.ExpectFailure(t, "LOCK_MISMATCH(private map acme)", "has changed since the lock pinned it")
+}
+
+// In a shallow clone, as CI checks a repo out, the commit the lock pins a
+// private map at isn't there to read: upgrade compares against the map as
+// it is, and still upgrades.
+func TestUpgradeInAShallowCloneReadsThePrivateMapAsItIs(t *testing.T) {
+	s := newReleaseServer(t)
+	repo := acmeStubsRepo(t, s, fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	commitRepo(t, repo)
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed in the private map.\n")
+	commitRepo(t, repo)
+	shallow := &clitest.Repo{Dir: t.TempDir()}
+	if out, err := exec.Command("git", "clone", "-q", "--depth", "1", "file://"+repo.Dir, shallow.Dir).CombinedOutput(); err != nil {
+		t.Fatalf("git clone: %v\n%s", err, out)
+	}
+	shallow.Setenv("AUTOMAP_RELEASES", s.URL)
+	shallow.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	shallow.Setenv("AUTOMAP_CACHE", t.TempDir())
+
+	run := shallow.Automap(t, "upgrade", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	if !strings.Contains(run.Result.Summary, "0 files updated, 0 diverged") {
+		t.Errorf("summary %q, want 0 files updated, 0 diverged: the old reference can't be read", run.Result.Summary)
+	}
+}
+
+// find searches every map layer: a private map's slot and its library are
+// found by the slot's id and by its description.
+func TestFindSearchesPrivateSlots(t *testing.T) {
+	repo := sharedPortRepo(t, "1.0.0")
+	for _, query := range []string{"text", "font"} {
+		run := repo.Automap(t, "find", query, "--json")
+
+		run.ExpectExit(t, 0)
+		if len(run.Result.Entries) != 1 || run.Result.Entries[0]["id"] != "acme-fonts" {
+			t.Errorf("find %s: entries %v, want acme-fonts, which fills the private text slot", query, run.Result.Entries)
+		}
+	}
+}
+
+// A private map needs no commit to be composed from: its content is what
+// the lock pins. The result says the pin has no commit behind it.
+func TestAnUncommittedPrivateMapComposesWithAWarning(t *testing.T) {
+	s := newReleaseServer(t)
+	s.publish(t, "map-2026.10.01", fixtureMapDir(t), nil)
+	repo := clitest.NewRepo(t, "acme-stubs")
+	repo.Setenv("AUTOMAP_RELEASES", s.URL)
+	repo.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	repo.Setenv("AUTOMAP_CACHE", t.TempDir())
+	repo.Automap(t, "start", "--with", "stub-window", "--with", "stub-ui", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.EditJSON(t, "automap.manifest.json", set("private_maps", []any{map[string]any{"id": "acme", "location": "automap-private"}}))
+
+	run := repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
+	var warned bool
+	for _, w := range run.Result.Warnings {
+		warned = warned || w.Code == "PRIVATE_MAP_UNCOMMITTED(acme)"
+	}
+	if !warned {
+		t.Errorf("no PRIVATE_MAP_UNCOMMITTED(acme) warning in %+v", run.Result.Warnings)
+	}
+	if acme := readLock(t, repo).PrivateMaps["acme"]; acme.Commit != "" || !strings.HasPrefix(acme.ContentHash, "sha256:") {
+		t.Errorf("private map acme pinned as %+v, want its content hash and no commit", acme)
+	}
+}
+
+// A change to a private map, committed or not, is a change to what the
+// lock pins: commands that check the lock say so, and resolve re-pins it.
+func TestAChangedPrivateMapNeedsResolve(t *testing.T) {
+	repo := acmeStubsRepo(t, newReleaseServer(t), fixtureMapDir(t))
+	repo.Automap(t, "extend", "acme-tools", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, acmeToolsReference, clitest.Read(t, repo, acmeToolsReference)+"# Changed, not committed.\n")
+
+	run := repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 2)
+	run.ExpectFailure(t, "LOCK_MISMATCH(private map acme)", "automap resolve")
+
+	run = repo.Automap(t, "resolve", "--no-verify", "--json")
+	run.ExpectExit(t, 0)
+	repo.Automap(t, "extend", "stub-physics", "--no-verify", "--json").ExpectExit(t, 0)
+}
+
+// A lock checks the same in a shallow clone, as CI checks a repo out, as in
+// a full one: a private map's content doesn't depend on git's history.
+func TestALockWithAPrivateVariantChecksInAShallowClone(t *testing.T) {
+	s := newReleaseServer(t)
+	repo := acmeStubsRepo(t, s, fixtureMapDir(t))
+	commitRepo(t, repo)
+	repo.WriteFile(t, "README.md", "More.\n")
+	commitRepo(t, repo)
+	shallow := &clitest.Repo{Dir: t.TempDir()}
+	if out, err := exec.Command("git", "clone", "-q", "--depth", "1", "file://"+repo.Dir, shallow.Dir).CombinedOutput(); err != nil {
+		t.Fatalf("git clone: %v\n%s", err, out)
+	}
+	shallow.Setenv("AUTOMAP_RELEASES", s.URL)
+	shallow.Setenv("AUTOMAP_EVIDENCE_URL", s.URL+"/main")
+	shallow.Setenv("AUTOMAP_CACHE", t.TempDir())
+
+	run := shallow.Automap(t, "extend", "stub-physics", "--no-verify", "--json")
+
+	run.ExpectExit(t, 0)
 }

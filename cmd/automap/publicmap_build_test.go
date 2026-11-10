@@ -69,7 +69,7 @@ var testbedSeeds = []struct{ seed, code string }{
 
 func TestEveryPublicMapSeedIsTested(t *testing.T) {
 	patches := seedPatches(t, filepath.Join(clitest.Root(t), "map"))
-	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds) + len(shadercrossSeeds); patches != covered {
+	if covered := len(testbedSeeds) + len(joltSeeds) + len(enkitsSeeds) + len(mimallocSeeds) + len(diagnosticsBackendSeeds) + len(glmSeeds) + len(miniaudioSeeds) + len(assetsSeeds) + len(flecsSeeds) + len(deterministicSeeds) + len(shadercrossSeeds) + len(textSeeds); patches != covered {
 		t.Errorf("the public map carries %d seed patches but the testbed tests cover %d", patches, covered)
 	}
 }
@@ -355,6 +355,37 @@ func TestTheTestbedExtendsWithJoltAndMimallocProbed(t *testing.T) {
 	}
 }
 
+// Tracy's on-demand variant, the one a game can ship, records only while a
+// profiler is connected. It reaches probed like the default, and its probe
+// and its link-time check catch the same seeded violations.
+func TestTheTestbedWithOnDemandTracyProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "tracy:on-demand", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	for _, c := range diagnosticsBackendSeeds {
+		if !strings.HasSuffix(c.seed, ":tracy") {
+			continue
+		}
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
+}
+
 // The seeds spdlog and Tracy add as the diagnostics facade's backends.
 var diagnosticsBackendSeeds = []struct{ seed, code string }{
 	{"diagnostics.routed-through-facade:spdlog", "DIAG_NOT_ROUTED(spdlog)"},
@@ -520,6 +551,50 @@ var assetsSeeds = []struct{ seed, code string }{
 	{"assets.reads-through-interface:stb-image", "ASSET_READ_BYPASSED(stb-image)"},
 	{"assets.output-identical:stb-image", "ASSET_OUTPUT_DIFFERS(stb-image)"},
 	{"allocation.routed-through-facade:stb-image", "ALLOC_NOT_ROUTED(stb-image)"},
+}
+
+// The seed stb_truetype adds.
+var textSeeds = []struct{ seed, code string }{
+	{"allocation.routed-through-facade:stb-truetype", "ALLOC_NOT_ROUTED(stb-truetype)"},
+}
+
+// stb_truetype fills the text slot and nlohmann/json the data-files slot.
+// stb_truetype comes from the stb port stb_image comes from: the
+// composition builds the port once, for both.
+func TestTheTestbedExtendsWithTextAndDataFilesProbed(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--with", "stb-image", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.Automap(t, "extend", "nlohmann-json", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+
+	run := repo.Automap(t, "extend", "stb-truetype", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	var man struct {
+		Slots map[string]string `json:"slots"`
+	}
+	json.Unmarshal([]byte(clitest.Read(t, repo, "automap.manifest.json")), &man)
+	if man.Slots["text"] != "stb-truetype" || man.Slots["data-files"] != "nlohmann-json" || man.Slots["image-decode"] != "stb-image" {
+		t.Errorf("slots %v, want stb-truetype in text, nlohmann-json in data-files and stb-image in image-decode", man.Slots)
+	}
+	if n := strings.Count(clitest.Read(t, repo, "vcpkg.json"), `"name": "stb"`); n != 2 {
+		t.Errorf("vcpkg.json names the stb port %d times, want once as a dependency and once as an override", n)
+	}
+	for _, c := range textSeeds {
+		t.Run(c.seed, func(t *testing.T) {
+			t.Parallel()
+			run := repo.Automap(t, "verify", "--seed", c.seed, "--map", "map", "--json")
+
+			if run.Exit != 0 || !strings.Contains(run.Result.Summary, c.code) {
+				run.LogDetails(t)
+				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
+			}
+		})
+	}
 }
 
 // fastgltf imports a model and stb_image decodes an image, both reading
@@ -746,6 +821,19 @@ func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
 		}
 	}
 
+	// The library links no DXC, so nothing puts dxcompiler beside the
+	// executable for a game to ship: on Windows, vcpkg copies every DLL
+	// the executable needs there.
+	if hostPlatform == "windows-x64-msvc" {
+		build := filepath.Join(repo.Dir, "build", "automap", hostPlatform)
+		if dlls, _ := filepath.Glob(filepath.Join(build, "*.dll")); len(dlls) == 0 {
+			t.Errorf("no DLL is beside the executable in %s: vcpkg didn't copy what it needs, so this check proves nothing", build)
+		}
+		if _, err := os.Stat(filepath.Join(build, "dxcompiler.dll")); err == nil {
+			t.Error("dxcompiler.dll is beside the executable: the library still imports DXC")
+		}
+	}
+
 	for _, c := range shadercrossSeeds {
 		t.Run(c.seed, func(t *testing.T) {
 			t.Parallel()
@@ -756,6 +844,40 @@ func TestTheTestbedExtendsWithShadercrossProbed(t *testing.T) {
 				t.Errorf("exit %d, summary %q; want the probe to report %s\n%s", run.Exit, run.Result.Summary, c.code, run.Stdout)
 			}
 		})
+	}
+}
+
+// The build fragment's automap_compile_shaders() turns HLSL into the
+// SPIR-V the pairing's glue takes, when the executable builds: with the
+// dxc vcpkg installs on Windows and x64 Linux, and from a committed .spv
+// where vcpkg has none, as on macOS.
+func TestShadersCompileWhenTheExecutableBuilds(t *testing.T) {
+	requirePublicMapBuilds(t)
+	repo := testbedRepo(t)
+	repo.Automap(t, "start", "--with", "sdl3", "--with", "dear-imgui:docking", "--with", "sdl-shadercross", "--map", "map", "--no-verify", "--json").ExpectExit(t, 0)
+	repo.WriteFile(t, "shaders/fill.vert.hlsl", "float4 main(float3 position : POSITION) : SV_Position { return float4(position, 1.0); }\n")
+	repo.WriteFile(t, "CMakeLists.txt", clitest.Read(t, repo, "CMakeLists.txt")+"automap_compile_shaders(testbed vertex:shaders/fill.vert.hlsl)\n")
+	spirv := "\x03\x02\x23\x07" // SPIR-V's magic number, little-endian
+	compiled := hostPlatform != "macos-arm64-appleclang"
+	if !compiled {
+		repo.WriteFile(t, "shaders/fill.vert.hlsl.spv", spirv+"compiled elsewhere")
+	}
+
+	run := repo.Automap(t, "verify", "--map", "map", "--json")
+
+	if run.Exit != 0 || run.Result.Level != "probed" {
+		run.LogDetails(t)
+		logVcpkgErrors(t)
+		t.Fatalf("exit %d, level %q; want 0, probed\n%s", run.Exit, run.Result.Level, run.Stdout)
+	}
+	out, err := os.ReadFile(filepath.Join(repo.Dir, "build", "automap", hostPlatform, "shaders", "fill.vert.hlsl.spv"))
+	switch {
+	case err != nil:
+		t.Fatalf("no SPIR-V beside the executable: %v", err)
+	case !strings.HasPrefix(string(out), spirv):
+		t.Errorf("shaders/fill.vert.hlsl.spv doesn't begin with SPIR-V's magic number: % x", out[:min(8, len(out))])
+	case compiled && len(out) < 100:
+		t.Errorf("shaders/fill.vert.hlsl.spv is %d bytes: dxc didn't compile it", len(out))
 	}
 }
 

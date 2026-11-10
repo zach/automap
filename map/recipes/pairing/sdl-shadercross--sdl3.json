@@ -75,7 +75,7 @@
   ],
   "adaptation_notes": [
     "am_shadercross_create_shader() reflects SPIR-V, compiles it to the format am_shadercross_format_for() gives for the device's driver (SDL_GetGPUDeviceDriver), and creates the shader with the reflected resource counts.",
-    "Direct3D 12 gets DXBC, compiled through the system's d3dcompiler_47.dll, so a game needs no DXC at runtime; a game that wants DXIL (shader model 6) changes the format and ships dxcompiler.dll and dxil.dll beside the executable.",
+    "Direct3D 12 gets DXBC, compiled through the system's d3dcompiler_47.dll: the library is built without DXC, so a game ships no dxcompiler.dll. DXIL (shader model 6) needs the port's dxc feature, through a private variant, and dxcompiler.dll and dxil.dll beside the executable.",
     "Metal reserves the name main: SPIRV-Cross renames a main entry point to main0, which the glue passes on.",
     "Shaders a build step cooks ahead of time (the assets binding) follow the same choice of format per backend; the game then loads the cooked shader for its driver and creates it with the counts reflected at cooking time."
   ]

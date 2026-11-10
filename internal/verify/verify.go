@@ -45,6 +45,7 @@ type Outcome struct {
 	Level        string
 	Results      []Result
 	Failures     []Failure
+	Warnings     []Failure // a code and a message each
 	EvidenceFile string
 }
 
@@ -93,11 +94,20 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	var built, smoked, probesRan, tsanRan bool
 	var setAside []TSanReport
 	var linked []Result // results the linker decided, such as MSVC's ABI define check
-	vcpkg, err := VcpkgRoot(m)
-	if err != nil {
+	// A system package a library needs and the machine lacks is named
+	// before building: the alternative is a port build failing minutes in.
+	lacking, warnings := missingPackages(m, man, platform)
+	out.Warnings = warnings
+	vcpkg, err := "", error(nil)
+	if len(lacking) == 0 {
+		vcpkg, err = VcpkgRoot(m)
+	}
+	if len(lacking) > 0 {
+		out.Failures = append(out.Failures, lacking...)
+	} else if err != nil {
 		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error()})
 	} else if err := build(vcpkg, opts.Root, paths.build, paths.buildLog, platform, man.Executable.Target); err != nil {
-		out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: err.Error(), DetailsFile: paths.buildLog})
+		out.Failures = append(out.Failures, buildFailure(in(paths.buildLog), paths.buildLog, "", err))
 		if log, err := os.ReadFile(in(paths.buildLog)); err == nil {
 			if r := LinkMismatch(string(log)); r != nil {
 				linked = append(linked, *r)
@@ -120,7 +130,7 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 	// says why.
 	if built {
 		if err := build(vcpkg, opts.Root, paths.probeBuild, paths.probeBuildLog, platform, man.Executable.Target, "-DAUTOMAP_PROBE=ON"); err != nil {
-			out.Failures = append(out.Failures, Failure{Code: "BUILD_FAILED", Message: "The probe build failed: " + err.Error(), DetailsFile: paths.probeBuildLog})
+			out.Failures = append(out.Failures, buildFailure(in(paths.probeBuildLog), paths.probeBuildLog, "The probe build failed: ", err))
 		} else {
 			err := runExecutable(opts.Root, paths.probeBuild, paths.probeLog, man.Executable.Target, env, paths.results)
 			harness, readErr := readResults(in(paths.results))
@@ -201,6 +211,36 @@ func Run(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock, opt
 		out.Failures = append(out.Failures, Failure{Code: "EVIDENCE_FAILED", Message: err.Error()})
 	}
 	return out
+}
+
+// buildFailure is the failure for a build that failed, with why from its
+// log (file on disk, details as the result names it): FETCH_FAILED with
+// the URL when vcpkg couldn't download something, and otherwise
+// BUILD_FAILED with the log's first error.
+func buildFailure(file, details, prefix string, err error) Failure {
+	f := Failure{Code: "BUILD_FAILED", Message: prefix + err.Error(), DetailsFile: details}
+	log, readErr := os.ReadFile(file)
+	if readErr != nil {
+		return f
+	}
+	d := DiagnoseBuild(string(log))
+	switch {
+	case d.URL != "":
+		f.Code = "FETCH_FAILED"
+		f.Message = prefix + "vcpkg couldn't download " + d.URL
+		if d.Excerpt != "" {
+			f.Message += " (" + strings.TrimSuffix(strings.TrimPrefix(firstLine(d.Excerpt), "error: "), ".") + ")"
+		}
+		f.Message += ". If this machine's network blocks it, run automap vendor on a machine that reaches it and commit vendor/automap/, which builds with no network; the build log has the details."
+	case d.Excerpt != "":
+		f.Message += ":\n" + d.Excerpt
+	}
+	return f
+}
+
+func firstLine(s string) string {
+	line, _, _ := strings.Cut(s, "\n")
+	return line
 }
 
 // tsanProcedure is the ThreadSanitizer run, as the jobs contract states it.
@@ -335,12 +375,9 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 		return "", err
 	}
 	defer log.Close()
-	exe, err := filepath.Abs(filepath.Join(root, filepath.FromSlash(buildDir), target))
+	exe, err := findExecutable(filepath.Join(root, filepath.FromSlash(buildDir)), target)
 	if err != nil {
 		return "", err
-	}
-	if runtime.GOOS == "windows" {
-		exe += ".exe"
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
 	defer cancel()
@@ -355,9 +392,11 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 	fmt.Fprintf(log, "$ %s %s %s\n", strings.Join(env, " "), exe, strings.Join(args, " "))
 	cmd := exec.CommandContext(ctx, exe, args...)
 	var stderr bytes.Buffer
-	// Run from the build directory, so files a library writes as it runs,
-	// such as imgui.ini, never land in the developer's repo.
-	cmd.Dir = filepath.Join(root, filepath.FromSlash(buildDir))
+	// Run from the executable's directory in the build tree: files a
+	// library writes as it runs, such as imgui.ini, never land in the
+	// developer's repo, and assets the build copies beside the executable
+	// are found.
+	cmd.Dir = filepath.Dir(exe)
 	cmd.Stdout, cmd.Stderr = log, &stderr
 	cmd.Env = append(os.Environ(), env...)
 	err = cmd.Run()
@@ -372,6 +411,50 @@ func runCapturing(root, buildDir, logFile, target string, env []string, results 
 		return stderr.String(), fmt.Errorf("%s didn't run %d headless frames and shut down cleanly: %v", target, SmokeFrames, err)
 	}
 	return stderr.String(), nil
+}
+
+// findExecutable is the absolute path of the executable a target builds:
+// at the build directory's root, where CMake puts a target the top-level
+// CMakeLists.txt defines, or wherever in the build tree the project's own
+// layout puts it.
+func findExecutable(buildDir, target string) (string, error) {
+	name := target
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	abs, err := filepath.Abs(buildDir)
+	if err != nil {
+		return "", err
+	}
+	isExecutable := func(p string) bool {
+		info, err := os.Stat(p)
+		return err == nil && info.Mode().IsRegular() && (runtime.GOOS == "windows" || info.Mode()&0o111 != 0)
+	}
+	if exe := filepath.Join(abs, name); isExecutable(exe) {
+		return exe, nil
+	}
+	var found string
+	filepath.WalkDir(abs, func(p string, d os.DirEntry, err error) error {
+		if err != nil || found != "" {
+			return filepath.SkipAll
+		}
+		if d.IsDir() {
+			// vcpkg's packages and CMake's own files hold no target of the
+			// project's.
+			if d.Name() == "vcpkg_installed" || d.Name() == "CMakeFiles" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.Name() == name && isExecutable(p) {
+			found = p
+		}
+		return nil
+	})
+	if found == "" {
+		return "", fmt.Errorf("the build produced no executable named %s in %s: the manifest's executable target must be a CMake executable target", name, filepath.ToSlash(buildDir))
+	}
+	return found, nil
 }
 
 var initFailed = regexp.MustCompile(`INIT_FAILED\([^)]*\)`)
@@ -441,13 +524,13 @@ type EvidenceInput struct {
 // an identity token to sign it with and the map is released or a git
 // commit, or the developer's machine, unsigned. getenv reads the
 // environment. It is a pure function of it.
-func Verifier(mapRelease string, getenv func(string) string) map[string]any {
+func Verifier(mapRelease string, committed bool, getenv func(string) string) map[string]any {
 	if getenv("GITHUB_ACTIONS") != "true" || getenv("GITHUB_WORKFLOW_REF") == "" {
 		return map[string]any{"kind": "developer-local", "id": "local", "signed": false}
 	}
 	identity := getenv("ACTIONS_ID_TOKEN_REQUEST_URL") != "" && getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN") != ""
 	return map[string]any{"kind": "developer-ci", "id": getenv("GITHUB_SERVER_URL") + "/" + getenv("GITHUB_WORKFLOW_REF"),
-		"signed": identity && mapRelease != "unreleased"}
+		"signed": identity && mapRelease != "unreleased" && committed}
 }
 
 // Evidence is the composition's evidence for one run: an in-toto v1
@@ -459,6 +542,12 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 		return nil, err
 	}
 	sum := sha256.Sum256(raw)
+	// A private map with uncommitted changes has no commit to read it back
+	// from: evidence about it is never signed.
+	committed := true
+	for _, pm := range lock.PrivateMaps {
+		committed = committed && pm.Commit != ""
+	}
 	environment := map[string]string{}
 	for _, kv := range in.Env {
 		k, v, _ := strings.Cut(kv, "=")
@@ -489,7 +578,7 @@ func Evidence(lock *composition.Lock, in EvidenceInput) ([]byte, error) {
 			"map_release":    lock.MapRelease,
 			"conditions":     conditions,
 			"results":        in.Results,
-			"verifier":       Verifier(lock.MapRelease, os.Getenv),
+			"verifier":       Verifier(lock.MapRelease, committed, os.Getenv),
 		},
 	}
 	if len(in.SetAside) > 0 {

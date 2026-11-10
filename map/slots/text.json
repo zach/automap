@@ -1,0 +1,7 @@
+{
+  "id": "text",
+  "description": "Rasterizes fonts into glyph bitmaps for on-screen text: titles, menus, a HUD, any text the game draws itself.",
+  "examples": [
+    "stb-truetype"
+  ]
+}

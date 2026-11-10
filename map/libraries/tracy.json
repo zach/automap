@@ -42,7 +42,14 @@
         {
           "name": "default",
           "build_options": {},
-          "description": "The Tracy client as the tracy port builds it with its default features: TRACY_ENABLE on, the crash handler on, not on-demand, so the client records from startup and holds what it records until a profiler connects."
+          "description": "The Tracy client as the tracy port builds it with its default features: TRACY_ENABLE on, the crash handler on, not on-demand, so the client records from startup and holds what it records until a profiler connects. A build for development: in a player's copy that is memory that only grows."
+        },
+        {
+          "name": "on-demand",
+          "build_options": {
+            "vcpkg_features": "on-demand"
+          },
+          "description": "The Tracy client built with the tracy port's on-demand feature (TRACY_ON_DEMAND): it records only while a profiler is connected, so a run with none holds nothing and zones cost a check. It still starts with the process and listens on the network for a profiler; the port has no option to listen on localhost only."
         }
       ],
       "facts": {

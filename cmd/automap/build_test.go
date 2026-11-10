@@ -153,6 +153,27 @@ func TestABuildFailureReportsTheBuildLog(t *testing.T) {
 	if f := run.Result.Failures[0].DetailsFile; !strings.Contains(run.ReadFile(t, f), "stub_ui_setup.cpp") {
 		t.Errorf("details file %s doesn't show the failing source", f)
 	}
+	// The result itself says why: the log's first error, in a few lines.
+	msg := run.Result.Failures[0].Message
+	if !strings.Contains(msg, "stub_ui_setup.cpp") || !strings.Contains(msg, "error") || strings.Count(msg, "\n") > 5 {
+		t.Errorf("the failure's message doesn't quote the build's first error in a few lines:\n%s", msg)
+	}
+	if want := "The composition didn't build on "; !strings.HasPrefix(run.Result.Summary, want) {
+		t.Errorf("summary %q, want it to begin %q", run.Result.Summary, want)
+	}
+}
+
+// A start whose build fails says so plainly: no level was reached.
+func TestAStartThatDoesNotBuildSaysSo(t *testing.T) {
+	repo := buildableRepo(t)
+	repo.WriteFile(t, "map/recipes/library/stub-ui/stub_ui_setup.cpp", "this is not C++\n")
+
+	run := repo.Automap(t, "start", "--with", "stub-window", "--with", "stub-ui", "--map", "map", "--json")
+
+	run.ExpectExit(t, 1)
+	if !strings.Contains(run.Result.Summary, "; it didn't build on ") || strings.Contains(run.Result.Summary, "none") {
+		t.Errorf("summary %q, want \"…; it didn't build on <platform>: BUILD_FAILED.\"", run.Result.Summary)
+	}
 }
 
 func TestACrashOnStartupFailsTheSmokeRun(t *testing.T) {

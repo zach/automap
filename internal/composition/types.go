@@ -180,7 +180,21 @@ type Lock struct {
 }
 
 type PrivateMapPin struct {
-	Commit string `json:"commit"`
+	// ContentHash is the hash of the map's directory, evidence aside: what
+	// the lock pins. A lock a CLI before 0.2.0 wrote has only the commit.
+	ContentHash string `json:"content_hash,omitempty"`
+	// Commit is the commit that last changed the directory, when it had no
+	// uncommitted changes: where to read the map as it was pinned.
+	Commit string `json:"commit,omitempty"`
+}
+
+// Matches says whether a private map is still what the pin names: its
+// content hash, or for a pin with a commit alone, its commit.
+func (p PrivateMapPin) Matches(contentHash, commit string) bool {
+	if p.ContentHash != "" {
+		return p.ContentHash == contentHash
+	}
+	return p.Commit == commit
 }
 
 // Pin is one library's exact version in the lock (ADR-0036).
@@ -196,7 +210,10 @@ type Pin struct {
 }
 
 type Registry struct {
-	Kind   string `json:"kind"`
-	ID     string `json:"id,omitempty"`
-	Commit string `json:"commit"`
+	Kind string `json:"kind"`
+	ID   string `json:"id,omitempty"`
+	// A private map is named by its content hash, with its commit when it
+	// has one; the other registries by their commit.
+	ContentHash string `json:"content_hash,omitempty"`
+	Commit      string `json:"commit,omitempty"`
 }

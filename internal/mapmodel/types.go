@@ -13,8 +13,12 @@ type MapMeta struct {
 	Platforms    []string        `json:"platforms,omitempty"`
 	BuildBackend json.RawMessage `json:"build_backend,omitempty"`
 
-	Dir    string `json:"-"` // where the map was read from, as given
-	Commit string `json:"-"` // a private map's last commit in its git repository, or ""
+	Dir string `json:"-"` // where the map was read from, as given
+	// A private map's identity: the hash of its directory's content
+	// (evidence aside, which is about the map, not of it), and the commit
+	// that last changed it when it has no uncommitted changes, or "".
+	ContentHash string `json:"-"`
+	Commit      string `json:"-"`
 }
 
 type Slot struct {

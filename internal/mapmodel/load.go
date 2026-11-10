@@ -113,7 +113,8 @@ func (m *Map) readMap(dir, kind string, private *PrivateMap) *MapMeta {
 	}
 	meta.Dir = dir
 	if private != nil {
-		meta.Commit = lastCommit(dir)
+		meta.ContentHash, _ = ContentHash(dir, true, "evidence")
+		meta.Commit = cleanCommit(dir)
 	}
 	if (meta.Kind == "public") != (kind == "public") {
 		m.fail(f.name(), "only the public map has kind public")

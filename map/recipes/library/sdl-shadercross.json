@@ -48,6 +48,8 @@
   "probes": [],
   "adaptation_notes": [
     "The build fragment calls find_package(SDL3_shadercross CONFIG REQUIRED) and links SDL3_shadercross::SDL3_shadercross; its header is <SDL3_shadercross/SDL_shadercross.h>.",
-    "Setup glue calls SDL_ShaderCross_Init in the systems phase and SDL_ShaderCross_Quit at shutdown; the sdl-shadercross--sdl3 pairing compiles shaders for the composition's SDL_GPU device, and the assets binding cooks shader files at build time."
+    "Setup glue calls SDL_ShaderCross_Init in the systems phase and SDL_ShaderCross_Quit at shutdown; the sdl-shadercross--sdl3 pairing compiles shaders for the composition's SDL_GPU device, and the assets binding cooks shader files at build time.",
+    "automap_compile_shaders(<target> <stage>:<file>...), from the build fragment, compiles HLSL shader sources to SPIR-V when <target> builds and puts them in shaders/ beside the executable as <file's name>.spv; <stage> is vertex, fragment or compute, and the entry point is main. It uses the dxc compiler vcpkg installs with SDL_shadercross on Windows and x64 Linux, or one on the PATH. Where there is neither, as on macOS, it copies <file>.spv from beside the source: commit the SPIR-V a Windows or Linux build wrote.",
+    "The library is built without DXC, so a game ships no dxcompiler: it takes SPIR-V, not HLSL, at run time. A game that wants HLSL at run time or DXIL adds a private variant with the port's dxc feature and ships dxcompiler and dxil beside its executable."
   ]
 }

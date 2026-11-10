@@ -39,6 +39,9 @@ func TestEverySeededViolationIsCaught(t *testing.T) {
 			if run.Result.EvidenceFile != "" {
 				t.Errorf("a seed run wrote evidence %s", run.Result.EvidenceFile)
 			}
+			if run.Result.Level != "" {
+				t.Errorf("a seed run reports level %q; the broken scratch copy's level isn't the composition's", run.Result.Level)
+			}
 		})
 	}
 	if _, err := os.Stat(filepath.Join(repo.Dir, "evidence")); err == nil {
@@ -147,8 +150,8 @@ func TestAnABIDefineMismatchFailsAtLinkTimeOnMSVC(t *testing.T) {
 	run := repo.Automap(t, "verify", "--seed", "build-flags.abi-defines-match", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	atLinkTime := run.Result.Level == "none"
+	atLinkTime := strings.Contains(run.Result.Summary, "at link time")
 	if want := hostPlatform == "windows-x64-msvc"; atLinkTime != want {
-		t.Errorf("level %q: caught at link time %v, want %v on %s\n%s", run.Result.Level, atLinkTime, want, hostPlatform, run.Stdout)
+		t.Errorf("summary %q: caught at link time %v, want %v on %s\n%s", run.Result.Summary, atLinkTime, want, hostPlatform, run.Stdout)
 	}
 }

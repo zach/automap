@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zach/automap/internal/agentfiles"
 	"github.com/zach/automap/internal/composition"
 	"github.com/zach/automap/internal/verify"
 )
@@ -111,10 +112,46 @@ func eject(a *args, r *result) int {
 			return exitFailed
 		}
 	}
+	removeAgentFiles()
+	stays := "evidence/ stays as the record of what was verified"
+	for _, meta := range m.Maps[1:] {
+		stays += ", and " + filepath.ToSlash(meta.Dir) + "/, private map " + meta.ID + ", stays as it is"
+	}
 	r.OK = true
-	r.Summary = fmt.Sprintf("Ejected: %d Automap registry %s copied into %s/, and the manifest and lock removed. The repo is a plain CMake and vcpkg project.",
-		len(ports), plural(len(ports), "port", "ports"), EjectedPorts)
+	r.Summary = fmt.Sprintf("Ejected: %d Automap registry %s copied into %s/, and the manifest, the lock, the Automap section of AGENTS.md and the router skill removed. The repo is a plain CMake and vcpkg project; %s.",
+		len(ports), plural(len(ports), "port", "ports"), EjectedPorts, stays)
 	return exitOK
+}
+
+// removeAgentFiles takes out what start, extend and adopt wrote for the
+// developer's agents: the Automap section of AGENTS.md (and the file, and
+// CLAUDE.md's import of it, when nothing else is in it) and the router
+// skill in every skill directory. After eject nothing in the repo should
+// send an agent to a CLI and manifest that are gone.
+func removeAgentFiles() {
+	if raw, err := os.ReadFile("AGENTS.md"); err == nil {
+		if rest, had := agentfiles.RemoveSection(string(raw)); had {
+			if strings.TrimSpace(rest) != "" {
+				os.WriteFile("AGENTS.md", []byte(rest), 0o644)
+			} else {
+				os.Remove("AGENTS.md")
+				if claude, err := os.ReadFile("CLAUDE.md"); err == nil {
+					if rest := agentfiles.RemoveClaudeImport(string(claude)); strings.TrimSpace(rest) == "" {
+						os.Remove("CLAUDE.md")
+					} else if rest != string(claude) {
+						os.WriteFile("CLAUDE.md", []byte(rest), 0o644)
+					}
+				}
+			}
+		}
+	}
+	for _, p := range agentfiles.SkillPaths(".") {
+		os.RemoveAll(filepath.Dir(filepath.FromSlash(p)))
+	}
+	// Claude Code's skill directory is the CLI's own doing when nothing
+	// else is in it; os.Remove leaves a directory that has anything.
+	os.Remove(filepath.Join(".claude", "skills"))
+	os.Remove(".claude")
 }
 
 // registryPort copies a port from a git registry at a commit into dst,

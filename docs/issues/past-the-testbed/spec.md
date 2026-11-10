@@ -54,12 +54,16 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 21. As Automap's CI, I want to compare every variant's features against vcpkg's install plan for each reference composition, so that a fact about a build can't drift.
 22. As a developer's agent, I want a library's system packages as a list I can install and `verify` to name a missing one, instead of a failed port build.
 
-### Direction, for the product owner
+### Changing a composition
 
 23. As a developer's agent, I want to remove a library and to re-resolve after a manifest or private-map change with commands named for those jobs.
-24. As a developer, I want a private map's uncommitted changes read and marked, so that iterating on one doesn't need a commit per try and the lock never claims a commit it didn't read.
-25. As a game developer, I want text and fonts and data files in the public map.
-26. As a game developer, I want profiling in development builds and not in the release, and a profiler variant that can ship.
+24. As a developer, I want a private map's uncommitted changes read and marked, so that iterating on one doesn't need a commit per try, and a lock that checks in CI's shallow clone as it does on my machine.
+25. As a game developer, I want a profiler variant that can ship.
+
+### Direction, for the product owner
+
+26. As a game developer, I want text and fonts and data files in the public map.
+27. As a game developer, I want profiling in development builds and not in the release.
 
 ## Implementation Decisions
 
@@ -69,12 +73,14 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 - **Usage is generated from the command table,** so a command can't be missing from it. `--version`, `version`, `help` and `<command> --help` exit 0.
 - **A failed build's failure message ends with the log's first error lines.** A vcpkg download failure is `FETCH_FAILED` with the URL, from `verify` as from `fetch`.
 - **`find` summarizes; `show` details.** A `find` entry has `id`, `name`, `version`, `variants`, `slots`, `license` and `evidence` as one state and level per platform. `show library` keeps every evidence row.
-- **The executable lands in the build root.** The CLI configures with `CMAKE_RUNTIME_OUTPUT_DIRECTORY` set to the build directory.
+- **The CLI finds the executable.** It runs the one at the build root or, failing that, the one the target built anywhere in the build tree, from the executable's own directory.
 - **The router skill stays one file per topic.** `SKILL.md` routes; `game.md` and `private-maps.md` beside it hold the two longer guides, written and refreshed by the CLI with it.
 - **Window settings are context fields** SDL3's setup glue reads before it creates the window: `sdl3.window_title`, `sdl3.window_width`, `sdl3.window_height`, with the testbed's values as defaults.
 - **The reference workflow reads the composition.** A first job turns the manifest's `platforms` into the matrix and reads the CLI version from the router skill's metadata; each verify job downloads that release's binary and checks its SHA-256, and uploads `build/automap/*.log`.
-- **SDL3's default variant states what is built.** IBus is on: vcpkg unions features, so a variant can't promise a feature stays off when another port asks for it.
+- **A variant builds what it says.** vcpkg unions the features ports ask of a port, so a variant can't promise a feature stays off while another port in the map asks for it: Dear ImGui comes from an Automap registry port that asks for SDL3 without its default features, which keeps IBus, D-Bus and libsystemd out of every composition, and SDL3's variant states `vulkan` for every platform, as SDL_shadercross's port asks.
 - **System packages are a new platform fact,** `system_packages`, a list per platform and package manager, beside the prose; the platform contract moves to 1.1.0.
+- **`remove` and `resolve` are commands.** `remove <library>` is the other half of extend; `resolve` re-resolves against the lock's own release after the manifest or a private map changed; `upgrade` is `resolve` plus the move to a newer release.
+- **A private map is pinned by content.** The lock records the hash of its directory, as for an in-repo library, and the commit beside it when the directory is committed and clean; an uncommitted map composes with a warning and unsigned evidence.
 - **SDL_shadercross links DXC only where a variant asks for it.** The default variant compiles SPIR-V to DXBC, MSL and SPIR-V with no DXC at run time; the port keeps DXC as a build-time tool, and the build fragment offers a CMake function that compiles HLSL to SPIR-V with it.
 
 ## Out of Scope
@@ -83,6 +89,9 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 - A download workaround inside the CLI for networks that block source archives: `automap vendor` on an open network is the route.
 - A web testbed, a second build backend and NDA platforms ([ADR-0056](../../adr/0056-v1-platforms-desktop-only.md), [ADR-0034](../../adr/0034-vcpkg-is-the-v1-build-backend.md), [ADR-0083](../../adr/0083-nda-platforms-are-out-of-scope.md)).
 
-## Decisions the product owner makes
+## Decisions the product owner made
 
-Tickets 13, 14, 16 and 17 change an ADR or what the map covers, and ticket 18 spends on evals and cuts a release; each waits for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI.
+- The public map covers text and data files ([ADR-0084](../../adr/0084-the-map-covers-text-and-data-files.md), ticket 17).
+- A composition has one set of slots for every build type ([ADR-0085](../../adr/0085-a-composition-has-one-set-of-slots-for-every-build-type.md), ticket 16).
+
+Ticket 18's eval run and release wait for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI: command names beyond the five jobs and how the lock records a private map are the spec's details (SPEC §12.3), and a variant of a library the map covers, or the registry its port comes from, is curation.

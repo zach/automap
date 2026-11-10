@@ -21,7 +21,9 @@ Evaluated 2026-11-10. Spintacular is a complete single-player Windows game the p
 3. **Results and search cost context.** `find --json` is 600 lines without the slots [6]; `find text` finds nothing though a library fills `text` [46]; a failed build's result carries no cause, so six runs in a row needed the log opened to learn it was one blocked download [19].
 4. **The map says two things vcpkg doesn't build** [14, 42], and nothing in Automap's CI would catch a third.
 
-**[Inference]** The order of value follows the report's own ranking: the bugs first, then the testbed-to-game path, then results and search, then map truth. Coverage (text, data files) and per-build-type choices matter, but they set direction, so they are the product owner's to decide ([ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md)).
+**[Verified]** A fourth bug, found while fixing the third: the lock pins a private map at the last commit that changed its directory, and in a shallow clone, which is how CI checks a repo out, that is the clone's one commit, so a composition with a private variant fails its lock check in CI (ticket 14).
+
+**[Inference]** The order of value follows the report's own ranking: the bugs first, then the testbed-to-game path, then results and search, then map truth. Coverage (text, data files) and libraries for development builds only matter, but they set direction, so they are the product owner's to decide ([ADR-0069](../adr/0069-human-checkpoints-only-where-direction-is-set.md)).
 
 ## The 50 entries
 
@@ -42,7 +44,7 @@ Disposition names the ticket in `docs/issues/past-the-testbed/`, or says why not
 | 11 | OK | Failure results are honest | n/a | | none |
 | 12 | FRICTION | "the composition is none on …" | Verified: `writeAndVerify`, `runVerify` | The level is spliced into a sentence written for a level that was reached | 05 |
 | 13 | ENV | GitHub archive downloads blocked; nothing in Automap helps | Verified: this repo's sessions hit the same proxy | vcpkg downloads sources from `/archive/` URLs | 05 (names the URL), 08 (`vendor` as the route) |
-| 14 | GAP | SDL3's variant says IBus is off; the build has it | Verified by dry run: the plan is `sdl3[core,dbus,ibus,vulkan,wayland,x11]` | vcpkg unions features: `imgui[sdl3-binding]` depends on `sdl3` with default features | 11 |
+| 14 | GAP | SDL3's variant says IBus is off; the build has it | Verified by dry run: the plan is `sdl3[core,dbus,ibus,vulkan,wayland,x11]` | vcpkg unions features: `imgui[sdl3-binding]` depends on `sdl3` with default features | 11 (Dear ImGui from a registry port that doesn't) |
 | 15 | GAP | The skill doesn't say how a testbed becomes a game | Verified: `SKILL.md.tmpl` | The skill covers start, extend, upgrade, verify | 08 |
 | 16 | OK | Day-one composition reached `probed` locally | n/a | | none |
 | 17 | OK | `extend` is quick and correct | n/a | | none |
@@ -55,9 +57,9 @@ Disposition names the ticket in `docs/issues/past-the-testbed/`, or says why not
 | 24 | OK | A private map is easy to start | n/a | | none |
 | 25 | FRICTION | No guide to writing a private map | Verified: the skill never mentions private maps | | 08 |
 | 26 | OK | Validation errors are specific | n/a | | none |
-| 27 | FRICTION | A private map change needs a commit before the CLI reads it | Partly: a private map with no commit is refused (`Resolve`); once it has one, the CLI reads the working tree and pins the last commit, so uncommitted changes are read but not pinned | `lastCommit` is `git log -1 -- .` | 14 (owner decides the pin) |
+| 27 | FRICTION | A private map change needs a commit before the CLI reads it | Partly: a private map with no commit is refused (`Resolve`); once it has one, the CLI reads the working tree and pins the last commit, so uncommitted changes are read but not pinned | `lastCommit` is `git log -1 -- .` | 14 |
 | 28 | GAP (bug) | Two libraries on one vcpkg port break `vcpkg.json` | Verified: `VcpkgJSON` and `vcpkgOverrides` append per library | No merge by port | 01 |
-| 29 | GAP | Nothing re-resolves or removes; `upgrade` does, with "0 files updated" and a doubled `LOCK_MISMATCH` | Verified: `upgrade` loads the private maps' working tree for both the old and the new map, so a changed private reference equals itself; `Check` reports a pin once per platform | | 03 (carry and dedupe), 13 (commands; owner decides) |
+| 29 | GAP | Nothing re-resolves or removes; `upgrade` does, with "0 files updated" and a doubled `LOCK_MISMATCH` | Verified: `upgrade` loads the private maps' working tree for both the old and the new map, so a changed private reference equals itself; `Check` reports a pin once per platform | | 03 (carry and dedupe), 13 (commands) |
 | 30 | OK | The allocation binding and probe for a new library pass | n/a | | none |
 | 31 | OK | The facades are the right seam | n/a | | none |
 | 32 | OK, with two things found in the source | The executable must land in the build root and runs from there | Verified: `runCapturing` | The CLI joins the build directory and the target's name | 07 (the CLI puts it there), 08 |
@@ -71,8 +73,8 @@ Disposition names the ticket in `docs/issues/past-the-testbed/`, or says why not
 | 40 | OK | The game verifies as the composition's executable | n/a | | none |
 | 41 | OK | Windows and Linux render the same | n/a | | none |
 | 42 | GAP | "No DXC at runtime" isn't true of the DLL the port builds | Verified in the port: `SDLSHADERCROSS_DXC=ON` on Windows and x64 Linux links DXC into the library | The note describes the code path, not the link | 15 |
-| 43 | GAP | Tracy's one variant can't ship; choices can't differ by build type | Verified: `tracy.json` has one variant; the manifest has one set of choices | | 16 (owner decides) |
-| 44 | GAP | No `automap remove`; orphans left behind | Verified | | 13 (owner decides) |
+| 43 | GAP | Tracy's one variant can't ship; choices can't differ by build type | Verified: `tracy.json` has one variant; the manifest has one set of choices | | 16 (the variant; the owner decides choices per build type) |
+| 44 | GAP | No `automap remove`; orphans left behind | Verified | | 13 |
 | 45 | OK | The facade made removal free for the game | n/a | | none |
 | 46 | FRICTION | `find text` finds nothing though a library fills `text` | Verified: `find` matches library ids and names only | | 06 |
 | 47 | OK | `verify --platform` on the wrong machine says what to do | n/a | | none |

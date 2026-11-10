@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -258,31 +259,53 @@ func find(a *args, r *result) int {
 		r.fail(fmt.Sprintf("UNKNOWN_ENTRY(slot %s)", slot), "The map has no slot with id "+slot+".")
 		return exitUsage
 	}
-	var ids []string
+	type hit struct {
+		id, match string
+		rank      int
+	}
+	var hits []hit
 	for id, lib := range m.Libraries {
 		if slot != "" && !slices.Contains(lib.Slots, slot) {
 			continue
 		}
-		if query != "" && !strings.Contains(id, query) && !strings.Contains(strings.ToLower(lib.Name), query) {
+		match, rank := matchLibrary(m, lib, query)
+		if query != "" && match == "" {
 			continue
 		}
-		ids = append(ids, id)
+		hits = append(hits, hit{id, match, rank})
 	}
-	sort.Strings(ids)
+	// The closest matches first: by id or name, then by slot, then by a
+	// description.
+	sort.Slice(hits, func(i, j int) bool {
+		if hits[i].rank != hits[j].rank {
+			return hits[i].rank < hits[j].rank
+		}
+		return hits[i].id < hits[j].id
+	})
 	var found []string
-	for _, id := range ids {
-		v := m.Libraries[id].Newest()
-		var variants []string
+	for _, h := range hits {
+		lib := m.Libraries[h.id]
+		v := lib.Newest()
+		variants := []string{}
 		for _, x := range v.Variants {
 			variants = append(variants, x.Name)
 		}
-		e := entry{"kind": "library", "id": id, "version": v.Version, "variants": variants}
-		if evidence := libraryEvidence(m, id, time.Now()); len(evidence) > 0 {
-			e["evidence"] = evidence
-			warnEvidence(r, evidence)
+		slots := slices.Clone(lib.Slots)
+		sort.Strings(slots)
+		e := entry{"kind": "library", "id": h.id, "name": lib.Name, "version": v.Version, "variants": variants, "slots": slots,
+			"license": lib.License.SPDX, "license_class": lib.License.Class}
+		if h.match != "" {
+			e["match"] = h.match
 		}
+		// One line per platform; show library has every binding's and
+		// pairing's evidence.
+		evidence := libraryEvidence(m, h.id, time.Now())
+		if summary := evidenceByPlatform(evidence); len(summary) > 0 {
+			e["evidence_by_platform"] = summary
+		}
+		warnEvidence(r, evidence)
 		r.Entries = append(r.Entries, e)
-		found = append(found, id+" "+v.Version)
+		found = append(found, h.id+" "+v.Version)
 	}
 	r.OK = true
 	what := "in the map"
@@ -294,15 +317,106 @@ func find(a *args, r *result) int {
 	case query != "":
 		what = fmt.Sprintf("match %q", query)
 	}
+	if len(found) == 1 {
+		what = strings.NewReplacer("fill ", "fills ", "match ", "matches ").Replace(what)
+	}
 	if len(found) == 0 {
-		r.Summary = "No libraries " + what + "."
+		// The slots are the map's own words for what a library does: the
+		// next question can be asked in them.
+		var slots []string
+		for _, id := range sortedKeys(m.Slots) {
+			filling := librariesFilling(m, id)
+			slots = append(slots, fmt.Sprintf("%s (%d)", id, len(filling)))
+			r.Entries = append(r.Entries, entry{"kind": "slot", "id": id, "description": m.Slots[id].Description, "libraries": filling})
+		}
+		r.Summary = "No libraries " + what + ". The map's slots, each with how many libraries fill it: " + strings.Join(slots, ", ") + ". automap find --slot <slot> lists a slot's libraries."
 		return exitOK
 	}
 	r.Summary = fmt.Sprintf("%d %s %s: %s.", len(found), plural(len(found), "library", "libraries"), what, strings.Join(found, ", "))
-	if len(found) == 1 && slot != "" {
-		r.Summary = fmt.Sprintf("1 library fills %s: %s.", slot, found[0])
-	}
 	return exitOK
+}
+
+// matchLibrary says how a library matches a find query, and how closely:
+// by its id or name, by a slot it fills (the slot's id, then its
+// description or examples), or by a variant. No match is "". Ids and names
+// match by substring; descriptions match by whole words, so "text" finds a
+// slot that draws text and not one that loads textures.
+func matchLibrary(m *mapmodel.Map, lib *mapmodel.Library, query string) (string, int) {
+	if query == "" {
+		return "", 0
+	}
+	has := func(s string) bool { return strings.Contains(strings.ToLower(s), query) }
+	says := func(s string) bool { return saysWords(s, query) }
+	switch {
+	case has(lib.ID):
+		return "id", 0
+	case has(lib.Name):
+		return "name", 0
+	}
+	slots := slices.Clone(lib.Slots)
+	sort.Strings(slots)
+	for _, id := range slots {
+		if has(id) {
+			return "slot " + id, 1
+		}
+	}
+	for _, id := range slots {
+		slot := m.Slots[id]
+		if slot != nil && (says(slot.Description) || slices.ContainsFunc(slot.Examples, has)) {
+			return "slot " + id + ": " + slot.Description, 2
+		}
+	}
+	for _, v := range lib.Newest().Variants {
+		if has(v.Name) || says(v.Description) {
+			return "variant " + v.Name, 3
+		}
+	}
+	return "", 0
+}
+
+var wordSplit = regexp.MustCompile(`[^a-z0-9]+`)
+
+// saysWords reports whether text has every word of the query as a word of
+// its own, in the singular or the plural.
+func saysWords(text, query string) bool {
+	words := map[string]bool{}
+	for _, w := range wordSplit.Split(strings.ToLower(text), -1) {
+		words[w] = true
+		words[strings.TrimSuffix(w, "s")] = true
+	}
+	for _, q := range wordSplit.Split(strings.ToLower(query), -1) {
+		if q != "" && !words[q] && !words[strings.TrimSuffix(q, "s")] {
+			return false
+		}
+	}
+	return true
+}
+
+// evidenceByPlatform sums a library's published evidence up per platform,
+// as "<level> <state>": the lowest level and the worst state across its
+// bindings and pairings.
+func evidenceByPlatform(evidence []published) map[string]string {
+	states := []string{"current", "stale", "broken"}
+	levels := []string{"hardware", "probed", "smoke", "builds", "none"}
+	worst := map[string]*published{}
+	for _, e := range evidence {
+		w := worst[e.Platform]
+		if w == nil {
+			worst[e.Platform] = &published{Level: e.Level, State: e.State}
+			continue
+		}
+		if slices.Index(states, e.State) > slices.Index(states, w.State) {
+			w.State = e.State
+		}
+		if slices.Index(levels, e.Level) > slices.Index(levels, w.Level) {
+			w.Level = e.Level
+		}
+	}
+	out := map[string]string{}
+	for platform, w := range worst {
+		out[platform] = w.Level + " " + w.State
+	}
+	return out
 }
 
 func plural(n int, one, many string) string {
@@ -310,4 +424,13 @@ func plural(n int, one, many string) string {
 		return one
 	}
 	return many
+}
+
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

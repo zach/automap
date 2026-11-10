@@ -74,7 +74,7 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 		fails = append(fails, failure("LOCK_MISMATCH("+lib+")", format, args...))
 	}
 	if !slices.Equal(sortedKeys(lock.Pins), used) {
-		fails = append(fails, failure("LOCK_MISMATCH", "the lock pins %v but the manifest's slots hold %v; re-resolve with automap extend or upgrade", sortedKeys(lock.Pins), used))
+		fails = append(fails, failure("LOCK_MISMATCH", "the lock pins %v but the manifest's slots hold %v; automap resolve re-resolves the lock from the manifest (automap remove <library> takes a library out, files and all)", sortedKeys(lock.Pins), used))
 	}
 	if lock.MapRelease != man.MapRelease {
 		fails = append(fails, failure("LOCK_MISMATCH", "the lock's map_release %s differs from the manifest's %s", lock.MapRelease, man.MapRelease))
@@ -87,8 +87,11 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 		}
 		choice := man.Variants[lib]
 		if pin.Variant != choice.Default {
-			mismatch(lib, "%s is pinned as variant %s, but the manifest asks for %s", lib, pin.Variant, choice.Default)
+			mismatch(lib, "%s is pinned as variant %s, but the manifest asks for %s; automap resolve re-resolves it", lib, pin.Variant, choice.Default)
 		}
+		// A problem with the library's one pin is the same on every
+		// platform that uses it: say it once.
+		said := map[string]bool{}
 		for _, p := range man.Platforms {
 			ppin := pin
 			if pp, ok := pin.Platforms[p]; ok {
@@ -97,9 +100,17 @@ func Check(m *mapmodel.Map, man *Manifest, lock *Lock) []Failure {
 			if ppin.Variant != choice.On(p) {
 				mismatch(lib, "%s on %s is pinned as variant %s, but the manifest asks for %s", lib, p, ppin.Variant, choice.On(p))
 			}
-			if msg := pinAgainstMap(m, l, ppin); msg != "" {
+			if msg := pinAgainstMap(m, l, ppin); msg != "" && !said[msg] {
+				said[msg] = true
 				mismatch(lib, "%s", msg)
 			}
+		}
+	}
+	// A private map the lock pins must still be what it pinned: its
+	// recipes, facts and probes are read as they are now.
+	for _, meta := range m.Maps[1:] {
+		if pin, pinned := lock.PrivateMaps[meta.ID]; pinned && !pin.Matches(meta.ContentHash, meta.Commit) {
+			fails = append(fails, failure("LOCK_MISMATCH(private map "+meta.ID+")", "private map %s at %s has changed since the lock pinned it; automap resolve re-pins it and carries its changes into the repo", meta.ID, meta.Dir))
 		}
 	}
 	for _, c := range sortedKeys(lock.Contracts) {
@@ -133,8 +144,8 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 		if pin.Path != l.Source.Path {
 			return fmt.Sprintf("%s is pinned at path %q, but the map says %q", l.ID, pin.Path, l.Source.Path)
 		}
-		if hash, err := SourceHash(l.Source.Path); err != nil || hash != pin.ContentHash {
-			return fmt.Sprintf("%s's source in %s has changed since the lock pinned it; re-resolve with automap upgrade %s", l.ID, l.Source.Path, l.ID)
+		if !SourceMatches(l.Source.Path, pin.ContentHash) {
+			return fmt.Sprintf("%s's source in %s has changed since the lock pinned it; automap resolve re-pins it", l.ID, l.Source.Path)
 		}
 		return ""
 	}
@@ -147,13 +158,6 @@ func pinAgainstMap(m *mapmodel.Map, l *mapmodel.Library, pin Pin) string {
 	}
 	if pin.Registry != nil && pin.Registry.Kind == "vcpkg-curated" && pin.Registry.Commit != vcpkgBaseline(m) {
 		return fmt.Sprintf("%s's curated registry commit differs from the map's vcpkg baseline", l.ID)
-	}
-	if pin.Registry != nil && pin.Registry.Kind == "private" {
-		for _, meta := range m.Maps[1:] {
-			if meta.ID == pin.Registry.ID && meta.Commit != pin.Registry.Commit {
-				return fmt.Sprintf("private map %s has changed since the lock pinned %s from it; re-resolve with automap upgrade %s", meta.ID, l.ID, l.ID)
-			}
-		}
 	}
 	return ""
 }

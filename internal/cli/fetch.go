@@ -43,7 +43,13 @@ func fetchCmd(a *args, r *result) int {
 	log, installRoot := logFile("fetch-"+platform+".log"), filepath.Join("build", "automap", platform, "vcpkg_installed")
 	if _, err := verify.Vcpkg(vcpkg, ".", abs(installRoot), log, nil, "install"); err != nil {
 		r.Summary = "vcpkg couldn't download what the composition needs."
-		r.fail("FETCH_FAILED", err.Error()+"; the log has the details.")
+		msg := err.Error() + "; the log has the details."
+		if raw, readErr := os.ReadFile(log); readErr == nil {
+			if d := verify.DiagnoseBuild(string(raw)); d.URL != "" {
+				msg = "vcpkg couldn't download " + d.URL + "; the log has the details."
+			}
+		}
+		r.fail("FETCH_FAILED", msg)
 		r.Failures[len(r.Failures)-1].DetailsFile = filepath.ToSlash(log)
 		return exitFailed
 	}

@@ -29,7 +29,7 @@ func Extend(m *mapmodel.Map, base *Manifest, req ExtendRequest) (*Manifest, []Fa
 		return nil, []Failure{failure("UNKNOWN_ENTRY(library "+req.Library+")", "The map has no library %s; automap find lists libraries.", req.Library)}
 	}
 	if _, present := base.Variants[req.Library]; present {
-		return nil, []Failure{failure("ALREADY_PRESENT("+req.Library+")", "%s is already in the composition; use automap upgrade to change its version or variant.", req.Library)}
+		return nil, []Failure{failure("ALREADY_PRESENT("+req.Library+")", "%s is already in the composition; automap upgrade %[1]s moves its version, and editing its variant in the manifest and running automap resolve changes its variant.", req.Library)}
 	}
 	v := lib.Newest()
 	variant := req.Variant
@@ -83,6 +83,74 @@ func Upgrade(m *mapmodel.Map, base *Manifest, mapRelease string) *Manifest {
 	man.MapRelease = mapRelease
 	addDefaults(m, man)
 	return man
+}
+
+// Remove takes one library out of a composition: it empties the slots the
+// library fills, drops its variant and its recipes' glue entries, sets
+// every choice that named one of those slots back to its contract's
+// default, and drops the choices of contracts no remaining library
+// touches. It returns the new manifest and the slots emptied. It is a pure
+// function of the map and the manifest.
+func Remove(m *mapmodel.Map, base *Manifest, library string) (*Manifest, []string, []Failure) {
+	if !slices.Contains(base.Libraries(), library) {
+		return nil, nil, []Failure{failure("UNKNOWN_ENTRY(library "+library+")", "%s isn't in the composition; its libraries are %s.", library, strings.Join(base.Libraries(), ", "))}
+	}
+	man := copyManifest(base)
+	var slots []string
+	for slot, lib := range man.Slots {
+		if lib == library {
+			slots = append(slots, slot)
+			delete(man.Slots, slot)
+		}
+	}
+	slices.Sort(slots)
+	delete(man.Variants, library)
+	for key := range man.Glue.Bindings {
+		if strings.HasPrefix(key, library+"/") {
+			delete(man.Glue.Bindings, key)
+		}
+	}
+	for key := range man.Glue.Pairings {
+		if slices.Contains(strings.Split(key, "/"), library) {
+			delete(man.Glue.Pairings, key)
+		}
+	}
+	delete(man.Glue.Setup, library)
+
+	// The contracts still in play are those a remaining library declares
+	// facts for; a choice at any other contract decides nothing.
+	inPlay := map[string]bool{}
+	for _, lib := range man.Libraries() {
+		l := m.Libraries[lib]
+		if l == nil {
+			continue
+		}
+		v := l.Newest()
+		for c := range v.Facts {
+			inPlay[c] = true
+		}
+		if variant := v.Variant(man.Variants[lib].Default); variant != nil {
+			for c := range variant.Facts {
+				inPlay[c] = true
+			}
+		}
+	}
+	for cid, choices := range man.Choices {
+		c := m.LatestContract(cid)
+		if !inPlay[cid] || c == nil {
+			delete(man.Choices, cid)
+			continue
+		}
+		for id, value := range choices {
+			name, _ := value.(string)
+			if slot, ok := strings.CutSuffix(name, "-slot"); ok && man.Slots[slot] == "" {
+				var def any
+				json.Unmarshal(c.Choices[id].Default, &def)
+				choices[id] = def
+			}
+		}
+	}
+	return man, slots, nil
 }
 
 // addDefaults adds the choice defaults of every contract the composition

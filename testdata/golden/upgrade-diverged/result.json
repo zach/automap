@@ -6,7 +6,7 @@
   "warnings": [
     {
       "code": "GLUE_DIVERGED(glue/stub-ui/stub_ui_allocation.cpp)",
-      "message": "glue/stub-ui/stub_ui_allocation.cpp differs from map-2026.09.01's reference, so upgrade left it as it is; map-2026.10.01's reference is beside it at glue/stub-ui/stub_ui_allocation.cpp.reference. Carry over what applies, using the recipe's adaptation notes (automap show recipe \u003cid\u003e)."
+      "message": "glue/stub-ui/stub_ui_allocation.cpp differs from the reference it was copied from, so upgrade left it as it is; the new reference is beside it at glue/stub-ui/stub_ui_allocation.cpp.reference. Carry over what applies, using the recipe's adaptation notes (automap show recipe \u003cid\u003e)."
     }
   ],
   "failures": [],

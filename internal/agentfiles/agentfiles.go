@@ -54,8 +54,8 @@ This engine is an Automap composition. Before changing any glue, read the router
 
 - Manifest: ` + "`automap.manifest.json`" + `. Lock: ` + "`automap.lock.json`" + `, which only the CLI writes.
 - Slots: ` + strings.Join(slots, ", ") + `.
-- Build: ` + "`cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake && cmake --build build`" + `
-- Test: ` + "`automap verify --json`" + `
+- Test: ` + "`automap verify --json`" + `, which builds a Debug build in ` + "`build/automap/<platform>/`" + `, runs it headless and runs the probes.
+- Build: ` + "`cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake && cmake --build build`" + `. Without ` + "`VCPKG_ROOT`" + `, use the vcpkg the CLI keeps: the first line of ` + "`build/automap/build-<platform>.log`" + ` is the configure command ` + "`automap verify`" + ` ran, toolchain path included.
 - Run: ` + "`./build/" + in.Executable + "`" + `
 ` + endMarker + "\n"
 }
@@ -81,6 +81,34 @@ func UpdateAgentsMD(existing, section string) string {
 	return existing + sep + section
 }
 
+// RemoveSection returns existing without its Automap section, and whether
+// it had one. Everything outside the markers keeps its bytes, but for the
+// blank line the section was appended after.
+func RemoveSection(existing string) (string, bool) {
+	begin := strings.Index(existing, beginMarker)
+	end := strings.Index(existing, endMarker)
+	if begin < 0 || end < begin {
+		return existing, false
+	}
+	before := existing[:begin]
+	after := strings.TrimPrefix(existing[end+len(endMarker):], "\n")
+	if after == "" && strings.HasSuffix(before, "\n\n") {
+		before = strings.TrimSuffix(before, "\n")
+	}
+	return before + after, true
+}
+
+// RemoveClaudeImport returns CLAUDE.md without the import line.
+func RemoveClaudeImport(existing string) string {
+	var kept []string
+	for _, line := range strings.SplitAfter(existing, "\n") {
+		if strings.TrimSpace(line) != ClaudeImport {
+			kept = append(kept, line)
+		}
+	}
+	return strings.Join(kept, "")
+}
+
 // ClaudeImport is the line that makes Claude Code read AGENTS.md.
 const ClaudeImport = "@AGENTS.md"
 
@@ -101,9 +129,25 @@ func AddClaudeImport(existing string) (string, bool) {
 //go:embed SKILL.md.tmpl
 var skillTemplate string
 
+//go:embed game.md.tmpl
+var gameTemplate string
+
+//go:embed private-maps.md.tmpl
+var privateMapsTemplate string
+
+// skillFiles are the router skill's files, by name in its directory:
+// SKILL.md routes, and the guides beside it hold what is too long for it.
+var skillFiles = map[string]*string{"SKILL.md": &skillTemplate, "game.md": &gameTemplate, "private-maps.md": &privateMapsTemplate}
+
 // RouterSkill is the router skill's SKILL.md at a CLI version.
-func RouterSkill(version string) string {
-	t := template.Must(template.New("skill").Funcs(template.FuncMap{"inc": func(i int) int { return i + 1 }}).Parse(skillTemplate))
+func RouterSkill(version string) string { return skillFile("SKILL.md", version) }
+
+// SkillGuide is one of the guides beside SKILL.md, game.md or
+// private-maps.md, at a CLI version.
+func SkillGuide(name, version string) string { return skillFile(name, version) }
+
+func skillFile(name, version string) string {
+	t := template.Must(template.New(name).Funcs(template.FuncMap{"inc": func(i int) int { return i + 1 }}).Parse(*skillFiles[name]))
 	var b strings.Builder
 	if err := t.Execute(&b, struct {
 		Version string
@@ -112,6 +156,33 @@ func RouterSkill(version string) string {
 		panic(err)
 	}
 	return b.String()
+}
+
+// SkillFiles is every file of the router skill at a CLI version, by its
+// name in the skill's directory.
+func SkillFiles(version string) map[string]string {
+	out := map[string]string{}
+	for name := range skillFiles {
+		out[name] = skillFile(name, version)
+	}
+	return out
+}
+
+// skillDirFiles is every file of the router skill in the directory that
+// holds its SKILL.md at p.
+func skillDirFiles(p, version string) map[string][]byte {
+	out := map[string][]byte{}
+	for name := range skillFiles {
+		out[path.Join(path.Dir(p), name)] = []byte(skillFile(name, version))
+	}
+	return out
+}
+
+// IsAgentFile says whether a path in the repo is one of the files this
+// package maintains: commands merge into them where they exist, never keep
+// them as found.
+func IsAgentFile(p string) bool {
+	return p == "AGENTS.md" || p == "CLAUDE.md" || strings.Contains(p, "/skills/automap/")
 }
 
 // otherSkillDirs are other agents' skill directories; the router skill goes
@@ -146,7 +217,9 @@ func Files(root, version string, in SectionInput) (map[string][]byte, error) {
 		}
 	}
 	for _, p := range SkillPaths(root) {
-		out[p] = []byte(RouterSkill(version))
+		for file, data := range skillDirFiles(p, version) {
+			out[file] = data
+		}
 	}
 	return out, nil
 }
@@ -161,7 +234,9 @@ func StaleSkills(root, version string) map[string][]byte {
 			continue
 		}
 		if m := skillVersion.FindStringSubmatch(string(raw)); m != nil && compareSemver(m[1], version) < 0 {
-			out[p] = []byte(RouterSkill(version))
+			for file, data := range skillDirFiles(p, version) {
+				out[file] = data
+			}
 		}
 	}
 	return out

@@ -24,7 +24,10 @@
         "fetch",
         "vendor",
         "find",
-        "show"
+        "show",
+        "version",
+        "resolve",
+        "remove"
       ]
     },
     "cli_version": {
@@ -106,7 +109,7 @@
     },
     "entries": {
       "type": "array",
-      "description": "find and show: the map entries found, each with its kind, id, facts and evidence states.",
+      "description": "find and show: the map entries found. show gives one entry with its definition and, for a library, a row of evidence per binding or pairing and platform. find gives a short entry per library: name, version, variants, slots, license, how it matched the query, and evidence_by_platform; when no library matches, the entries are the map's slots.",
       "items": {
         "type": "object",
         "required": [
@@ -124,6 +127,14 @@
           },
           "id": {
             "type": "string"
+          },
+          "evidence_by_platform": {
+            "type": "object",
+            "description": "find: per platform, \"<level> <state>\", the lowest level and the worst state across the library's bindings and pairings.",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(none|builds|smoke|probed|hardware) (current|stale|broken)$"
+            }
           },
           "evidence": {
             "type": "array",

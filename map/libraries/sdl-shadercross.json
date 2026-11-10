@@ -28,7 +28,7 @@
         "vcpkg": {
           "port": "sdl3-shadercross",
           "registry": "automap",
-          "port_version": 1
+          "port_version": 2
         }
       },
       "cmake": {
@@ -41,13 +41,13 @@
         {
           "name": "default",
           "build_options": {},
-          "description": "SDL_shadercross at the commit vcpkg's port pins (it has no release tags), from the Automap registry's port: vcpkg's port depends on directx-dxc, which doesn't build on macOS, so Automap's makes DXC a dependency only on Windows and x64 Linux and builds without it elsewhere. Compiles SPIR-V to SPIR-V, DXBC, DXIL (with DXC) and MSL, and reflects it."
+          "description": "SDL_shadercross at the commit vcpkg's port pins (it has no release tags), from the Automap registry's port, built without DXC on every platform: it compiles SPIR-V to DXBC (through the system's d3dcompiler_47.dll on Windows), MSL and SPIR-V, and reflects it, so a game that hands it SPIR-V ships nothing extra. It takes no HLSL source and makes no DXIL at run time; the port's dxc feature links DXC in for that, and a program built with it ships dxcompiler and dxil. Where vcpkg has DXC (Windows, x64 Linux), the port still installs it as a tool, which the build fragment's automap_compile_shaders() uses to compile HLSL to SPIR-V when the game builds."
         }
       ],
       "facts": {
         "assets": {
           "usage": "both",
-          "file_io_hook": "every function takes SPIR-V or HLSL as bytes or a string; it reads no file itself (HLSL includes aside, which go through DXC)",
+          "file_io_hook": "every function takes SPIR-V as bytes; it reads no file itself",
           "reload_hook": null,
           "output_settings": [
             "the target shader format",
@@ -77,7 +77,7 @@
           "min_language_standard": "C99",
           "exceptions": "never-thrown",
           "rtti": "no-constraint",
-          "consumer_flags": "SDL_shadercross allocates with SDL_malloc, so SDL3's allocation binding routes it; it links SPIRV-Cross statically and loads d3dcompiler_47.dll at runtime on Windows for DXBC."
+          "consumer_flags": "SDL_shadercross allocates with SDL_malloc, so SDL3's allocation binding routes it; it links SPIRV-Cross statically and loads d3dcompiler_47.dll at runtime on Windows for DXBC. This build links no DXC: SDL_SHADERCROSS_DXC is not defined, and the functions that take HLSL or make DXIL fail with an error."
         },
         "platform": {
           "targets": [

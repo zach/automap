@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -124,9 +125,32 @@ func TestFindFetchesEvidenceFromMainAndKeepsItForOfflineUse(t *testing.T) {
 	}
 	repo := releaseRepo(t, s, t.TempDir())
 
-	expectStubUIStates(t, repo.Automap(t, "find", "stub-ui", "--json"))
+	expectStubUIStates(t, repo.Automap(t, "show", "library", "stub-ui", "--json"))
 	s.Close()
-	expectStubUIStates(t, repo.Automap(t, "find", "stub-ui", "--json"))
+	expectStubUIStates(t, repo.Automap(t, "show", "library", "stub-ui", "--json"))
+}
+
+// find sums a library's evidence up per platform: the worst state and the
+// lowest level across its bindings and pairings. show has every row.
+func TestFindSumsEvidenceUpPerPlatform(t *testing.T) {
+	repo := fixtureRepo(t)
+	for p, content := range stubUIEvidence() {
+		repo.WriteFile(t, "map/"+p, content)
+	}
+
+	run := repo.Automap(t, "find", "stub-ui", "--map", "map", "--json")
+
+	run.ExpectExit(t, 0)
+	if len(run.Result.Entries) == 0 || run.Result.Entries[0]["id"] != "stub-ui" {
+		t.Fatalf("entries %v, want stub-ui first", run.Result.Entries)
+	}
+	e := run.Result.Entries[0]
+	if got, want := fmt.Sprint(e["evidence_by_platform"]), "map[linux-x64-clang:smoke broken]"; got != want {
+		t.Errorf("stub-ui's evidence_by_platform %s, want %s", got, want)
+	}
+	if e["evidence"] != nil {
+		t.Errorf("find carries evidence rows %v; show library has those", e["evidence"])
+	}
 }
 
 func TestVerifyWarnsAboutStaleOrBrokenPublishedEvidenceForTheLocksPins(t *testing.T) {

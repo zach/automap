@@ -123,11 +123,11 @@ jobs:
           - name: macOS
             os: macos-latest
           - group: core
-            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed|TestTheCustomAdoptEvalsEngineCanBeAdoptedAndEjected
+            tests: TestTheTestbedStartsProbed|TestTheTestbedExtendsWithJoltProbed|TestTheTestbedExtendsWithJoltAndGLMProbed|TestTheTestbedWithDoublePrecisionJoltProbed|TestTheTestbedWithDeterministicJoltProbed|TestTheCustomAdoptEvalsEngineCanBeAdoptedAndEjected|TestALibrarysPortBuildsTheSameFeaturesInEveryReferenceComposition
           - group: slots
-            tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed
+            tests: TestTheTestbedExtendsWithJoltAndEnkiTSProbed|TestTheTestbedExtendsWithJoltAndMimallocProbed|TestTheTestbedExtendsWithSpdlogAndTracyProbed|TestTheTestbedExtendsWithEnkiTSTracyAndFlecsProbed|TestTheTestbedWithOnDemandTracyProbed
           - group: media
-            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed|TestTheTestbedExtendsWithShadercrossProbed
+            tests: TestTheTestbedExtendsWithMiniaudioProbed|TestTheTestbedExtendsWithAssetLibrariesProbed|TestTheTestbedExtendsWithShadercrossProbed|TestShadersCompileWhenTheExecutableBuilds|TestTheTestbedExtendsWithTextAndDataFilesProbed
           - group: offline
             tests: TestTheTestbedVerifiesOfflineAfterFetch|TestAVendoredTestbedVerifiesFromAFreshCloneOffline|TestTheReferenceCompositionsBuildWithoutAutomapOnceEjected
           - group: starter

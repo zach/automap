@@ -1,14 +1,9 @@
 package composition
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"os"
 	"path"
-	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
@@ -339,15 +334,13 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 		} `json:"vcpkg"`
 	}
 	json.Unmarshal(m.Maps[0].BuildBackend, &buildBackend)
+	// A private map is pinned by its content, with the commit behind it
+	// when it has one: an uncommitted map composes, and the lock says so.
 	for _, meta := range m.Maps[1:] {
-		if meta.Commit == "" {
-			fails = append(fails, failure("MANIFEST_INVALID", "private map %s at %s has no commit: the lock pins each private map at the last commit that changed it, so commit it to git", meta.ID, meta.Dir))
-			continue
-		}
 		if lock.PrivateMaps == nil {
 			lock.PrivateMaps = map[string]PrivateMapPin{}
 		}
-		lock.PrivateMaps[meta.ID] = PrivateMapPin{Commit: meta.Commit}
+		lock.PrivateMaps[meta.ID] = PrivateMapPin{ContentHash: meta.ContentHash, Commit: meta.Commit}
 	}
 
 	pinFor := func(lib *mapmodel.Library, v *mapmodel.Version, variantName string) (Pin, bool) {
@@ -388,7 +381,7 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 			// The variant's port is an overlay port in the private map that
 			// adds the variant, pinned at that map's commit.
 			meta := m.MapFor([2]string{"variant", lib.ID + ":" + v.Version + ":" + variantName})
-			pin.Registry = &Registry{Kind: "private", ID: meta.ID, Commit: meta.Commit}
+			pin.Registry = &Registry{Kind: "private", ID: meta.ID, ContentHash: meta.ContentHash, Commit: meta.Commit}
 		default:
 			fails = append(fails, failure("UNSUPPORTED("+lib.ID+")", "%s comes from registry %q, which the CLI doesn't know.", lib.ID, kind))
 			return Pin{}, false
@@ -425,6 +418,7 @@ func Resolve(m *mapmodel.Map, man *Manifest) (*Lock, []Failure) {
 	for _, c := range Contracts(m, man) {
 		lock.Contracts[c] = m.LatestContract(c).Version
 	}
+	fails = append(fails, PortConflicts(m, man, lock)...)
 	if len(fails) > 0 {
 		return nil, fails
 	}
@@ -454,39 +448,22 @@ func GlueEntryFor(man *Manifest, r *mapmodel.Recipe) GlueEntry {
 
 // SourceHash is the content hash of an in-repo library's directory: the
 // SHA-256 of each file's path and SHA-256 in path order, skipping .git, so
-// it changes whenever a file in it does.
-func SourceHash(dir string) (string, error) {
-	info, err := os.Stat(dir)
-	if err != nil {
-		return "", err
+// it changes whenever a file in it does. Text, a file with no NUL byte, is
+// hashed with CRLF line endings read as LF, so a checkout that converts
+// line endings, as git does on Windows, keeps the hash.
+func SourceHash(dir string) (string, error) { return sourceHash(dir, true) }
+
+// SourceMatches says whether an in-repo library's directory still has the
+// content a pin's hash names. It accepts the hash of the raw bytes too,
+// which is what a CLI before 0.2.0 pinned.
+func SourceMatches(dir, hash string) bool {
+	if normalized, err := sourceHash(dir, true); err != nil || normalized == hash {
+		return err == nil
 	}
-	if !info.IsDir() {
-		return "", fmt.Errorf("not a directory")
-	}
-	var lines []string
-	err = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			if d.Name() == ".git" {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		data, err := os.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		rel, _ := filepath.Rel(dir, p)
-		sum := sha256.Sum256(data)
-		lines = append(lines, filepath.ToSlash(rel)+"\x00"+hex.EncodeToString(sum[:]))
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-	sort.Strings(lines)
-	sum := sha256.Sum256([]byte(strings.Join(lines, "\n")))
-	return "sha256:" + hex.EncodeToString(sum[:]), nil
+	raw, err := sourceHash(dir, false)
+	return err == nil && raw == hash
+}
+
+func sourceHash(dir string, normalize bool) (string, error) {
+	return mapmodel.ContentHash(dir, normalize)
 }

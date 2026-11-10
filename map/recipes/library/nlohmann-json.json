@@ -1,0 +1,29 @@
+{
+  "kind": "library",
+  "subject": {
+    "library": "nlohmann-json"
+  },
+  "applies_to": {
+    "nlohmann-json": {
+      "versions": [
+        "3.12.0"
+      ],
+      "variants": [
+        "default"
+      ]
+    }
+  },
+  "reference_glue": [
+    {
+      "path": "nlohmann-json/nlohmann-json.cmake",
+      "role": "build-fragment"
+    }
+  ],
+  "probes": [],
+  "adaptation_notes": [
+    "Header-only: the build fragment links nlohmann_json::nlohmann_json; include <nlohmann/json.hpp>.",
+    "The library throws on malformed input: parse at a boundary that catches nlohmann::json::exception and reports the reason, or parse with exceptions off (the parse call's allow_exceptions argument) and check is_discarded().",
+    "It parses bytes or a string, not a path: read the file through the assets interface where the composition has one.",
+    "Its containers allocate through std::allocator, which no hook redirects: a game that must account for that memory instantiates nlohmann::basic_json with its own allocator type."
+  ]
+}

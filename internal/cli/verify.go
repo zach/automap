@@ -38,6 +38,7 @@ func verifyCmd(a *args, r *result) int {
 	if seed := a.value("seed"); seed != "" {
 		return runSeed(m, man, lock, platform, seed, r)
 	}
+	warnPrivateMaps(m, r)
 	return runVerify(m, man, lock, platform, r)
 }
 
@@ -58,6 +59,9 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 	r.EvidenceFile = out.EvidenceFile
 	for _, f := range out.Failures {
 		r.Failures = append(r.Failures, failure{Code: f.Code, Rule: f.Rule, Library: f.Library, Message: f.Message, DetailsFile: f.DetailsFile})
+	}
+	for _, w := range out.Warnings {
+		r.warn(w.Code, w.Message)
 	}
 	var unverifiable int
 	for _, res := range out.Results {
@@ -85,6 +89,10 @@ func runVerify(m *mapmodel.Map, man *composition.Manifest, lock *composition.Loc
 			detail = fmt.Sprintf("%d probed %s failed", rules, plural(rules, "rule", "rules"))
 		}
 		r.Summary = fmt.Sprintf("Composition is %s on %s: %s.", out.Level, platform, detail)
+		if out.Level == "none" {
+			// No level was reached: say what happened instead.
+			r.Summary = fmt.Sprintf("The composition didn't build on %s: %s.", platform, detail)
+		}
 		return exitFailed
 	case unverifiable > 0:
 		r.Summary = fmt.Sprintf("Composition is %s on %s: %d probed %s unverifiable.", out.Level, platform, unverifiable, plural(unverifiable, "rule", "rules"))
@@ -148,12 +156,17 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 	if _, fails := regenerate(m, &seeded, lock, scratch); fails != nil {
 		return failWith(r, fails, "The seeded composition's files can't be generated.", exitFailed)
 	}
+	// A seed run says whether a probe catches its violation; the level the
+	// broken scratch copy reached isn't the composition's.
 	out := verify.Run(m, &seeded, lock, verify.Options{Root: scratch, Platform: platform})
-	r.Level = out.Level
 	for _, res := range out.Results {
 		if res.Rule == seed.Rule && res.Library == seed.Library && res.Status == "fail" {
 			r.OK = true
 			r.Summary = fmt.Sprintf("The probe caught the seeded violation of %s: %s.", spec, res.FailureCode)
+			if out.Level == "none" {
+				// A rule the linker enforces is caught before anything runs.
+				r.Summary = fmt.Sprintf("The build caught the seeded violation of %s at link time: %s.", spec, res.FailureCode)
+			}
 			return exitOK
 		}
 	}
