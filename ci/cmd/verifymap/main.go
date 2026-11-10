@@ -421,6 +421,38 @@ func copyMapWithVersions(src, dst string, picks []Pick) error {
 			}
 		}
 	}
+	// Binding evidence pinning a picked library at a version the copy
+	// left out names a version no library has.
+	evidence, err := filepath.Glob(filepath.Join(dst, "evidence", "binding", "*", "*", "*.json"))
+	if err != nil {
+		return err
+	}
+	for _, file := range evidence {
+		if strings.HasSuffix(file, ".sigstore.json") {
+			continue
+		}
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		var doc struct {
+			Predicate struct {
+				SubjectDetail struct {
+					Pin struct{ Library, Version string }
+				} `json:"subject_detail"`
+			}
+		}
+		if err := json.Unmarshal(raw, &doc); err != nil {
+			return fmt.Errorf("%s: %v", file, err)
+		}
+		pin := doc.Predicate.SubjectDetail.Pin
+		if version, ok := picked[pin.Library]; ok && pin.Version != version {
+			if err := os.Remove(file); err != nil {
+				return err
+			}
+			os.Remove(strings.TrimSuffix(file, ".json") + ".sigstore.json")
+		}
+	}
 	return nil
 }
 
