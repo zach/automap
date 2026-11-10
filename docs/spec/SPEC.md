@@ -962,3 +962,4 @@ These details are needed to build v1 but no ADR records them. They follow from t
 | [0082](../adr/0082-evidence-is-read-live-for-exact-pins.md) | Map releases freeze facts, recipes and probes; evidence is read live for exact pins |
 | [0083](../adr/0083-nda-platforms-are-out-of-scope.md) | NDA platforms are out of scope |
 | [0084](../adr/0084-the-map-covers-text-and-data-files.md) | The public map covers text and data files |
+| [0085](../adr/0085-a-composition-has-one-set-of-slots-for-every-build-type.md) | A composition has one set of slots for every build type |

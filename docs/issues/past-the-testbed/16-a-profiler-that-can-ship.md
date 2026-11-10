@@ -9,7 +9,7 @@
 - [x] Tracy's `on-demand` variant builds the client with `TRACY_ON_DEMAND`; its description says it records only while a profiler is connected, and what it still does (listens for one).
 - [x] The diagnostics probe for Tracy fits both variants: a facade zone opens a Tracy zone in both, and the client's queue gains the zone's events in the default variant and nothing in the on-demand one. The ABI seed defines `TRACY_FIBERS`, which neither variant is built with.
 - [ ] Verify map on the branch is green for Tracy's edges, both variants, on all three platforms.
-- [ ] The product owner decides whether a composition can hold a library in development builds only (an ADR: it changes what a composition is); if yes, a follow-up ticket builds it.
+- [x] The product owner decides whether a composition can hold a library in development builds only: it can't; a composition has one set of slots for every build type ([ADR-0085](../../adr/0085-a-composition-has-one-set-of-slots-for-every-build-type.md)).
 
 ## Comments
 

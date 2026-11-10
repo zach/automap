@@ -89,6 +89,9 @@ Fix the bugs, then make the path from testbed to shipped game one the agent can 
 - A download workaround inside the CLI for networks that block source archives: `automap vendor` on an open network is the route.
 - A web testbed, a second build backend and NDA platforms ([ADR-0056](../../adr/0056-v1-platforms-desktop-only.md), [ADR-0034](../../adr/0034-vcpkg-is-the-v1-build-backend.md), [ADR-0083](../../adr/0083-nda-platforms-are-out-of-scope.md)).
 
-## Decisions the product owner makes
+## Decisions the product owner made
 
-Ticket 17 changes what the map covers, ticket 16's second half changes what a composition is, and ticket 18 spends on evals and cuts a release; each waits for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI: command names beyond the five jobs and how the lock records a private map are the spec's details (SPEC §12.3), and a variant of a library the map covers is curation.
+- The public map covers text and data files ([ADR-0084](../../adr/0084-the-map-covers-text-and-data-files.md), ticket 17).
+- A composition has one set of slots for every build type ([ADR-0085](../../adr/0085-a-composition-has-one-set-of-slots-for-every-build-type.md), ticket 16).
+
+Ticket 18's eval run and release wait for the product owner ([ADR-0069](../../adr/0069-human-checkpoints-only-where-direction-is-set.md)). Everything else merges on its tests and CI: command names beyond the five jobs and how the lock records a private map are the spec's details (SPEC §12.3), and a variant of a library the map covers, or the registry its port comes from, is curation.
