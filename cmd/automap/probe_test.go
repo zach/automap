@@ -150,8 +150,8 @@ func TestAnABIDefineMismatchFailsAtLinkTimeOnMSVC(t *testing.T) {
 	run := repo.Automap(t, "verify", "--seed", "build-flags.abi-defines-match", "--map", "map", "--json")
 
 	run.ExpectExit(t, 0)
-	atLinkTime := run.Result.Level == "none"
+	atLinkTime := strings.Contains(run.Result.Summary, "at link time")
 	if want := hostPlatform == "windows-x64-msvc"; atLinkTime != want {
-		t.Errorf("level %q: caught at link time %v, want %v on %s\n%s", run.Result.Level, atLinkTime, want, hostPlatform, run.Stdout)
+		t.Errorf("summary %q: caught at link time %v, want %v on %s\n%s", run.Result.Summary, atLinkTime, want, hostPlatform, run.Stdout)
 	}
 }

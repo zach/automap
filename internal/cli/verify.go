@@ -163,6 +163,10 @@ func runSeed(m *mapmodel.Map, man *composition.Manifest, lock *composition.Lock,
 		if res.Rule == seed.Rule && res.Library == seed.Library && res.Status == "fail" {
 			r.OK = true
 			r.Summary = fmt.Sprintf("The probe caught the seeded violation of %s: %s.", spec, res.FailureCode)
+			if out.Level == "none" {
+				// A rule the linker enforces is caught before anything runs.
+				r.Summary = fmt.Sprintf("The build caught the seeded violation of %s at link time: %s.", spec, res.FailureCode)
+			}
 			return exitOK
 		}
 	}
