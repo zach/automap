@@ -92,6 +92,83 @@
           "web": true
         }
       }
+    },
+    {
+      "version": "0.15.0",
+      "released": "2026-11-05",
+      "security_fix": false,
+      "pin": {
+        "tag": "v0.15.0",
+        "commit": "f2a4f2529e7e71844c9e434b877770a21ecf7587",
+        "content_hash": "sha512:a274fbb62ec25ab9b6025eeeb6e0458ba282fe61509dcd0daf824bdbcf3215c25eb992271d33cc88544068f83e00d791833e980eed7c8f4a1cd3ef71841cf38e"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "tracy",
+          "registry": "automap",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "Tracy",
+        "targets": [
+          "Tracy::TracyClient"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "The Tracy client as the tracy port builds it with its default features: TRACY_ENABLE on, the crash handler on, not on-demand, so the client records from startup and holds what it records until a profiler connects. A build for development: in a player's copy that is memory that only grows."
+        },
+        {
+          "name": "on-demand",
+          "build_options": {
+            "vcpkg_features": "on-demand"
+          },
+          "description": "The Tracy client built with the tracy port's on-demand feature (TRACY_ON_DEMAND): it records only while a profiler is connected, so a run with none holds nothing and zones cost a check. It still starts with the process and listens on the network for a profiler; the port has no option to listen on localhost only."
+        }
+      ],
+      "facts": {
+        "diagnostics": {
+          "log_hook": null,
+          "assert_hook": null,
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [
+            "TRACY_ENABLE",
+            "TRACY_ON_DEMAND",
+            "TRACY_DELAYED_INIT",
+            "TRACY_MANUAL_LIFETIME",
+            "TRACY_FIBERS",
+            "TRACY_DISALLOW_HW_TIMER",
+            "TRACY_TIMER_FALLBACK",
+            "TRACY_PLATFORM_HEADER",
+            "TRACY_NO_CALLSTACK",
+            "TRACY_NO_CRASH_HANDLER"
+          ],
+          "self_check": "link time: TracyMangle.hpp encodes TRACY_ENABLE, TRACY_ON_DEMAND, TRACY_DELAYED_INIT, TRACY_MANUAL_LIFETIME, TRACY_FIBERS, TRACY_DISALLOW_HW_TIMER, TRACY_TIMER_FALLBACK and TRACY_PLATFORM_HEADER in the names of tracy::GetProfiler and tracy::GetToken, so code compiled with other values fails to link",
+          "min_language_standard": "C++11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "Tracy::TracyClient's interface defines the options the client was built with (TRACY_ENABLE among them) for every consumer. A translation unit that leaves TRACY_ENABLE undefined compiles Tracy's macros away, which the link-time check can't see."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
     }
   ]
 }
