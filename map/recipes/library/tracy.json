@@ -6,7 +6,8 @@
   "applies_to": {
     "tracy": {
       "versions": [
-        "0.14.1"
+        "0.14.1",
+        "0.15.0"
       ],
       "variants": [
         "default",
