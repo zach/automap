@@ -49,6 +49,11 @@ func TestCopyingTheMapAtAnOlderVersionKeepsItValid(t *testing.T) {
 	if newerOnly == "" {
 		t.Fatal("no binding recipe applies to stub-ui")
 	}
+	// Binding evidence pins stub-ui at each version.
+	evidenceAt := map[string]string{}
+	for _, version := range []string{"1.1.0", "1.0.0"} {
+		evidenceAt[version] = writeBindingEvidence(t, src, "stub-ui", version)
+	}
 	if _, problems := mapmodel.Load(src, nil); len(problems) > 0 {
 		t.Fatalf("the source map: %v", problems)
 	}
@@ -68,6 +73,12 @@ func TestCopyingTheMapAtAnOlderVersionKeepsItValid(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dst, rel)); !os.IsNotExist(err) {
 		t.Errorf("%s applies to stub-ui 1.1.0 alone and should be left out of the copy", rel)
 	}
+	if _, err := os.Stat(filepath.Join(dst, evidenceAt["1.1.0"])); !os.IsNotExist(err) {
+		t.Errorf("%s pins stub-ui 1.1.0 and should be left out of the copy", evidenceAt["1.1.0"])
+	}
+	if _, err := os.Stat(filepath.Join(dst, evidenceAt["1.0.0"])); err != nil {
+		t.Errorf("%s pins stub-ui 1.0.0 and should stay in the copy: %v", evidenceAt["1.0.0"], err)
+	}
 	for _, file := range recipes {
 		rel, _ := filepath.Rel(src, file)
 		raw, err := os.ReadFile(filepath.Join(dst, rel))
@@ -82,6 +93,43 @@ func TestCopyingTheMapAtAnOlderVersionKeepsItValid(t *testing.T) {
 			t.Errorf("%s applies to stub-ui %v in the copy, want [1.0.0]", rel, a.Versions)
 		}
 	}
+}
+
+// writeBindingEvidence writes allocation binding evidence pinning a
+// library's version into the map, as Verify map would, and returns its
+// path in the map.
+func writeBindingEvidence(t *testing.T, mapDir, library, version string) string {
+	t.Helper()
+	rel := filepath.Join("evidence", "binding", library+"--allocation", library+"-"+version+"-default", "linux-x64-clang.json")
+	doc := map[string]any{
+		"_type":         "https://in-toto.io/Statement/v1",
+		"subject":       []any{map[string]any{"name": "pkg:generic/" + library + "@" + version, "digest": map[string]any{"sha512": "00"}}},
+		"predicateType": "https://github.com/zach/automap/evidence/v1",
+		"predicate": map[string]any{
+			"subject_kind": "binding",
+			"subject_detail": map[string]any{
+				"contract":         "allocation",
+				"contract_version": "1.0.0",
+				"pin":              map[string]any{"library": library, "version": version, "variant": "default", "content_hash": "sha512:00"},
+			},
+			"platform":    "linux-x64-clang",
+			"level":       "probed",
+			"produced_at": "2026-11-10T00:00:00Z",
+			"map_release": "unreleased",
+			"conditions":  map[string]any{"build_type": "Debug", "compiler": "clang", "environment": map[string]any{}, "runner_image": "test", "sanitizers": map[string]any{}},
+			"results":     []any{map[string]any{"rule": "allocation.hooks-before-first-allocation", "library": library, "status": "pass"}},
+			"verifier":    map[string]any{"kind": "automap-ci", "id": "test", "signed": false},
+		},
+	}
+	raw, _ := json.MarshalIndent(doc, "", "  ")
+	full := filepath.Join(mapDir, rel)
+	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(full, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return rel
 }
 
 func edit(t *testing.T, file string, f func(doc map[string]any)) {
