@@ -8,7 +8,8 @@
   "applies_to": {
     "flecs": {
       "versions": [
-        "4.1.6"
+        "4.1.6",
+        "4.2.0"
       ],
       "variants": [
         "default"
