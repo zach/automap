@@ -19,6 +19,10 @@
     "sdl3-shadercross": {
       "baseline": "3.0.0-preview2",
       "port-version": 2
+    },
+    "tracy": {
+      "baseline": "0.15.0",
+      "port-version": 0
     }
   }
 }
