@@ -86,6 +86,77 @@
           "web": true
         }
       }
+    },
+    {
+      "version": "3.6.1",
+      "released": "2026-10-30",
+      "security_fix": false,
+      "pin": {
+        "tag": "v3.6.1",
+        "commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+        "content_hash": "sha512:03090fbcfe16aff6b640ef64f8d26551f0347c9e49fbca4efc48d6874ec87c109227fa05157e21e2031d58fe9374a8af9a5e34cf67a2255806f32e39ce4ca3ed"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "mimalloc",
+          "registry": "automap",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "mimalloc",
+        "targets": [
+          "mimalloc-static",
+          "mimalloc"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "mimalloc as the mimalloc port builds it without features: the mi_* API only, not overriding malloc, static or shared as the triplet links."
+        }
+      ],
+      "facts": {
+        "allocation": {
+          "hook_style": "none",
+          "hooks": [],
+          "aligned": false,
+          "install_before": "",
+          "query": null
+        },
+        "diagnostics": {
+          "log_hook": "mi_register_output(mi_output_fun*, void*): statistics, warnings and errors",
+          "assert_hook": "mi_assert, compile-time (MI_DEBUG); a failure prints through the registered output and aborts",
+          "query": null
+        },
+        "lifecycle": {
+          "init_steps": [
+            {
+              "phase": "diagnostics",
+              "step": "mimalloc:mi_register_output"
+            }
+          ],
+          "shutdown_steps": [],
+          "reloadable": false
+        },
+        "build-flags": {
+          "abi_defines": [],
+          "self_check": null,
+          "min_language_standard": "C11",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint"
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
     }
   ]
 }
