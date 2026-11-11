@@ -1,5 +1,9 @@
 {
   "default": {
+    "flecs": {
+      "baseline": "4.2.0",
+      "port-version": 0
+    },
     "imgui": {
       "baseline": "1.93.0",
       "port-version": 1
