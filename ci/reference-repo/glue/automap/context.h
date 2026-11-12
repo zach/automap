@@ -9,6 +9,10 @@ namespace am {
 // The context every entry point takes: the fields recipes provide and read.
 struct Context {
     struct {
+        const char* window_title = {};
+        int window_width = {};
+        int window_height = {};
+        unsigned long long window_flags = {};
         ::SDL_Window* window = nullptr;
         ::SDL_GPUDevice* gpu_device = nullptr;
     } sdl3;

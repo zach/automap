@@ -2,12 +2,12 @@
 name: automap
 description: Compose, extend and verify a C++ game engine built from libraries, with Automap's map of slots, contracts, pairings and recipes and its automap CLI. Use whenever the user asks to start an engine or testbed, add or swap a library, or check that the engine's libraries are wired together correctly.
 metadata:
-  automap-cli-version: "0.0.0-dev"
+  automap-cli-version: "0.2.0"
 ---
 
 # Automap
 
-Automap describes an engine as a **composition**: which library fills each **slot**, and where the **glue** lives for each **binding** (a library connected to one of Automap's contracts) and each **pairing** (two libraries integrated directly). The **manifest** (`automap.manifest.json`) declares it; the **lock** (`automap.lock.json`) pins it; **probes** decide whether glue works; **evidence** records what passed. This skill was written by automap 0.0.0-dev; the CLI rewrites it when a newer CLI runs.
+Automap describes an engine as a **composition**: which library fills each **slot**, and where the **glue** lives for each **binding** (a library connected to one of Automap's contracts) and each **pairing** (two libraries integrated directly). The **manifest** (`automap.manifest.json`) declares it; the **lock** (`automap.lock.json`) pins it; **probes** decide whether glue works; **evidence** records what passed. This skill was written by automap 0.2.0; the CLI rewrites it when a newer CLI runs.
 
 Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `level` reached, and `failures`, each with a failure `code` and a `details_file`.
 
@@ -17,25 +17,51 @@ Always pass `--json` and act on the result: `ok`, a one-line `summary`, the `lev
 | --- | --- |
 | a new testbed with some libraries | `automap start --with <library>[:<variant>]... --json` |
 | to add or swap in a library | `automap extend <library>[:<variant>] [--slot <slot>]... --json` |
+| to take a library out | `automap remove <library> --json` |
+| a newer map release, for every library or the ones named | `automap upgrade [<library>...] [--map-release <release>] --json` |
+| the lock brought up to date after editing the manifest or a private map | `automap resolve --json` |
 | to know whether the engine is wired correctly | `automap verify --json` |
-| to know which libraries fill a slot | `automap find --slot <slot> --json` |
+| to know whether the map has a library for something | `automap find <words> --json`, or `automap find --slot <slot> --json` |
 | a library's facts, hooks and variants | `automap show library <id> --json` |
+| to turn the testbed into a game, build a release or ship it | read [`game.md`](game.md), beside this file |
+| a library the map doesn't have, or a patched one | read [`private-maps.md`](private-maps.md), beside this file |
+| to change the composition some other way | see **Changing a composition** below |
+
+`automap help` lists every command and `automap help <command>` its flags.
 
 `start` writes the manifest, lock, vcpkg files, build fragments, glue and startup, then verifies on this machine. `extend` adds one library the same way: its slots, build fragment, bindings, setup glue and the glue of any pairing it completes, then re-resolves and verifies; it never overwrites glue already in the repo. A `LICENSE_WARNING(<library>)` warning means the library is copyleft or proprietary: tell the developer why before going on. Each library fills every slot it can unless `--slot <slot>=<library>` says otherwise. A library's variant comes after a colon, such as `dear-imgui:docking`. `start` reads the newest map release and the lock records it; later commands, `extend` included, read the release the lock records. Once a release is cached, everything but fetching works offline.
+
+`upgrade` moves the composition to the newest map release (or the one named), re-resolves the libraries named (all of them by default; the others stay at their versions), updates glue and build fragments the developer hasn't changed since the old release, and verifies. A `GLUE_DIVERGED(<file>)` warning means the developer changed that file and the reference changed too: the file is left as it is, with the new reference beside it as `<file>.reference`. Carry over what applies from the reference using the recipe's adaptation notes (`automap show recipe <id> --json`), delete the `.reference` file, and run `automap verify`.
 
 ## Reading a verify result
 
 The `level` is the highest one reached: `none` (didn't build), `builds`, `smoke` (ran 120 headless frames and shut down cleanly) or `probed` (every applicable probed rule passed). Aim for `probed`.
 
-- `BUILD_FAILED`: read the details file, the build log; fix the build.
+- `SYSTEM_PACKAGE_MISSING(<package>)`: a library needs a system package this machine lacks; nothing was built. The message has the one `apt-get install` line for everything missing. As a warning, it is a package only a headless run needs, such as a software GPU driver.
+- `BUILD_FAILED`: the message quotes the build log's first error; the details file is the whole log. Fix the build.
+- `FETCH_FAILED`: vcpkg couldn't download a source, and the message names the URL. Retry if the network was down. If this machine's network blocks the URL, nothing in the repo is wrong: run `automap vendor --json` on a machine that reaches it and commit `vendor/automap/`, which builds with no network.
 - `SMOKE_FAILED`: the executable crashed or didn't shut down cleanly. `INIT_FAILED(<call>)` names the startup call that failed.
 - A rule's failure code, such as `ALLOC_HOOK_LATE(<library>)`, `INIT_ORDER(<step> before <step>)` or `ABI_DEFINE_MISMATCH(<define>)`, names the rule and library. Read the details file, then fix the glue it points at.
 - An `UNVERIFIABLE(<rule>)` warning means no probe could check that rule; it keeps the composition below `probed`.
 - `EVIDENCE_STALE(<subject>,<platform>)` and `EVIDENCE_BROKEN(<subject>,<platform>)` warnings are about Automap's published evidence for a binding or pairing at the lock's exact pins: stale is more than 30 days old, broken means Automap's latest run of it failed. Mention them to the developer; they don't change this composition's own level.
 
-## Evidence on all three platforms
+## Changing a composition
 
-`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it is signed by the repo's workflow. To verify on Windows, Linux and macOS, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which verifies on all three hosted runners, signs each platform's evidence with GitHub artifact attestations, and commits it with its `.sigstore.json` bundle beside the lock.
+- **Removing a library**: `automap remove <library> --json`. It empties the library's slots, sets a choice that named one of them (such as `profiling-slot`) back to its default, deletes the library's glue and build fragment where you haven't changed them, and verifies. A `GLUE_LEFT(<file>)` warning names a file it left because you changed it.
+- **A choice** (`choices` in the manifest, such as `diagnostics.profiler`): edit the manifest and run `automap verify --json`, which rewrites the choices header.
+- **The executable** (`executable` in the manifest): edit it and run `automap verify --json`; [`game.md`](game.md) has the rules.
+- **A library's variant, the platforms, or which library fills a slot**: edit the manifest, then `automap resolve --json`.
+- **A private map or an in-repo library that changed**: `automap resolve --json` re-pins it and updates the glue you haven't changed. It needn't be committed first; a `PRIVATE_MAP_UNCOMMITTED(<id>)` warning says the lock pins content with no commit behind it, which leaves evidence unsigned until you commit and resolve again.
+
+`resolve` keeps the map release and every library's version; `upgrade` is the command that moves them. A `LOCK_MISMATCH` failure means the lock no longer matches the manifest or the maps, and says which of these to run. Never edit the lock.
+
+## When the network blocks downloads
+
+vcpkg downloads each library's source the first time it builds. `FETCH_FAILED` names the URL that failed. On a machine whose network refuses those URLs (many agent sandboxes do), the composition is not at fault and editing it won't help. On a machine with an open network, `automap vendor --json` copies the ports, sources, map release and evidence the composition needs into `vendor/automap/`; committed, it builds with no network and no caches. `automap fetch --json` fills the machine's own caches instead. Until then, verify in CI.
+
+## Evidence in CI
+
+`verify` writes `evidence/<platform>.json` beside the lock. Run on this machine it is marked unsigned; run in the repo's GitHub Actions with an identity token, it names the repo's workflow as its verifier. To verify on every platform the manifest targets, add this workflow as `.github/workflows/automap.yml`: it calls Automap's reference workflow, which runs one job per platform on GitHub's hosted runners with the CLI release this skill names, signs each platform's evidence with GitHub artifact attestations, commits it with its `.sigstore.json` bundle beside the lock, and uploads the build logs as the artifact `automap-logs-<platform>`.
 
 ```yaml
 name: Automap
@@ -52,7 +78,9 @@ jobs:
     uses: zach/automap/.github/workflows/automap-verify.yml@main
 ```
 
-If the composition isn't at the repo's root, pass its directory with `with: { working-directory: <dir> }`.
+Its inputs, under `with:`: `working-directory` when the composition isn't at the repo's root; `keep-build: true` to upload the built executable and what the build put beside it as `automap-build-<platform>`; `publish: false` to verify without committing evidence, as on a feature branch; `automap-version` to install another CLI release.
+
+A workflow of your own gets the same evidence when each job: installs the CLI release this skill names and checks its SHA-256; installs the system packages the libraries need (`automap show library <id> --json`: `facts.platform.system_packages`, per platform, `apt` to build and `apt_headless` to run without a display); on Windows, runs in the MSVC developer environment; runs `automap verify --json`; and uploads `build/automap/*.log`, which the result's `details_file` names. For signed evidence the job also needs `permissions: { id-token: write, attestations: write }` and a step that attests the evidence file (`actions/attest-build-provenance` with `subject-path: evidence/<platform>.json`); commit the evidence with the attestation's bundle beside it as `evidence/<platform>.sigstore.json`.
 
 ## Adapting glue
 

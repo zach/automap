@@ -12,7 +12,14 @@ bool am_sdl3_setup_init(am::Context& ctx) {
         return false;
     }
     am::lifecycle::init_step("sdl3:SDL_Init");
-    ctx.sdl3.window = SDL_CreateWindow("Automap testbed", 1280, 720, SDL_WINDOW_RESIZABLE);
+    // A game sets the window's title, size and flags in the context before
+    // startup; left unset, they are the testbed's.
+    if (ctx.sdl3.window_title == nullptr) ctx.sdl3.window_title = "Automap testbed";
+    if (ctx.sdl3.window_width <= 0) ctx.sdl3.window_width = 1280;
+    if (ctx.sdl3.window_height <= 0) ctx.sdl3.window_height = 720;
+    if (ctx.sdl3.window_flags == 0) ctx.sdl3.window_flags = SDL_WINDOW_RESIZABLE;
+    ctx.sdl3.window = SDL_CreateWindow(ctx.sdl3.window_title, ctx.sdl3.window_width, ctx.sdl3.window_height,
+                                       static_cast<SDL_WindowFlags>(ctx.sdl3.window_flags));
     if (ctx.sdl3.window == nullptr) {
         SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
         return false;

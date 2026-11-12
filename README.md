@@ -6,7 +6,7 @@ The **map** describes libraries, the slots they fill (windowing, physics, jobs, 
 
 ## Status
 
-The CLI is released as [`cli-v0.1.0`](https://github.com/zach/automap/releases/tag/cli-v0.1.0), one static binary each for Linux, Windows and macOS. The public map covers fifteen libraries on those three platforms: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image, stb_truetype, nlohmann/json and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
+The CLI is released as [`cli-v0.2.0`](https://github.com/zach/automap/releases/tag/cli-v0.2.0), one static binary each for Linux, Windows and macOS. The public map covers fifteen libraries on those three platforms: SDL3, Dear ImGui, Jolt, enkiTS, mimalloc, spdlog, Tracy, GLM, flecs, miniaudio, fastgltf, stb_image, stb_truetype, nlohmann/json and SDL_shadercross. Automap's CI verifies every binding and pairing on all three platforms and publishes signed evidence in the map.
 
 ## Quick start
 
@@ -15,7 +15,7 @@ You need CMake 3.25+, Ninja and a C++20 compiler (clang on Linux, MSVC on Window
 Download the CLI for your platform from the [latest release](https://github.com/zach/automap/releases) and check it against the release's SHA-256 file. On Linux:
 
 ```console
-$ base=https://github.com/zach/automap/releases/download/cli-v0.1.0
+$ base=https://github.com/zach/automap/releases/download/cli-v0.2.0
 $ curl -fsSLO $base/automap-0.1.0-linux-amd64 -O $base/automap-0.1.0.sha256
 $ sha256sum --check --ignore-missing automap-0.1.0.sha256
 $ install -m 755 automap-0.1.0-linux-amd64 ~/.local/bin/automap

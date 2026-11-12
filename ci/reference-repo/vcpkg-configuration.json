@@ -1,3 +1,14 @@
 {
-  "registries": []
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/zach/automap",
+      "reference": "registry",
+      "baseline": "1cc3fd7d089b38411c8e43739eb087298f25ea28",
+      "packages": [
+        "imgui",
+        "sdl3"
+      ]
+    }
+  ]
 }
