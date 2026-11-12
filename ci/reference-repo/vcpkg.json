@@ -12,10 +12,7 @@
       "name": "sdl3",
       "default-features": false,
       "features": [
-        {
-          "name": "vulkan",
-          "platform": "linux"
-        },
+        "vulkan",
         {
           "name": "x11",
           "platform": "linux"
@@ -30,11 +27,12 @@
   "overrides": [
     {
       "name": "imgui",
-      "version": "1.93.0"
+      "version": "1.93.0",
+      "port-version": 1
     },
     {
       "name": "sdl3",
-      "version": "3.4.18"
+      "version": "3.4.20"
     }
   ],
   "builtin-baseline": "d186940b2f0c4e8e5b4ff804af57d2a26fbfa091"

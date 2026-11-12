@@ -15,6 +15,7 @@ add_library(automap_glue OBJECT
     ${AUTOMAP_ROOT}/glue/dear-imgui/imgui_allocation.cpp
     ${AUTOMAP_ROOT}/glue/dear-imgui/imgui_allocation_probe.cpp
     ${AUTOMAP_ROOT}/glue/dear-imgui/imgui_build_flags_probe.cpp
+    ${AUTOMAP_ROOT}/glue/dear-imgui/imgui_math_glm_probe.cpp
     ${AUTOMAP_ROOT}/glue/dear-imgui/imgui_setup.cpp
     ${AUTOMAP_ROOT}/glue/sdl3/sdl3_allocation.cpp
     ${AUTOMAP_ROOT}/glue/sdl3/sdl3_allocation_probe.cpp
@@ -28,6 +29,7 @@ if(AUTOMAP_PROBE)
     target_compile_definitions(automap_glue PUBLIC AUTOMAP_PROBE)
 endif()
 target_compile_definitions(automap_glue PUBLIC AUTOMAP_LIBRARY_DEAR_IMGUI=1 AUTOMAP_LIBRARY_SDL3=1)
+target_compile_definitions(automap_glue PUBLIC AUTOMAP_VARIANT_DEAR_IMGUI="docking" AUTOMAP_VARIANT_SDL3="default")
 
 include(${CMAKE_CURRENT_LIST_DIR}/dear-imgui.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/sdl3.cmake)
