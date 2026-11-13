@@ -6,7 +6,8 @@
   "applies_to": {
     "fastgltf": {
       "versions": [
-        "0.9.1"
+        "0.9.1",
+        "1.0.1"
       ],
       "variants": [
         "default"
@@ -21,7 +22,7 @@
   ],
   "probes": [],
   "adaptation_notes": [
-    "The build fragment calls find_package(fastgltf CONFIG REQUIRED), which finds simdjson too, and links fastgltf::fastgltf; its headers are included as <fastgltf/core.hpp>.",
+    "The build fragment calls find_package(fastgltf CONFIG REQUIRED), which finds simdjson too (and simdutf from 1.0), and links fastgltf::fastgltf; its headers are included as <fastgltf/core.hpp>.",
     "Game code loads glTF files with am_fastgltf_load() from the assets binding, never with fastgltf's own file streams, so every read goes through the assets interface."
   ]
 }

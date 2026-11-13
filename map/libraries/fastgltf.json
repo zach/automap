@@ -85,6 +85,72 @@
           "web": true
         }
       }
+    },
+    {
+      "version": "1.0.1",
+      "released": "2026-11-07",
+      "security_fix": false,
+      "pin": {
+        "tag": "v1.0.1",
+        "commit": "87cfbceeeda127ccc9092694279437b700046119",
+        "content_hash": "sha512:407f99ba7e6cc439b5255d780e12443775a4f2ea2f878ab6bb64e496d6e05d52def4bbb22a7cf43437e3454279b751c70f20423e16160387ff24e16fd0f5a1f3"
+      },
+      "build_backend": {
+        "vcpkg": {
+          "port": "fastgltf",
+          "registry": "automap",
+          "port_version": 0
+        }
+      },
+      "cmake": {
+        "package": "fastgltf",
+        "targets": [
+          "fastgltf::fastgltf"
+        ]
+      },
+      "variants": [
+        {
+          "name": "default",
+          "build_options": {},
+          "description": "fastgltf as the fastgltf port builds it: the compiled library on vcpkg's simdjson and simdutf, with fastgltf's default options."
+        }
+      ],
+      "facts": {
+        "assets": {
+          "usage": "both",
+          "file_io_hook": "fastgltf::GltfDataBuffer::FromBytes for the glTF or GLB file, and buffers loaded by the caller into sources::Array when Options::LoadExternalBuffers is left off",
+          "reload_hook": null,
+          "output_settings": [
+            "fastgltf::Options",
+            "fastgltf::Extensions passed to the Parser",
+            "fastgltf::Category"
+          ]
+        },
+        "lifecycle": {
+          "init_steps": [],
+          "shutdown_steps": [],
+          "reloadable": true
+        },
+        "build-flags": {
+          "abi_defines": [
+            "FASTGLTF_USE_64BIT_FLOAT"
+          ],
+          "self_check": null,
+          "min_language_standard": "C++20",
+          "exceptions": "never-thrown",
+          "rtti": "no-constraint",
+          "consumer_flags": "FASTGLTF_USE_64BIT_FLOAT changes fastgltf's types; fastgltf::fastgltf's interface defines it as the port built it, and a translation unit that defines it otherwise before including fastgltf breaks the layout silently. fastgltf::fastgltf requires C++20 of its consumers."
+        },
+        "platform": {
+          "targets": [
+            "windows-x64-msvc",
+            "linux-x64-clang",
+            "macos-arm64-appleclang"
+          ],
+          "headless": "",
+          "web": true
+        }
+      }
     }
   ]
 }

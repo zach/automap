@@ -1,6 +1,6 @@
 --- a/fastgltf_assets.cpp
 +++ b/fastgltf_assets.cpp
-@@ -16,7 +16,7 @@
+@@ -32,7 +32,7 @@
      fastgltf::Parser parser(extensions);
      // Without Options::LoadExternalBuffers fastgltf reads no file itself:
      // each external buffer is loaded below, through the interface.
