@@ -8,7 +8,8 @@
   "applies_to": {
     "fastgltf": {
       "versions": [
-        "0.9.1"
+        "0.9.1",
+        "1.0.1"
       ],
       "variants": [
         "default"
@@ -50,6 +51,7 @@
   "adaptation_notes": [
     "am_fastgltf_load() reads the glTF or GLB file through the assets interface into a GltfDataBuffer, parses it without Options::LoadExternalBuffers, so fastgltf opens no file itself, then reads each buffer with a relative URI through the interface into a sources::Array.",
     "Images keep their sources::URI: the image decoder loads them through the interface when the game asks.",
-    "The parser takes the extensions the game passes; extensions and options change what an import produces, so a cooker records them with its output."
+    "The parser takes the extensions the game passes; extensions and options change what an import produces, so a cooker records them with its output.",
+    "fastgltf 1.0 boxes sources::URI::uri, replaces StaticVector with static_vector and renames Error::MissingExternalBuffer to MissingExternalFile; the glue picks each by whether <fastgltf/containers/static_vector.hpp> exists, so one file serves 0.9 and 1.0."
   ]
 }
