@@ -1,6 +1,6 @@
 {
   "name": "joltphysics",
-  "version": "5.6.0",
+  "version": "5.7.0",
   "description": "Jolt Physics as Automap builds it: the joltphysics port with Jolt's external profile hooks, and double precision and cross-platform determinism as features. vcpkg's features must be additive; these aren't, so they live in the Automap registry, and a composition takes at most one build of Jolt.",
   "homepage": "https://github.com/jrouwe/JoltPhysics",
   "license": "MIT",

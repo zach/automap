@@ -46,6 +46,13 @@ public:
         return handle;
     }
 
+#if JPH_VERSION_MAJOR > 5 || (JPH_VERSION_MAJOR == 5 && JPH_VERSION_MINOR >= 7)
+    // Jolt 5.7 creates batches of similar jobs through CreateJobs.
+    void CreateJobs(const char* name, JPH::ColorArg color, const JobFunction& function, JobHandle* out, JPH::uint32 count, JPH::uint32 dependencies) override {
+        for (JPH::uint32 i = 0; i < count; ++i) out[i] = CreateJob(name, color, function, dependencies);
+    }
+#endif
+
 protected:
     void QueueJob(Job* job) override {
         job->AddRef();
