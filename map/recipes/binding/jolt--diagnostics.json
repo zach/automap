@@ -8,7 +8,8 @@
   "applies_to": {
     "jolt": {
       "versions": [
-        "5.6.0"
+        "5.6.0",
+        "5.7.0"
       ],
       "variants": [
         "default",
@@ -49,6 +50,6 @@
   ],
   "adaptation_notes": [
     "JPH::Trace takes a printf-style format; the glue formats it into a buffer before passing it to the facade.",
-    "JPH::AssertFailed exists only when Jolt is built with JPH_ENABLE_ASSERTS, which Jolt's CMake turns on for Debug builds; wrap the assignment in JPH_IF_ENABLE_ASSERTS."
+    "JPH::AssertFailed exists only when Jolt is built with JPH_ENABLE_ASSERTS, which the port's Debug library has and Jolt's build fragment defines for Debug builds; wrap the assignment in JPH_IF_ENABLE_ASSERTS."
   ]
 }

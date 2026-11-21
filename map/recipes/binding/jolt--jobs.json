@@ -8,7 +8,8 @@
   "applies_to": {
     "jolt": {
       "versions": [
-        "5.6.0"
+        "5.6.0",
+        "5.7.0"
       ],
       "variants": [
         "default",
@@ -70,6 +71,7 @@
   ],
   "adaptation_notes": [
     "The adapter derives from JPH::JobSystemWithBarrier and submits each Jolt job to am::jobs; GetMaxConcurrency is the interface's worker count plus the calling thread.",
+    "From Jolt 5.7, JPH::JobSystem has a pure virtual CreateJobs, which PhysicsSystem::Update uses for batches of similar jobs; the adapter implements it, behind a JPH_VERSION_MINOR check, by creating each job through CreateJob.",
     "The adapter counts jobs in flight and its destructor, which am_unbind_jolt_jobs() runs, waits for the count to reach zero: a worker can still be releasing a Jolt job after Update returns.",
     "Translation units that derive from Jolt classes compile with -fno-rtti (MSVC /GR-); Jolt's build fragment sets this on the glue target."
   ]

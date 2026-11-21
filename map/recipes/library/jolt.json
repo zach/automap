@@ -6,7 +6,8 @@
   "applies_to": {
     "jolt": {
       "versions": [
-        "5.6.0"
+        "5.6.0",
+        "5.7.0"
       ],
       "variants": [
         "default",
@@ -78,7 +79,7 @@
     }
   ],
   "adaptation_notes": [
-    "The build fragment calls find_package(Jolt CONFIG REQUIRED), links Jolt::Jolt, and compiles the glue with -fno-rtti (MSVC /GR-), since glue derives from Jolt classes and the port builds Jolt without RTTI.",
+    "The build fragment calls find_package(Jolt CONFIG REQUIRED), links Jolt::Jolt, and compiles the glue with -fno-rtti (MSVC /GR-), since glue derives from Jolt classes and the port builds Jolt without RTTI. It defines JPH_ENABLE_ASSERTS for Debug builds: the port's Debug library has Jolt's assertions (from JPH_DEBUG, which Jolt's CMake sets only while building Jolt itself, which Jolt 5.7's headers don't derive from NDEBUG), and JPH_VERSION_ID would differ without it.",
     "Setup glue checks JPH::VerifyJoltVersionID(), runs Factory and RegisterTypes, then creates one PhysicsSystem with two object layers (non-moving, moving) mapped to two broad-phase layers and a TempAllocatorImpl. The jolt--jobs binding provides the job system the game passes to PhysicsSystem::Update.",
     "The layer tables and capacities are placeholders the game replaces; setup glue creates no bodies.",
     "Shutdown destroys the PhysicsSystem before UnregisterTypes and deleting the Factory."
